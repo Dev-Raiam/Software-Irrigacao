@@ -1,0 +1,23 @@
+# Build
+bin/
+obj/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+Logs/
+*.log
+
+# User settings
+*.user
+appsettings.Development.json
+
+# Secrets
+credenciais.json
+**/Security/Keys/
+
+# IDE
+.vs/
