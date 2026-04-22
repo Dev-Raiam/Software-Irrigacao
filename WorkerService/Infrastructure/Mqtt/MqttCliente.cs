@@ -3,15 +3,14 @@ using System.Text;
 using System.Text.Json;
 using MQTTnet;
 using MQTTnet.Protocol;
-using WorkerService.Features.Comandos;
-using WorkerService.Infrastructure;
-using WorkerService.Infrastructure.Interfaces;
+using WorkerService.Features.Mensageria;
+using WorkerService.Features.Shared.Abstractions;
 
 namespace WorkerService.Infrastructure.Mqtt
 {
     public class MqttCliente(
         IMqttClient _mqttCliente,
-        IProcessadorMensageria _servicoMensageria,
+        ProcessadorMensageria _servicoMensageria,
         ILogger<MqttCliente> _logger
     ) : IMqttCliente
     {

@@ -1,7 +1,5 @@
 using System.Net.Http.Headers;
-using WorkerService.Configurations;
-using WorkerService.Infrastructure.Interfaces;
-using WorkerService.Infrastructure.Services;
+using WorkerService.Features.Configuracao.GerenciamentoToken;
 
 namespace WorkerService.Infrastructure.Http;
 

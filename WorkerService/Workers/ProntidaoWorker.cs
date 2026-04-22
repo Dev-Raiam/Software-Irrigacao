@@ -1,8 +1,8 @@
-using WorkerService.Infrastructure.Interfaces;
+using WorkerService.Features.Prontidao;
 
 namespace WorkerService.Workers;
 
-public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, IProntidao _servicoProntidao)
+public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servicoProntidao)
     : BackgroundService
 {
     private bool _avisoEmitido = false;
@@ -33,7 +33,7 @@ public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, IProntidao _servi
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado na sincronização");
+                _logger.LogError(ex, "Erro inesperado na preparação da aplicação");
             }
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }

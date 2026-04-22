@@ -1,12 +1,12 @@
-using WorkerService.Features.Sincronizacao.Automacao;
-using WorkerService.Infrastructure.Interfaces;
+using WorkerService.Features.Automacao.Sincronizacao;
+using WorkerService.Features.Prontidao;
 
 namespace WorkerService.Workers;
 
 public class SincronizacaoWorker(
     ILogger<SincronizacaoWorker> _logger,
     IServiceProvider _serviceProvider,
-    IProntidao _servicoProntidao
+    Prontidao _servicoProntidao
 ) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

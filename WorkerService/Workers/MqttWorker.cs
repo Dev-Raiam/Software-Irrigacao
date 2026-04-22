@@ -1,14 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using WorkerService.Configurations;
+using WorkerService.Features.Prontidao;
+using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Infrastructure.Data;
-using WorkerService.Infrastructure.Interfaces;
 
 namespace WorkerService.Workers;
 
 public class MqttWorker(
     ILogger<MqttWorker> _logger,
     IMqttCliente _mqttCliente,
-    IProntidao _servicoProntidao,
+    Prontidao _servicoProntidao,
     IServiceProvider _serviceProvider,
     TopicoConfiguracao _topicoConfiguracao
 ) : BackgroundService

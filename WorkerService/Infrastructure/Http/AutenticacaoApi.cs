@@ -2,8 +2,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using WorkerService.Configurations;
-using WorkerService.Infrastructure.Interfaces;
-using WorkerService.Infrastructure.Services;
+using WorkerService.Features.Configuracao.GerenciamentoToken;
+using WorkerService.Features.Shared.Abstractions;
 
 namespace WorkerService.Infrastructure.Http;
 

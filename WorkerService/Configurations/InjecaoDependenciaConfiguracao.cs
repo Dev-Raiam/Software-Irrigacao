@@ -1,16 +1,21 @@
 using MQTTnet;
-using WorkerService.Features.Comandos;
-using WorkerService.Features.Comandos.Executores;
-using WorkerService.Features.Shared;
-using WorkerService.Features.Sincronizacao.Automacao;
-using WorkerService.Features.Sincronizacao.Automacao.Dispositivos;
-using WorkerService.Features.Sincronizacao.Automacao.Interfaces;
-using WorkerService.Features.Sincronizacao.Automacao.Paineis;
-using WorkerService.Features.Sincronizacao.Automacao.Portas;
+using WorkerService.Features.Automacao.Comandos;
+using WorkerService.Features.Automacao.Comandos.Executores;
+using WorkerService.Features.Automacao.Sincronizacao;
+using WorkerService.Features.Automacao.Sincronizacao.Dispositivos;
+using WorkerService.Features.Automacao.Sincronizacao.InterfacesComunicacao;
+using WorkerService.Features.Automacao.Sincronizacao.Paineis;
+using WorkerService.Features.Automacao.Sincronizacao.Portas;
+using WorkerService.Features.Configuracao.ConfiguracaoSistema;
+using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
+using WorkerService.Features.Configuracao.GerenciamentoCredenciais.Interfaces;
+using WorkerService.Features.Configuracao.GerenciamentoToken;
+using WorkerService.Features.Mensageria;
+using WorkerService.Features.Prontidao;
+using WorkerService.Features.Shared.Abstractions;
+using WorkerService.Infrastructure.Criptografia;
 using WorkerService.Infrastructure.Http;
-using WorkerService.Infrastructure.Interfaces;
 using WorkerService.Infrastructure.Mqtt;
-using WorkerService.Infrastructure.Services;
 using WorkerService.Workers;
 
 namespace WorkerService.Configurations;
@@ -22,7 +27,7 @@ public static class InjecaoDependenciaConfiguracao
         IConfiguration configuration
     )
     {
-        services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguracao"));
+        services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguration"));
 
         services.AddDataProtection();
         // //Configura o Serviço No Windows
@@ -51,13 +56,13 @@ public static class InjecaoDependenciaConfiguracao
             return factory.CreateMqttClient();
         });
         services.AddSingleton<IMqttCliente, MqttCliente>();
-        services.AddSingleton<IProntidao, Prontidao>();
+        services.AddSingleton<Prontidao>();
         services.AddSingleton<GerenciadorToken>();
 
         services.AddScoped<SincronizarAutomacao>();
         services.AddScoped<ProcessarComando>();
         services.AddScoped<AcionarPorta>();
-        services.AddScoped<ArmazenamentoCredenciais>();
+        services.AddScoped<GerenciadorCredenciais>();
         services.AddScoped<ICriptografia, Criptografia>();
 
         services.AddScoped<SincronizarAutomacao>();
@@ -65,8 +70,9 @@ public static class InjecaoDependenciaConfiguracao
         services.AddScoped<SincronizarDispositivos>();
         services.AddScoped<SincronizarPortas>();
         services.AddScoped<SincronizarInterfaces>();
+        services.AddScoped<ConfigurarSistema>();
 
         services.AddTransient<ManipuladorTokenAcesso>();
-        services.AddTransient<IProcessadorMensageria, ProcessadorMensageria>();
+        services.AddTransient<ProcessadorMensageria>();
     }
 }

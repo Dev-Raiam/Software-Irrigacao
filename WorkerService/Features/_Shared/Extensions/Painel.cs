@@ -1,4 +1,4 @@
-namespace WorkerService.Application.Extensions;
+namespace WorkerService.Features.Shared.Extensions;
 
 public static class Painel
 {
