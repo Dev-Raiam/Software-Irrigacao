@@ -1,10 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using WorkerService.Configurations;
-using WorkerService.Features.Automacao.Sincronizacao;
 using WorkerService.Features.Shared.Extensions;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Automacao.Sincronizacao.Paineis;
+namespace WorkerService.Features.Sincronizacao.Automacao;
 
 public class SincronizarPainel(
     IAutomacaoApi _automacaoApi,

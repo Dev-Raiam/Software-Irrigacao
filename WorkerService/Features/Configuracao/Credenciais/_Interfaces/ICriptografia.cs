@@ -1,4 +1,4 @@
-﻿namespace WorkerService.Features.Configuracao.GerenciamentoCredenciais.Interfaces
+﻿namespace WorkerService.Features.Configuracao.Credenciais.Interfaces
 {
     public interface ICriptografia
     {

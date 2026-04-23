@@ -1,18 +1,13 @@
 using MQTTnet;
-using WorkerService.Features.Automacao.Comandos;
-using WorkerService.Features.Automacao.Comandos.Executores;
-using WorkerService.Features.Automacao.Sincronizacao;
-using WorkerService.Features.Automacao.Sincronizacao.Dispositivos;
-using WorkerService.Features.Automacao.Sincronizacao.InterfacesComunicacao;
-using WorkerService.Features.Automacao.Sincronizacao.Paineis;
-using WorkerService.Features.Automacao.Sincronizacao.Portas;
+using WorkerService.Features.Comandos;
 using WorkerService.Features.Configuracao.ConfiguracaoSistema;
+using WorkerService.Features.Configuracao.Credenciais.Interfaces;
 using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
-using WorkerService.Features.Configuracao.GerenciamentoCredenciais.Interfaces;
-using WorkerService.Features.Configuracao.GerenciamentoToken;
+using WorkerService.Features.Infrastructure.GerenciamentoToken;
 using WorkerService.Features.Mensageria;
 using WorkerService.Features.Prontidao;
 using WorkerService.Features.Shared.Abstractions;
+using WorkerService.Features.Sincronizacao.Automacao;
 using WorkerService.Infrastructure.Criptografia;
 using WorkerService.Infrastructure.Http;
 using WorkerService.Infrastructure.Mqtt;
@@ -66,7 +61,6 @@ public static class InjecaoDependenciaConfiguracao
 
         services.AddScoped<SincronizarAutomacao>();
         services.AddScoped<ProcessarComando>();
-        services.AddScoped<AcionarPorta>();
         services.AddScoped<GerenciadorCredenciais>();
         services.AddScoped<ICriptografia, Criptografia>();
 

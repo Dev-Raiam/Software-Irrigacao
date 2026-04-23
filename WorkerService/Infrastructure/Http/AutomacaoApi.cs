@@ -4,8 +4,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using WorkerService.Configurations;
-using WorkerService.Features.Automacao.Sincronizacao;
 using WorkerService.Features.Shared.Response;
+using WorkerService.Features.Sincronizacao.Automacao;
 using WorkerService.Infrastructure.Data;
 
 namespace WorkerService.Infrastructure.Http;

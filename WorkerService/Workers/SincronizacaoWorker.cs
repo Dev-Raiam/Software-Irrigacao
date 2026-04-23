@@ -1,5 +1,5 @@
-using WorkerService.Features.Automacao.Sincronizacao;
 using WorkerService.Features.Prontidao;
+using WorkerService.Features.Sincronizacao.Automacao;
 
 namespace WorkerService.Workers;
 

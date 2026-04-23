@@ -1,6 +1,6 @@
 using WorkerService.Features.Shared.Response;
 
-namespace WorkerService.Features.Automacao.Sincronizacao;
+namespace WorkerService.Features.Sincronizacao.Automacao;
 
 public interface IAutomacaoApi
 {

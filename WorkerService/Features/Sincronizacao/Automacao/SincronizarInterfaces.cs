@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using WorkerService.Features.Automacao.Sincronizacao;
 using WorkerService.Features.Shared.Extensions;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Automacao.Sincronizacao.InterfacesComunicacao;
+namespace WorkerService.Features.Sincronizacao.Automacao;
 
 public class SincronizarInterfaces(IAutomacaoApi _automacaoApi, WorkerServiceContext _context)
 {

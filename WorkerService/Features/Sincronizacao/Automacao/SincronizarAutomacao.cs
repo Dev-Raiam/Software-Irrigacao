@@ -1,12 +1,7 @@
-using System.Reflection.Metadata.Ecma335;
 using Microsoft.EntityFrameworkCore;
-using WorkerService.Features.Automacao.Sincronizacao.Dispositivos;
-using WorkerService.Features.Automacao.Sincronizacao.InterfacesComunicacao;
-using WorkerService.Features.Automacao.Sincronizacao.Paineis;
-using WorkerService.Features.Automacao.Sincronizacao.Portas;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Automacao.Sincronizacao;
+namespace WorkerService.Features.Sincronizacao.Automacao;
 
 public class SincronizarAutomacao(
     SincronizarPainel _paineis,

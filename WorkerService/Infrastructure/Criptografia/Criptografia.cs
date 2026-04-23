@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
-using WorkerService.Features.Configuracao.GerenciamentoCredenciais.Interfaces;
+using WorkerService.Features.Configuracao.Credenciais.Interfaces;
 
 namespace WorkerService.Infrastructure.Criptografia;
 

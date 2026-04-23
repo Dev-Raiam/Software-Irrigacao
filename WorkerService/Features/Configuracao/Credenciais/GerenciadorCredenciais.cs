@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WorkerService.Configurations;
-using WorkerService.Features.Configuracao.GerenciamentoCredenciais.Interfaces;
+using WorkerService.Features.Configuracao.Credenciais.Interfaces;
 using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Infrastructure.Data;
 

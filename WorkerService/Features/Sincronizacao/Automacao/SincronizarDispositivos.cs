@@ -1,10 +1,9 @@
 using System.Reflection.Metadata.Ecma335;
 using Microsoft.EntityFrameworkCore;
-using WorkerService.Features.Automacao.Sincronizacao;
 using WorkerService.Features.Shared.Extensions;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Automacao.Sincronizacao.Dispositivos;
+namespace WorkerService.Features.Sincronizacao.Automacao;
 
 public class SincronizarDispositivos(IAutomacaoApi _automacaoApi, WorkerServiceContext _context)
 {

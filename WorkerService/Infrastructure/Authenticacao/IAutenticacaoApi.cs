@@ -1,6 +1,6 @@
 using WorkerService.Features.Shared.Abstractions;
 
-namespace WorkerService.Features.Configuracao.GerenciamentoToken;
+namespace WorkerService.Features.Infrastructure.GerenciamentoToken;
 
 public interface IAutenticacaoApi
 {
