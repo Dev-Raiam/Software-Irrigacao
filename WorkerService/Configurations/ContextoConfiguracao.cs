@@ -8,7 +8,7 @@ public static class ContextoConfiguracao
     public static void RegistrarContexto(this IServiceCollection services)
     {
         services.AddDbContext<WorkerServiceContext>(options =>
-            options.UseSqlite("Data Source=database.db")
+            options.UseSqlite("Data Source=worker-service.db")
         );
     }
 }

@@ -40,6 +40,11 @@ public static class InjecaoDependenciaConfiguracao
         services.AddHostedService<SincronizacaoWorker>();
         services.AddHostedService<MqttWorker>();
 
+        services.AddWindowsService(options =>
+        {
+            options.ServiceName = "SoftwareAutomacao";
+        });
+
         services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
         services
             .AddHttpClient<IAutomacaoApi, AutomacaoApi>()
