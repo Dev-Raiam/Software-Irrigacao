@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MQTTnet;
 
 namespace WorkerService.Features.Shared.Abstractions
 {
     public interface IMqttCliente
     {
-        public Task Conectar(
+        bool Conectado { get; }
+        Task<bool> Conectar(
             string servidor,
             int porta,
             string clienteId,
@@ -14,8 +16,17 @@ namespace WorkerService.Features.Shared.Abstractions
             string? senha,
             CancellationToken cancellationToken
         );
-        public Task Assinar(string topico, CancellationToken cancellationToken);
-        public Task Publicar(string topico, object mensagem, CancellationToken cancellationToken);
-        public void IniciarMensageria(CancellationToken cancellationToken);
+        Task AssinarTopico(string topico, CancellationToken cancellationToken);
+        Task Publicar(
+            string topico,
+            string mensagem,
+            CancellationToken cancellationToken,
+            MqttApplicationMessageBuilder? messageBuilder = null
+        );
+        Task Publicar(string topico, object mensagem, CancellationToken cancellationToken);
+        void ExecutarCallbackMensageria(CancellationToken cancellationToken);
+        Task Reconectar(CancellationToken cancellationToken);
+        void ExecutarCallbackDesconectado(CancellationToken cancellationToken);
+        Task Desconectar(CancellationToken cancellationToken);
     }
 }

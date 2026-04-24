@@ -9,6 +9,8 @@ public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servic
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -18,24 +20,24 @@ public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servic
                 );
                 if (execucaoCompleta)
                 {
-                    _logger.LogInformation("Configuraçõens Obtidas com Sucesso.");
+                    _servicoProntidao.MarcarPronto();
                     break;
                 }
                 else if (!_avisoEmitido)
                 {
-                    _logger.LogWarning("Aguardando configurações...");
+                    _logger.LogInformation("Aguardando configurações...");
                     _avisoEmitido = true;
                 }
+                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException)
             {
-                // Encerramento normal do serviço
+                break;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado na preparação da aplicação");
+                _logger.LogError(ex, "Erro inesperado na preparação do serviço");
             }
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
 }

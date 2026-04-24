@@ -50,12 +50,35 @@ public static class InjecaoDependenciaConfiguracao
         services.AddSingleton<TopicoConfiguracao>();
         services.AddSingleton<ContaConfiguracao>();
 
-        services.AddSingleton<IMqttClient>(sp =>
+        //Factory Delegate para resolver múltiplas instâncias por chave
+        services.AddSingleton<Func<string, IMqttCliente>>(provider =>
         {
-            var factory = new MqttClientFactory();
-            return factory.CreateMqttClient();
+            var instanciasMqtt = new Dictionary<string, IMqttCliente>()
+            {
+                [InstanciasMqtt.Nuvem] = new MqttCliente(
+                    InstanciasMqtt.Nuvem,
+                    new MqttClientFactory().CreateMqttClient(),
+                    provider.GetRequiredService<ProcessadorMensageria>(),
+                    provider.GetRequiredService<ILogger<MqttCliente>>()
+                ),
+                [InstanciasMqtt.Local] = new MqttCliente(
+                    InstanciasMqtt.Local,
+                    new MqttClientFactory().CreateMqttClient(),
+                    provider.GetRequiredService<ProcessadorMensageria>(),
+                    provider.GetRequiredService<ILogger<MqttCliente>>()
+                ),
+            };
+            return name =>
+            {
+                if (!instanciasMqtt.TryGetValue(name, out var service))
+                    throw new ArgumentException(
+                        $"Não foi encontrada nenhuma Instancia registrada com esse nome"
+                    );
+
+                return service;
+            };
         });
-        services.AddSingleton<IMqttCliente, MqttCliente>();
+
         services.AddSingleton<Prontidao>();
         services.AddSingleton<GerenciadorToken>();
 

@@ -6,7 +6,6 @@ using Newtonsoft.Json.Serialization;
 using WorkerService.Configurations;
 using WorkerService.Features.Shared.Response;
 using WorkerService.Features.Sincronizacao.Automacao;
-using WorkerService.Infrastructure.Data;
 
 namespace WorkerService.Infrastructure.Http;
 
@@ -15,19 +14,16 @@ public sealed class AutomacaoApi : IAutomacaoApi
     private readonly HttpClient _httpClient;
     private readonly ApiConfiguracao _apiConfiguracao;
     private readonly JsonSerializerSettings _jsonSettings;
-    private readonly WorkerServiceContext _context;
     private readonly ILogger<AutomacaoApi> _logger;
 
     public AutomacaoApi(
         HttpClient httpClient,
         IOptions<ApiConfiguracao> apiConfiguracao,
-        WorkerServiceContext context,
         ILogger<AutomacaoApi> logger
     )
     {
         _httpClient = httpClient;
         _apiConfiguracao = apiConfiguracao.Value;
-        _context = context;
         _logger = logger;
 
         _httpClient.BaseAddress = new Uri(_apiConfiguracao.BaseUrl);
@@ -48,19 +44,32 @@ public sealed class AutomacaoApi : IAutomacaoApi
         CancellationToken cancellationToken = default
     )
     {
-        var response = await _httpClient.GetAsync(
-            $"/automacao/v1/paineis?contaId={contaId}&categoria=todos&status=todos",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError("Erro ao obter painéis: {StatusCode}", response.StatusCode);
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis?contaId={contaId}&categoria=todos&status=todos",
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Erro ao obter painéis: {StatusCode}", response.StatusCode);
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<List<Painel>>(json, _jsonSettings);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter painéis");
             return null;
         }
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<List<Painel>>(json, _jsonSettings);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter painéis");
+            return null;
+        }
     }
 
     public async Task<List<Dispositivo>?> ObterDispositivosPorPainelAsync(
@@ -68,19 +77,32 @@ public sealed class AutomacaoApi : IAutomacaoApi
         CancellationToken cancellationToken = default
     )
     {
-        var response = await _httpClient.GetAsync(
-            $"/automacao/v1/paineis/{painelId}/dispositivos",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError("Erro ao obter dispositivos: {StatusCode}", response.StatusCode);
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis/{painelId}/dispositivos",
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Erro ao obter dispositivos: {StatusCode}", response.StatusCode);
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<List<Dispositivo>>(json, _jsonSettings);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter Dispositivos");
             return null;
         }
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<List<Dispositivo>>(json, _jsonSettings);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter Dispositivos");
+            return null;
+        }
     }
 
     // /// Nao Precisa
@@ -110,22 +132,35 @@ public sealed class AutomacaoApi : IAutomacaoApi
         CancellationToken cancellationToken = default
     )
     {
-        var response = await _httpClient.GetAsync(
-            $"/automacao/v1/paineis/{painelId}/controladores/{controladorId}/portas?status=todas",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError(
-                "Erro ao obter portas por Controlador: {StatusCode}",
-                response.StatusCode
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis/{painelId}/controladores/{controladorId}/portas?status=todas",
+                cancellationToken
             );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "Erro ao obter portas por Controlador: {StatusCode}",
+                    response.StatusCode
+                );
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<List<Porta>>(json, _jsonSettings);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter Portas por Controlador");
             return null;
         }
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<List<Porta>>(json, _jsonSettings);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter Portas por Controlador");
+            return null;
+        }
     }
 
     public async Task<List<Porta>?> ObterPortasPorModuloAsync(
@@ -134,19 +169,34 @@ public sealed class AutomacaoApi : IAutomacaoApi
         CancellationToken cancellationToken
     )
     {
-        var response = await _httpClient.GetAsync(
-            $"/automacao/v1/paineis/{painelId}/modulos/{moduloId}/portas?status=todas",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError("Erro ao obter portas por Modulo: {StatusCode}", response.StatusCode);
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis/{painelId}/modulos/{moduloId}/portas?status=todas",
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "Erro ao obter portas por Modulo: {StatusCode}",
+                    response.StatusCode
+                );
+                return null;
+            }
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<List<Porta>>(json, _jsonSettings);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter Portas por Modulo");
             return null;
         }
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<List<Porta>>(json, _jsonSettings);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter Portas por Modulo");
+            return null;
+        }
     }
 
     public async Task<List<Interface>?> ObterInterfacesPorControladorAsync(
@@ -155,22 +205,35 @@ public sealed class AutomacaoApi : IAutomacaoApi
         CancellationToken cancellationToken = default
     )
     {
-        var response = await _httpClient.GetAsync(
-            $"/automacao/v1/paineis/{painelId}/controladores/{controladorId}/interfaces?categoria=todas&status=todas",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError(
-                "Erro ao obter Interfaces por Controlador: {StatusCode}",
-                response.StatusCode
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis/{painelId}/controladores/{controladorId}/interfaces?categoria=todas&status=todas",
+                cancellationToken
             );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "Erro ao obter Interfaces por Controlador: {StatusCode}",
+                    response.StatusCode
+                );
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<List<Interface>>(json, _jsonSettings);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter Interfaces por Controlador");
             return null;
         }
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<List<Interface>>(json, _jsonSettings);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter Interfaces por Controlador");
+            return null;
+        }
     }
 
     public async Task<List<Interface>?> ObterInterfacesPorModuloAsync(
@@ -179,21 +242,34 @@ public sealed class AutomacaoApi : IAutomacaoApi
         CancellationToken cancellationToken
     )
     {
-        var response = await _httpClient.GetAsync(
-            $"/automacao/v1/paineis/{painelId}/modulos/{moduloId}/interfaces?categoria=todas&status=todas",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError(
-                "Erro ao obter Interfaces por Modulos: {StatusCode}",
-                response.StatusCode
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis/{painelId}/modulos/{moduloId}/interfaces?categoria=todas&status=todas",
+                cancellationToken
             );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "Erro ao obter Interfaces por Modulos: {StatusCode}",
+                    response.StatusCode
+                );
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonConvert.DeserializeObject<List<Interface>>(json, _jsonSettings);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter Interfaces por Modulo");
             return null;
         }
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonConvert.DeserializeObject<List<Interface>>(json, _jsonSettings);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter Interfaces por Modulo");
+            return null;
+        }
     }
 }

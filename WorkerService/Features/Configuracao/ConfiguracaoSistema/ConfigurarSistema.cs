@@ -3,7 +3,10 @@ using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
 
 namespace WorkerService.Features.Configuracao.ConfiguracaoSistema;
 
-public class ConfigurarSistema(GerenciadorCredenciais gerenciadorCredenciais)
+public class ConfigurarSistema(
+    GerenciadorCredenciais gerenciadorCredenciais,
+    ILogger<ConfigurarSistema> logger
+)
 {
     public async Task<bool> Executar(
         Guid contaId,
@@ -27,8 +30,10 @@ public class ConfigurarSistema(GerenciadorCredenciais gerenciadorCredenciais)
         );
         if (!contaIdSalva || !integracaoSalva || !topicoConfiguracaoSalvo)
         {
+            logger.LogError("Erro ao configurar sistema");
             return false;
         }
+        logger.LogInformation("Configurações obtidas com sucesso");
         return true;
     }
 }

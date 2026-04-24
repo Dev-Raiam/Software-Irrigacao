@@ -13,7 +13,7 @@ Log.Logger = new LoggerConfiguration()
     //.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("System.Net.Http", Serilog.Events.LogEventLevel.Warning)
-    //.WriteTo.Console()
+    .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
     .CreateLogger();
 

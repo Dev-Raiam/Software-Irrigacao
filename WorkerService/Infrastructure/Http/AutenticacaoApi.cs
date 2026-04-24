@@ -47,22 +47,38 @@ public sealed class AutenticacaoApi : IAutenticacaoApi
             "application/json"
         );
 
-        var response = await _httpClient.PostAsync(
-            "autenticacao/v1/autenticar-cliente",
-            content,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError("Erro ao autenticar: {StatusCode}", response.StatusCode);
+            var response = await _httpClient.PostAsync(
+                "autenticacao/v1/autenticar-cliente",
+                content,
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Erro ao autenticar: {StatusCode}", response.StatusCode);
+            }
+            var tokenResponse = await response.Content.ReadFromJsonAsync<Token>(cancellationToken);
+
+            if (tokenResponse is not null)
+                tokenResponse = tokenResponse with
+                {
+                    Expira = tokenResponse.Expira.AddSeconds(-15),
+                };
+
+            return tokenResponse;
         }
-        var tokenResponse = await response.Content.ReadFromJsonAsync<Token>(cancellationToken);
-
-        if (tokenResponse is not null)
-            tokenResponse = tokenResponse with { Expira = tokenResponse.Expira.AddSeconds(-15) };
-
-        return tokenResponse;
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao autenticar");
+            return null;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao autenticar");
+            return null;
+        }
     }
 
     // public async Task<TokenResponse> RefreshTokenAsync(

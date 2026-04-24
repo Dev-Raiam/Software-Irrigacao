@@ -1,15 +1,18 @@
 using WorkerService.Configurations;
 using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
+using WorkerService.Features.Shared.Abstractions;
 
 namespace WorkerService.Features.Prontidao;
 
 public class Prontidao(
     IntegracaoConfiguracao _integracaoConfiguracao,
     ContaConfiguracao _contaConfiguracao,
-    IServiceProvider _serviceProvider
+    IServiceProvider _serviceProvider,
+    Func<string, IMqttCliente> _factoryMqttClient
 )
 {
     private readonly TaskCompletionSource _pronto = new("Task-Prontidão");
+    private readonly IMqttCliente _mqttCliente = _factoryMqttClient(InstanciasMqtt.Nuvem);
 
     public async Task<bool> PrepararAplicacaoAsync(CancellationToken cancellationToken)
     {
@@ -27,7 +30,14 @@ public class Prontidao(
 
         if (!_integracaoConfiguracao.Invalida && !_contaConfiguracao.Invalida)
         {
-            MarcarPronto();
+            if (_mqttCliente.Conectado)
+            {
+                await _mqttCliente.Publicar(
+                    "prontidao",
+                    "Aplicacao Liberada para Uso",
+                    cancellationToken
+                );
+            }
             return true;
         }
         return false;
