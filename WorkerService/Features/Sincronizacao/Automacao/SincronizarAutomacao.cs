@@ -1,67 +1,39 @@
-using Microsoft.EntityFrameworkCore;
+using Toolbox.Core.Mediator;
+using WorkerService.Configurations;
 using WorkerService.Features.Shared.Abstractions;
-using WorkerService.Infrastructure.Data;
+using WorkerService.Infrastructure.Mqtt;
 
 namespace WorkerService.Features.Sincronizacao.Automacao;
 
 public class SincronizarAutomacao(
-    SincronizarPainel _paineis,
-    SincronizarDispositivos _dispositivos,
-    SincronizarPortas _portas,
-    SincronizarInterfaces _interfaces,
-    WorkerServiceContext _context,
-    ILogger<SincronizarAutomacao> _logger
+    ILogger<SincronizarAutomacao> _logger,
+    MqttClienteRemoto _mqttClienteRemoto,
+    IMediator _mediator
 )
 {
-    public async Task<bool> Executar(CancellationToken cancellationToken)
+    public async Task Executar(CancellationToken cancellationToken)
     {
-        var painelIds = await _paineis.ExecutarSincronizacao(cancellationToken);
-        if (painelIds.Count == 0)
-            return false;
-
-        var sucessoDispositivos = await _dispositivos.ExecutarSincronizacao(
-            painelIds,
+        await _mediator.Execute(
+            new SincronizarPaineisCommand(),
+            cancellationToken: cancellationToken
+        );
+        await _mediator.Execute(
+            new SincronizarDispositivosCommand(),
+            cancellationToken: cancellationToken
+        );
+        await _mediator.Execute(
+            new SincronizarPortasCommand(),
+            cancellationToken: cancellationToken
+        );
+        await _mediator.Execute(
+            new SincronizarInterfacesCommand(),
+            cancellationToken: cancellationToken
+        );
+        await _mqttClienteRemoto.Publicar(
+            "topico-request",
+            new { acionar = true },
             cancellationToken
         );
-
-        var modulos = await _context.Modulos.AsNoTracking().ToListAsync(cancellationToken);
-        var controladores = modulos.Where(m => m.Controlador).ToList();
-        var modulosSemControlador = modulos.Where(m => !m.Controlador).ToList();
-
-        var sucessoPortasControlador = await _portas.ExecutarSincronizacaoControlador(
-            controladores,
-            cancellationToken
-        );
-
-        var sucessoPortasModulo = await _portas.ExecutarSincronizacaoModulo(
-            modulosSemControlador,
-            cancellationToken
-        );
-
-        var sucessoInterfacesControlador = await _interfaces.ExecutarSincronizacaoControlador(
-            controladores,
-            cancellationToken
-        );
-
-        var sucessoInterfacesModulo = await _interfaces.ExecutarSincronizacaoModulo(
-            modulosSemControlador,
-            cancellationToken
-        );
-        if (
-            !sucessoDispositivos
-            || !sucessoPortasControlador
-            || !sucessoPortasModulo
-            || !sucessoInterfacesControlador
-            || !sucessoInterfacesModulo
-        )
-        {
-            _logger.LogWarning(
-                "Sincronização dos dados de Automação não foi executada com sucesso"
-            );
-            return false;
-        }
-
         _logger.LogInformation("Sincronização dos dados de Automação executada com sucesso");
-        return true;
     }
 }

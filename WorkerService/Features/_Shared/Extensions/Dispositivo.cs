@@ -5,7 +5,7 @@ namespace WorkerService.Features.Shared.Extensions;
 public static class Dispositivo
 {
     public static Domain.Entities.Dispositivo ToEntity(
-        this Features.Shared.Response.Dispositivo response,
+        this Response.Dispositivo response,
         Guid painelId
     )
     {

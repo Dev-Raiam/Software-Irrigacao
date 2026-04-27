@@ -1,17 +1,44 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Toolbox.Core.Api.Data;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 using WorkerService.Features.Shared.Extensions;
 using WorkerService.Infrastructure.Data;
 
 namespace WorkerService.Features.Sincronizacao.Automacao;
 
-public class SincronizarInterfaces(IAutomacaoApi _automacaoApi, WorkerServiceContext _context)
+public class SincronizarInterfacesCommand : Command { }
+
+public class SincronizarInterfacesHandler
+    : CommandHandler,
+        ICommandHandler<SincronizarInterfacesCommand>
 {
-    public async Task<bool> ExecutarSincronizacaoControlador(
-        List<Domain.Entities.Modulo> controladores,
+    private readonly IAutomacaoApi _automacaoApi;
+    private readonly WorkerServiceContext _context;
+    private readonly ILogger<SincronizarInterfacesHandler> _logger;
+
+    public SincronizarInterfacesHandler(
+        IAutomacaoApi automacaoApi,
+        IUnitOfWork<WorkerServiceContext> uow,
+        ILogger<SincronizarInterfacesHandler> logger
+    )
+        : base(uow)
+    {
+        _automacaoApi = automacaoApi;
+        _context = uow.Context;
+        _logger = logger;
+    }
+
+    public async Task<ResponseResult> Handle(
+        SincronizarInterfacesCommand request,
         CancellationToken cancellationToken
     )
     {
-        var sucesso = false;
+        var modulosDinamicos = await _context.Modulos.AsNoTracking().ToListAsync(cancellationToken);
+        var controladores = modulosDinamicos.Where(m => m.Controlador).ToList();
+        var modulos = modulosDinamicos.Where(m => !m.Controlador).ToList();
+
         foreach (var controlador in controladores)
         {
             var interfaceResponses = await _automacaoApi.ObterInterfacesPorControladorAsync(
@@ -53,19 +80,9 @@ public class SincronizarInterfaces(IAutomacaoApi _automacaoApi, WorkerServiceCon
                         );
                     }
                 }
-                await _context.SaveChangesAsync(cancellationToken);
-                sucesso = true;
             }
         }
-        return sucesso;
-    }
 
-    public async Task<bool> ExecutarSincronizacaoModulo(
-        List<Domain.Entities.Modulo> modulos,
-        CancellationToken cancellationToken
-    )
-    {
-        var sucesso = false;
         foreach (var modulo in modulos)
         {
             var interfaceResponses = await _automacaoApi.ObterInterfacesPorModuloAsync(
@@ -107,10 +124,21 @@ public class SincronizarInterfaces(IAutomacaoApi _automacaoApi, WorkerServiceCon
                         );
                     }
                 }
-                await _context.SaveChangesAsync(cancellationToken);
-                sucesso = true;
             }
         }
-        return sucesso;
+        try
+        {
+            var salvar = await _context.SaveChangesAsync(cancellationToken);
+            if (salvar > 0)
+            {
+                _logger.LogInformation("Interfaces sincronizadas");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao salvar interfaces");
+        }
+
+        return Ok<ResponseResult>();
     }
 }

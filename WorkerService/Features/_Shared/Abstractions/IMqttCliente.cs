@@ -25,7 +25,6 @@ namespace WorkerService.Features.Shared.Abstractions
         );
         Task Publicar(string topico, object mensagem, CancellationToken cancellationToken);
         void ExecutarCallbackMensageria(CancellationToken cancellationToken);
-        Task Reconectar(CancellationToken cancellationToken);
         void ExecutarCallbackDesconectado(CancellationToken cancellationToken);
         Task Desconectar(CancellationToken cancellationToken);
     }

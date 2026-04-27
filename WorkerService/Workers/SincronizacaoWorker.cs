@@ -22,7 +22,7 @@ public class SincronizacaoWorker(
                     scope.ServiceProvider.GetRequiredService<SincronizarAutomacao>();
 
                 await sincronizarAutomacao.Executar(stoppingToken);
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
             catch (OperationCanceledException)
             {

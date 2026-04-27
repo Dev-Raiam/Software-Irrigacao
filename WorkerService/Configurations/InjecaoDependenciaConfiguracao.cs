@@ -1,10 +1,11 @@
 using MQTTnet;
-using WorkerService.Features.Comandos;
+using Toolbox.Core.Api.Configuration;
 using WorkerService.Features.Configuracao.ConfiguracaoSistema;
 using WorkerService.Features.Configuracao.Credenciais.Interfaces;
 using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
 using WorkerService.Features.Infrastructure.GerenciamentoToken;
 using WorkerService.Features.Mensageria;
+using WorkerService.Features.Mensageria.Remota;
 using WorkerService.Features.Prontidao;
 using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Features.Sincronizacao.Automacao;
@@ -23,7 +24,8 @@ public static class InjecaoDependenciaConfiguracao
     )
     {
         services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguration"));
-
+        services.AddHttpContextAccessor();
+        services.AddMediator(typeof(Program).Assembly);
         services.AddDataProtection();
         // //Configura o Serviço No Windows
         // services.AddWindowsService(options =>
@@ -50,51 +52,32 @@ public static class InjecaoDependenciaConfiguracao
         services.AddSingleton<TopicoConfiguracao>();
         services.AddSingleton<ContaConfiguracao>();
 
-        //Factory Delegate para resolver múltiplas instâncias por chave
-        services.AddSingleton<Func<string, IMqttCliente>>(provider =>
-        {
-            var instanciasMqtt = new Dictionary<string, IMqttCliente>()
-            {
-                [InstanciasMqtt.Nuvem] = new MqttCliente(
-                    InstanciasMqtt.Nuvem,
-                    new MqttClientFactory().CreateMqttClient(),
-                    provider.GetRequiredService<ProcessadorMensageria>(),
-                    provider.GetRequiredService<ILogger<MqttCliente>>()
-                ),
-                [InstanciasMqtt.Local] = new MqttCliente(
-                    InstanciasMqtt.Local,
-                    new MqttClientFactory().CreateMqttClient(),
-                    provider.GetRequiredService<ProcessadorMensageria>(),
-                    provider.GetRequiredService<ILogger<MqttCliente>>()
-                ),
-            };
-            return name =>
-            {
-                if (!instanciasMqtt.TryGetValue(name, out var service))
-                    throw new ArgumentException(
-                        $"Não foi encontrada nenhuma Instancia registrada com esse nome"
-                    );
+        // Registrar as instâncias concretas
+        services.AddSingleton<MqttClienteRemoto>(provider => new MqttClienteRemoto(
+            "Remoto",
+            new MqttClientFactory().CreateMqttClient(),
+            provider.GetRequiredService<MqttClienteLocal>(),
+            provider.GetRequiredService<ProcessarMensagemRemota>(),
+            provider.GetRequiredService<ILogger<MqttCliente>>()
+        ));
 
-                return service;
-            };
-        });
+        services.AddSingleton<MqttClienteLocal>(provider => new MqttClienteLocal(
+            "Local",
+            new MqttClientFactory().CreateMqttClient(),
+            provider.GetRequiredService<ProcessarMensagemLocal>(),
+            provider.GetRequiredService<ILogger<MqttCliente>>()
+        ));
 
         services.AddSingleton<Prontidao>();
         services.AddSingleton<GerenciadorToken>();
 
         services.AddScoped<SincronizarAutomacao>();
-        services.AddScoped<ProcessarComando>();
         services.AddScoped<GerenciadorCredenciais>();
         services.AddScoped<ICriptografia, Criptografia>();
-
-        services.AddScoped<SincronizarAutomacao>();
-        services.AddScoped<SincronizarPainel>();
-        services.AddScoped<SincronizarDispositivos>();
-        services.AddScoped<SincronizarPortas>();
-        services.AddScoped<SincronizarInterfaces>();
         services.AddScoped<ConfigurarSistema>();
 
         services.AddTransient<ManipuladorTokenAcesso>();
-        services.AddTransient<ProcessadorMensageria>();
+        services.AddTransient<ProcessarMensagemRemota>();
+        services.AddTransient<ProcessarMensagemLocal>();
     }
 }

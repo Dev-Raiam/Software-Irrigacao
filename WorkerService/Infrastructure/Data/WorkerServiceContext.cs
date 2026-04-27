@@ -1,9 +1,31 @@
 using Microsoft.EntityFrameworkCore;
+using Toolbox.Core.Api.Data;
+using Toolbox.Core.Models;
 using WorkerService.Domain.Entities;
 
 namespace WorkerService.Infrastructure.Data;
 
-public class WorkerServiceContext : DbContext
+public class User : IUser
+{
+    public string? Name { get; set; }
+    public string? Email { get; set; }
+
+    public long? Id => null;
+
+    public string? Role => null;
+
+    public long? TenantId => null;
+
+    public Guid? ClientId => null;
+
+    public Guid? FeatureId => null;
+
+    public Guid? CollaboratorId => null;
+
+    public bool Authenticated => true;
+}
+
+public class WorkerServiceContext : DbContext, IDataContext
 {
     public DbSet<Painel> Paineis { get; set; } = null!;
     public DbSet<Modulo> Modulos { get; set; } = null!;
@@ -12,8 +34,13 @@ public class WorkerServiceContext : DbContext
     public DbSet<Interface> Interfaces { get; set; } = null!;
     public DbSet<ConfiguracaoSistema> ConfiguracoesSistema { get; set; } = null!;
 
+    public IUser User { get; }
+
     public WorkerServiceContext(DbContextOptions<WorkerServiceContext> options)
-        : base(options) { }
+        : base(options)
+    {
+        User = new User();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

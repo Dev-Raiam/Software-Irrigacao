@@ -1,32 +1,47 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using MQTTnet;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using WorkerService.Features.Mensageria;
 using WorkerService.Features.Shared.Abstractions;
+using WorkerService.Features.Shared.Response;
 
 namespace WorkerService.Infrastructure.Mqtt
 {
-    public sealed class MqttCliente(
-        string nomeInstancia,
-        IMqttClient _mqttCliente,
-        ProcessadorMensageria _servicoMensageria,
-        ILogger<MqttCliente> _logger
-    ) : IMqttCliente
+    public abstract class MqttCliente() : IMqttCliente
     {
-        private bool _reconectando = false;
-        private bool _conectando = false;
-        private bool _callbacksRegistrados = false;
+        protected readonly IMqttClient _mqttCliente = null!;
+        protected readonly ILogger<MqttCliente> _logger = null!;
+
+        protected readonly string _nomeInstancia = null!;
+        protected bool _reconectando = false;
+        protected bool _conectando = false;
+
+        protected List<Dictionary<Guid, DateTime>> _comandosPendentes = [];
+        protected readonly Guid _comandoId = Guid.NewGuid();
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
             IndentSize = 2,
             WriteIndented = true,
         };
 
-        bool IMqttCliente.Conectado => _mqttCliente.IsConnected;
+        public bool Conectado => _mqttCliente.IsConnected;
+
+        protected MqttCliente(
+            string nomeInstancia,
+            IMqttClient mqttCliente,
+            ILogger<MqttCliente> logger
+        )
+            : this()
+        {
+            _mqttCliente = mqttCliente;
+            _logger = logger;
+            _nomeInstancia = nomeInstancia;
+        }
 
         public async Task<bool> Conectar(
             string servidor,
@@ -37,7 +52,7 @@ namespace WorkerService.Infrastructure.Mqtt
             CancellationToken cancellationToken = default
         )
         {
-            if (_mqttCliente.IsConnected || _conectando || _reconectando)
+            if (_mqttCliente.IsConnected || _conectando)
                 return _mqttCliente.IsConnected;
 
             _conectando = true;
@@ -58,7 +73,7 @@ namespace WorkerService.Infrastructure.Mqtt
                 }
                 else
                 {
-                    _logger.LogInformation($"Conectado ao broker MQTT {nomeInstancia}");
+                    _logger.LogInformation($"Conectado ao broker MQTT {_nomeInstancia}");
                 }
             }
             catch (MqttConnectingFailedException ex)
@@ -99,10 +114,17 @@ namespace WorkerService.Infrastructure.Mqtt
         {
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topico)
+                .WithResponseTopic("topico-resposta")
+                .WithCorrelationData(Guid.NewGuid().ToByteArray())
                 .WithPayload(JsonSerializer.Serialize(mensagem, _jsonOptions))
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 // .WithRetainFlag()
                 .Build();
+
+            _comandosPendentes.Add(
+                new Dictionary<Guid, DateTime> { { _comandoId, DateTime.UtcNow } }
+            );
+            Console.WriteLine($"Lista de Comandos: {_comandosPendentes.Count}");
             await _mqttCliente.PublishAsync(message, cancellationToken);
         }
 
@@ -124,82 +146,48 @@ namespace WorkerService.Infrastructure.Mqtt
             await _mqttCliente.PublishAsync(message, cancellationToken);
         }
 
-        public void ExecutarCallbackMensageria(CancellationToken cancellationToken)
-        {
-            if (_callbacksRegistrados)
-                return;
-
-            _callbacksRegistrados = true;
-            _mqttCliente.ApplicationMessageReceivedAsync += async e =>
-            {
-                try
-                {
-                    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                    await _servicoMensageria.Processar(payload, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError("Erro ao processar mensagem MQTT: {Message}", ex.Message);
-                }
-            };
-        }
+        public abstract void ExecutarCallbackMensageria(CancellationToken cancellationToken);
 
         public void ExecutarCallbackDesconectado(CancellationToken cancellationToken)
         {
             _mqttCliente.DisconnectedAsync += async e =>
             {
-                // if (!_reconectando)
-                // {
-                //     _logger.LogWarning($"Cliente MQTT desconectado {nomeInstancia}");
-                //     if (!cancellationToken.IsCancellationRequested)
-                //         await Reconectar(cancellationToken);
-                // }
-                if (e.Reason == MqttClientDisconnectReason.NormalDisconnection)
+                if (_reconectando)
                     return;
+                _reconectando = true;
 
-                Console.WriteLine("Tentando reconectar em 5 segundos...");
-                await Task.Delay(TimeSpan.FromSeconds(5));
-
-                try
+                while (!_mqttCliente.IsConnected && !cancellationToken.IsCancellationRequested)
                 {
-                    await _mqttCliente.ReconnectAsync(); // ← usa as opções da última conexão
+                    _logger.LogInformation(
+                        "Tentando reconectar {instanciasMqtt} em 5 segundos...",
+                        _nomeInstancia
+                    );
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+
+                    try
+                    {
+                        await _mqttCliente.ReconnectAsync();
+                        _logger.LogInformation(
+                            "Reconectado com sucesso! {instanciasMqtt}",
+                            _nomeInstancia
+                        );
+                        break;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            "Falha ao reconectar {instanciasMqtt}: {ex.Message}",
+                            _nomeInstancia,
+                            ex.Message
+                        );
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Falha ao reconectar: {ex.Message}");
-                }
-            };
-        }
-
-        public async Task Reconectar(CancellationToken cancellationToken)
-        {
-            if (_mqttCliente.IsConnected)
-                return;
-
-            _reconectando = true;
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
-                if (cancellationToken.IsCancellationRequested)
-                    return;
-
-                await _mqttCliente.ReconnectAsync(cancellationToken);
-                if (_mqttCliente.IsConnected)
-                    _logger.LogInformation($"Cliente MQTT reconectado {nomeInstancia}");
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    "Erro ao reconectar MQTT {nomeInstancia}: {Message}",
-                    nomeInstancia,
-                    ex.Message
-                );
-            }
-            finally
-            {
                 _reconectando = false;
-            }
+            };
         }
 
         public async Task Desconectar(CancellationToken cancellationToken)

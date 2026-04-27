@@ -1,17 +1,42 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Toolbox.Core.Api.Data;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 using WorkerService.Features.Shared.Extensions;
 using WorkerService.Infrastructure.Data;
 
 namespace WorkerService.Features.Sincronizacao.Automacao;
 
-public class SincronizarPortas(IAutomacaoApi _automacaoApi, WorkerServiceContext _context)
+public class SincronizarPortasCommand : Command { }
+
+public class SincronizarPortasHandler : CommandHandler, ICommandHandler<SincronizarPortasCommand>
 {
-    public async Task<bool> ExecutarSincronizacaoControlador(
-        List<Domain.Entities.Modulo> controladores,
+    private readonly IAutomacaoApi _automacaoApi;
+    private readonly WorkerServiceContext _context;
+    private readonly ILogger<SincronizarPortasHandler> _logger;
+
+    public SincronizarPortasHandler(
+        IAutomacaoApi automacaoApi,
+        IUnitOfWork<WorkerServiceContext> uow,
+        ILogger<SincronizarPortasHandler> logger
+    )
+        : base(uow)
+    {
+        _automacaoApi = automacaoApi;
+        _context = uow.Context;
+        _logger = logger;
+    }
+
+    public async Task<ResponseResult> Handle(
+        SincronizarPortasCommand request,
         CancellationToken cancellationToken
     )
     {
-        var sucesso = false;
+        var modulos = await _context.Modulos.AsNoTracking().ToListAsync(cancellationToken);
+        var controladores = modulos.Where(m => m.Controlador).ToList();
+        var modulosSemControlador = modulos.Where(m => !m.Controlador).ToList();
+
         foreach (var controlador in controladores)
         {
             var portasResponse = await _automacaoApi.ObterPortasPorControladorAsync(
@@ -48,20 +73,10 @@ public class SincronizarPortas(IAutomacaoApi _automacaoApi, WorkerServiceContext
                         );
                     }
                 }
-                await _context.SaveChangesAsync(cancellationToken);
-                sucesso = true;
             }
         }
-        return sucesso;
-    }
 
-    public async Task<bool> ExecutarSincronizacaoModulo(
-        List<Domain.Entities.Modulo> modulos,
-        CancellationToken cancellationToken
-    )
-    {
-        var sucesso = false;
-        foreach (var modulo in modulos)
+        foreach (var modulo in modulosSemControlador)
         {
             var portasResponse = await _automacaoApi.ObterPortasPorModuloAsync(
                 modulo.PainelId,
@@ -97,10 +112,21 @@ public class SincronizarPortas(IAutomacaoApi _automacaoApi, WorkerServiceContext
                         );
                     }
                 }
-                await _context.SaveChangesAsync(cancellationToken);
-                sucesso = true;
             }
         }
-        return sucesso;
+        try
+        {
+            var salvar = await _context.SaveChangesAsync(cancellationToken);
+            if (salvar > 0)
+            {
+                _logger.LogInformation("Portas sincronizadas");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao salvar portas");
+        }
+
+        return Ok<ResponseResult>();
     }
 }
