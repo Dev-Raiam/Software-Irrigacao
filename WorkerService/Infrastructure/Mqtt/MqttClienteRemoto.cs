@@ -1,27 +1,28 @@
 using System.Text;
 using MQTTnet;
-using WorkerService.Features.Mensageria;
-using WorkerService.Features.Mensageria.Remota;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 
 namespace WorkerService.Infrastructure.Mqtt
 {
-    public class MqttClienteRemoto : MqttCliente
+    public class MqttClienteRemoto(
+        string nomeInstancia,
+        IMqttClient mqttCliente,
+        IServiceProvider _serviceProvider,
+        ILogger<MqttCliente> logger
+    ) : MqttCliente(nomeInstancia, mqttCliente, logger)
     {
-        private readonly MqttClienteLocal _mqttClienteLocal;
-        private readonly ProcessarMensagemRemota _processarMensagemRemota;
-
-        public MqttClienteRemoto(
-            string nomeInstancia,
-            IMqttClient mqttCliente,
-            MqttClienteLocal mqttClienteLocal,
-            ProcessarMensagemRemota processarMensagemRemota,
-            ILogger<MqttCliente> logger
-        )
-            : base(nomeInstancia, mqttCliente, logger)
+        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
         {
-            _mqttClienteLocal = mqttClienteLocal;
-            _processarMensagemRemota = processarMensagemRemota;
-        }
+            Formatting = Formatting.None,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.Objects,
+        };
 
         public override void ExecutarCallbackMensageria(CancellationToken cancellationToken)
         {
@@ -29,9 +30,25 @@ namespace WorkerService.Infrastructure.Mqtt
             {
                 try
                 {
-                    /// Esse cara é quem vai escutar os comandos enviados Remotos da api
+                    using var scope = _serviceProvider.CreateScope();
+                    var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                    _processarMensagemRemota.Processar(payload, cancellationToken);
+                    var mensagem = JsonConvert.DeserializeObject(payload, _settings)!;
+                    if (mensagem is Command command)
+                    {
+                        Console.WriteLine(payload);
+                        Console.WriteLine(command.GetType().FullName);
+                        await mediator.Execute(
+                            (dynamic)command,
+                            cancellationToken: cancellationToken
+                        );
+                    }
+                    if (mensagem is Event @event)
+                    {
+                        Console.WriteLine($"Event: {@event.GetType().Name}");
+                        await mediator.Publish(@event, cancellationToken);
+                    }
                 }
                 catch (Exception ex)
                 {

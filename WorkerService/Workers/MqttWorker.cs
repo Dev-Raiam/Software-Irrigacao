@@ -32,7 +32,7 @@ public class MqttWorker(
                 if (ConexaoIniciada)
                     break;
 
-                if (DispositivosIds.Count == 0)
+                if (DispositivosIds.Count > 0)
                 {
                     await Task.Delay(5000, stoppingToken);
                     DispositivosIds = await _context
@@ -99,13 +99,14 @@ public class MqttWorker(
                 if (_mqttClienteLocal.Conectado && !ConexaoLocalAtiva)
                 {
                     ConexaoLocalAtiva = true;
-                    foreach (var dispositivoId in DispositivosIds)
-                    {
-                        await _mqttClienteLocal.AssinarTopico(
-                            $"resposta/{dispositivoId}/api",
-                            stoppingToken
-                        );
-                    }
+                    await _mqttClienteRemoto.AssinarTopico("rapido", stoppingToken);
+                    // foreach (var dispositivoId in DispositivosIds)
+                    // {
+                    //     await _mqttClienteLocal.AssinarTopico(
+                    //         $"resposta/{dispositivoId}/api",
+                    //         stoppingToken
+                    //     );
+                    // }
                     _mqttClienteLocal.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackDesconectado(stoppingToken);
                 }

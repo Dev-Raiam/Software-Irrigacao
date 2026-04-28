@@ -1,14 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Channels;
+﻿using System.Text.Json;
 using MQTTnet;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
-using WorkerService.Features.Mensageria;
 using WorkerService.Features.Shared.Abstractions;
-using WorkerService.Features.Shared.Response;
 
 namespace WorkerService.Infrastructure.Mqtt
 {
@@ -17,13 +12,13 @@ namespace WorkerService.Infrastructure.Mqtt
         protected readonly IMqttClient _mqttCliente = null!;
         protected readonly ILogger<MqttCliente> _logger = null!;
 
-        protected readonly string _nomeInstancia = null!;
+        private readonly string _nomeInstancia = null!;
         protected bool _reconectando = false;
         protected bool _conectando = false;
 
         protected List<Dictionary<Guid, DateTime>> _comandosPendentes = [];
         protected readonly Guid _comandoId = Guid.NewGuid();
-        private readonly JsonSerializerOptions _jsonOptions = new()
+        protected readonly JsonSerializerOptions _jsonOptions = new()
         {
             IndentSize = 2,
             WriteIndented = true,

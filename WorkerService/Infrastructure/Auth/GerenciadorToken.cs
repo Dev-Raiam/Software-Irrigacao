@@ -1,7 +1,7 @@
 using WorkerService.Configurations;
 using WorkerService.Features.Shared.Abstractions;
 
-namespace WorkerService.Features.Infrastructure.GerenciamentoToken;
+namespace WorkerService.Features.Infrastructure.Auth;
 
 public sealed class GerenciadorToken(
     ArmazenamentoToken _armazenamentoToken,

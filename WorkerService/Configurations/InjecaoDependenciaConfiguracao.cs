@@ -1,11 +1,11 @@
+using System.Reflection;
 using MQTTnet;
+using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
 using WorkerService.Features.Configuracao.ConfiguracaoSistema;
 using WorkerService.Features.Configuracao.Credenciais.Interfaces;
 using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
-using WorkerService.Features.Infrastructure.GerenciamentoToken;
-using WorkerService.Features.Mensageria;
-using WorkerService.Features.Mensageria.Remota;
+using WorkerService.Features.Infrastructure.Auth;
 using WorkerService.Features.Prontidao;
 using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Features.Sincronizacao.Automacao;
@@ -25,7 +25,10 @@ public static class InjecaoDependenciaConfiguracao
     {
         services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguration"));
         services.AddHttpContextAccessor();
-        services.AddMediator(typeof(Program).Assembly);
+        services.AddMediator(
+            Assembly.GetExecutingAssembly(),
+            typeof(AcionarBomba).GetTypeInfo().Assembly
+        );
         services.AddDataProtection();
         // //Configura o Serviço No Windows
         // services.AddWindowsService(options =>
@@ -56,15 +59,14 @@ public static class InjecaoDependenciaConfiguracao
         services.AddSingleton<MqttClienteRemoto>(provider => new MqttClienteRemoto(
             "Remoto",
             new MqttClientFactory().CreateMqttClient(),
-            provider.GetRequiredService<MqttClienteLocal>(),
-            provider.GetRequiredService<ProcessarMensagemRemota>(),
+            provider,
             provider.GetRequiredService<ILogger<MqttCliente>>()
         ));
 
         services.AddSingleton<MqttClienteLocal>(provider => new MqttClienteLocal(
             "Local",
             new MqttClientFactory().CreateMqttClient(),
-            provider.GetRequiredService<ProcessarMensagemLocal>(),
+            provider,
             provider.GetRequiredService<ILogger<MqttCliente>>()
         ));
 
@@ -77,7 +79,5 @@ public static class InjecaoDependenciaConfiguracao
         services.AddScoped<ConfigurarSistema>();
 
         services.AddTransient<ManipuladorTokenAcesso>();
-        services.AddTransient<ProcessarMensagemRemota>();
-        services.AddTransient<ProcessarMensagemLocal>();
     }
 }
