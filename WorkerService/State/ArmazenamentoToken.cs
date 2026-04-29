@@ -1,4 +1,4 @@
-namespace WorkerService.Features.Shared.Abstractions;
+namespace WorkerService.State;
 
 public sealed class ArmazenamentoToken
 {
@@ -6,3 +6,10 @@ public sealed class ArmazenamentoToken
 
     public void AdicionarToken(Token token) => TokenResponse = token;
 }
+
+public sealed record Token(
+    string TokenAcesso,
+    string TokenAtualizacao,
+    DateTime Emitido,
+    DateTime Expira
+);

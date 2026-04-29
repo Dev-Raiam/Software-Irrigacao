@@ -9,11 +9,6 @@ public interface IAutomacaoApi
         Guid painelId,
         CancellationToken cancellationToken
     );
-
-    // Task<List<ModuloResponse>?> ObterControladoresPorPainelAsync(
-    //     Guid painelId,
-    //     CancellationToken cancellationToken
-    // );
     Task<List<Porta>?> ObterPortasPorControladorAsync(
         Guid painelId,
         Guid controladorId,

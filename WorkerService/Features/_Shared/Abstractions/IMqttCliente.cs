@@ -8,7 +8,7 @@ namespace WorkerService.Features.Shared.Abstractions
     public interface IMqttCliente
     {
         bool Conectado { get; }
-        Task<bool> Conectar(
+        Task<bool> ConectarAsync(
             string servidor,
             int porta,
             string clienteId,
@@ -16,16 +16,15 @@ namespace WorkerService.Features.Shared.Abstractions
             string? senha,
             CancellationToken cancellationToken
         );
-        Task AssinarTopico(string topico, CancellationToken cancellationToken);
-        Task Publicar(
+        Task AssinarTopicoAsync(string topico, CancellationToken cancellationToken);
+        void ExecutarCallbackMensageria(CancellationToken cancellationToken);
+        void ExecutarCallbackDesconectado(CancellationToken cancellationToken);
+        Task PublicarAsync(
             string topico,
             string mensagem,
             CancellationToken cancellationToken,
             MqttApplicationMessageBuilder? messageBuilder = null
         );
-        Task Publicar(string topico, object mensagem, CancellationToken cancellationToken);
-        void ExecutarCallbackMensageria(CancellationToken cancellationToken);
-        void ExecutarCallbackDesconectado(CancellationToken cancellationToken);
-        Task Desconectar(CancellationToken cancellationToken);
+        Task DesconectarAsync(CancellationToken cancellationToken);
     }
 }

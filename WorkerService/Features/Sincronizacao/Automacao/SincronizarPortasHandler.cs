@@ -118,9 +118,7 @@ public class SincronizarPortasHandler : CommandHandler, ICommandHandler<Sincroni
         {
             var salvar = await _context.SaveChangesAsync(cancellationToken);
             if (salvar > 0)
-            {
                 _logger.LogInformation("Portas sincronizadas");
-            }
         }
         catch (Exception ex)
         {

@@ -2,12 +2,12 @@ using WorkerService.Configurations;
 using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
 using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Infrastructure.Mqtt;
+using WorkerService.State;
 
 namespace WorkerService.Features.Prontidao;
 
 public class Prontidao(
-    IntegracaoConfiguracao _integracaoConfiguracao,
-    ContaConfiguracao _contaConfiguracao,
+    CredenciaisAplicacao _credenciaisAplicacao,
     IServiceProvider _serviceProvider,
     MqttClienteRemoto _mqttClienteRemoto
 )
@@ -19,20 +19,20 @@ public class Prontidao(
         // if (_pronto.Task.IsCompleted)
         //     return true;
 
-        if (_integracaoConfiguracao.Invalida || _contaConfiguracao.Invalida)
+        if (_credenciaisAplicacao.Invalida)
         {
             using var scope = _serviceProvider.CreateScope();
             var armazenamento = scope.ServiceProvider.GetRequiredService<GerenciadorCredenciais>();
-            await armazenamento.ObterCredencialTopicoConfiguracao(cancellationToken);
+            await armazenamento.ObterPainelId(cancellationToken);
             await armazenamento.ObterCredencialIntegracao(cancellationToken);
             await armazenamento.ObterContaId(cancellationToken);
         }
 
-        if (!_integracaoConfiguracao.Invalida && !_contaConfiguracao.Invalida)
+        if (!_credenciaisAplicacao.Invalida)
         {
             if (_mqttClienteRemoto.Conectado)
             {
-                await _mqttClienteRemoto.Publicar(
+                await _mqttClienteRemoto.PublicarAsync(
                     "prontidao",
                     "Aplicacao Liberada para Uso",
                     cancellationToken

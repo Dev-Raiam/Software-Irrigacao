@@ -2,8 +2,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using WorkerService.Configurations;
-using WorkerService.Features.Infrastructure.Auth;
 using WorkerService.Features.Shared.Abstractions;
+using WorkerService.Infrastructure.Auth;
+using WorkerService.State;
 
 namespace WorkerService.Infrastructure.Http;
 
@@ -80,43 +81,4 @@ public sealed class AutenticacaoApi : IAutenticacaoApi
             return null;
         }
     }
-
-    // public async Task<TokenResponse> RefreshTokenAsync(
-    //     string tokenAcesso,
-    //     string tokenAtualizacao,
-    //     Guid contextoId,
-    //     CancellationToken cancellationToken
-    // )
-    // {
-    //     var body = new
-    //     {
-    //         TokenAcesso = tokenAcesso,
-    //         TokenAtualizacao = tokenAtualizacao,
-    //         ContextoId = contextoId,
-    //     };
-    //     var json = JsonSerializer.Serialize(body);
-
-    //     HttpContent content = new StringContent(
-    //         json,
-    //         System.Text.Encoding.UTF8,
-    //         "application/json"
-    //     );
-
-    //     var response = await _httpClient.PostAsync(
-    //         "autenticacao/v1/atualizar-token",
-    //         content,
-    //         cancellationToken
-    //     );
-
-    //     if (!response.IsSuccessStatusCode)
-    //     {
-    //         throw new HttpRequestException("Falha ao autenticar");
-    //     }
-
-    //     var token =
-    //         await response.Content.ReadFromJsonAsync<TokenResponse>(cancellationToken)
-    //         ?? throw new InvalidOperationException("Token não encontrado na resposta");
-
-    //     return token;
-    // }
 }

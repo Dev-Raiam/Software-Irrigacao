@@ -1,13 +1,13 @@
-using WorkerService.Configurations;
 using WorkerService.Features.Shared.Abstractions;
+using WorkerService.State;
 
-namespace WorkerService.Features.Infrastructure.Auth;
+namespace WorkerService.Infrastructure.Auth;
 
 public sealed class GerenciadorToken(
     ArmazenamentoToken _armazenamentoToken,
     IAutenticacaoApi _autenticacaoApi,
     ILogger<GerenciadorToken> _logger,
-    IntegracaoConfiguracao _integracaoConfig
+    CredenciaisAplicacao _credenciaisAplicacao
 )
 {
     public async Task<Token?> ObterTokenValido(CancellationToken cancellationToken)
@@ -18,9 +18,9 @@ public sealed class GerenciadorToken(
         )
         {
             var token = await _autenticacaoApi.Autenticar(
-                _integracaoConfig!.Chave!,
-                _integracaoConfig.Segredo!,
-                _integracaoConfig.ContextoId,
+                _credenciaisAplicacao!.IntegracaoChave!,
+                _credenciaisAplicacao.IntegracaoSegredo!,
+                _credenciaisAplicacao.IntegracaoContextoId,
                 cancellationToken
             );
             if (token != null)

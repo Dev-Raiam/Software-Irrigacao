@@ -12,6 +12,7 @@ public static class ChavesBanco
     public static class Padrao
     {
         public const string ContaId = "Padrao.ContaId";
+        public const string PainelId = "Padrao.PainelId";
         public const string TopicoConfiguracao = "Padrao.TopicoConfiguracao";
     }
 }

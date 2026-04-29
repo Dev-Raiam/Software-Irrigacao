@@ -2,8 +2,10 @@ using System.Text;
 using MQTTnet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Toolbox.Automacao.Irrigacao.Comandos;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using WorkerService.Features.Shared.Abstractions;
 
 namespace WorkerService.Infrastructure.Mqtt
 {
@@ -35,14 +37,30 @@ namespace WorkerService.Infrastructure.Mqtt
 
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                     var mensagem = JsonConvert.DeserializeObject(payload, _settings)!;
+                    // Console.WriteLine(
+                    //     $"Mensagem recebida Topico de Resposta: {e.ApplicationMessage.ResponseTopic}"
+                    // );
                     if (mensagem is Command command)
                     {
-                        Console.WriteLine(payload);
-                        Console.WriteLine(command.GetType().FullName);
-                        await mediator.Execute(
-                            (dynamic)command,
-                            cancellationToken: cancellationToken
-                        );
+                        //Console.WriteLine(payload);
+                        //Console.WriteLine(command.GetType().FullName);
+                        var result = (ResponseResult)
+                            await mediator.Execute(
+                                (dynamic)command,
+                                cancellationToken: cancellationToken
+                            );
+
+                        // var response = new MqttApplicationMessageBuilder()
+                        //     .WithTopic(e.ApplicationMessage.ResponseTopic)
+                        //     .WithPayload(
+                        //         Encoding.UTF8.GetBytes(
+                        //             JsonConvert.SerializeObject(result, _settings)
+                        //         )
+                        //     )
+                        //     .Build();
+
+                        // if (!string.IsNullOrEmpty(e.ApplicationMessage.ResponseTopic))
+                        //     await _mqttCliente.PublishAsync(response, cancellationToken);
                     }
                     if (mensagem is Event @event)
                     {

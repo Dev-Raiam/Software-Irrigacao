@@ -1,6 +1,7 @@
 using WorkerService.Features.Shared.Abstractions;
+using WorkerService.State;
 
-namespace WorkerService.Features.Infrastructure.Auth;
+namespace WorkerService.Infrastructure.Auth;
 
 public interface IAutenticacaoApi
 {

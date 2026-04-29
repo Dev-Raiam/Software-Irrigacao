@@ -1,4 +1,4 @@
-﻿namespace WorkerService.Configurations
+﻿namespace WorkerService.State
 {
     public class ApiConfiguracao
     {

@@ -4,8 +4,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using WorkerService.Configurations;
+using WorkerService.Features.Shared.Extensions;
 using WorkerService.Features.Shared.Response;
 using WorkerService.Features.Sincronizacao.Automacao;
+using WorkerService.State;
 
 namespace WorkerService.Infrastructure.Http;
 
@@ -13,17 +15,20 @@ public sealed class AutomacaoApi : IAutomacaoApi
 {
     private readonly HttpClient _httpClient;
     private readonly ApiConfiguracao _apiConfiguracao;
+    private readonly ArmazenamentoAutomacao _armazenamentoAutomacao;
     private readonly JsonSerializerSettings _jsonSettings;
     private readonly ILogger<AutomacaoApi> _logger;
 
     public AutomacaoApi(
         HttpClient httpClient,
         IOptions<ApiConfiguracao> apiConfiguracao,
+        ArmazenamentoAutomacao armazenamentoAutomacao,
         ILogger<AutomacaoApi> logger
     )
     {
         _httpClient = httpClient;
         _apiConfiguracao = apiConfiguracao.Value;
+        _armazenamentoAutomacao = armazenamentoAutomacao;
         _logger = logger;
 
         _httpClient.BaseAddress = new Uri(_apiConfiguracao.BaseUrl);
@@ -39,7 +44,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         };
     }
 
-    public async Task<List<Painel>?> ObterPaineisAsync(
+    public async Task<List<Features.Shared.Response.Painel>?> ObterPaineisAsync(
         Guid contaId,
         CancellationToken cancellationToken = default
     )
@@ -58,7 +63,15 @@ public sealed class AutomacaoApi : IAutomacaoApi
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<List<Painel>>(json, _jsonSettings);
+            var paineis = JsonConvert.DeserializeObject<List<Features.Shared.Response.Painel>>(
+                json,
+                _jsonSettings
+            );
+
+            if (paineis is not null)
+                _armazenamentoAutomacao.Paineis.AddRange(paineis.Select(p => p.ToEntity()));
+
+            return paineis;
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -72,7 +85,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         }
     }
 
-    public async Task<List<Dispositivo>?> ObterDispositivosPorPainelAsync(
+    public async Task<List<Features.Shared.Response.Dispositivo>?> ObterDispositivosPorPainelAsync(
         Guid painelId,
         CancellationToken cancellationToken = default
     )
@@ -91,7 +104,16 @@ public sealed class AutomacaoApi : IAutomacaoApi
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<List<Dispositivo>>(json, _jsonSettings);
+            var dispositivos = JsonConvert.DeserializeObject<
+                List<Features.Shared.Response.Dispositivo>
+            >(json, _jsonSettings);
+
+            if (dispositivos is not null)
+                _armazenamentoAutomacao.Dispositivos.AddRange(
+                    dispositivos.Select(d => d.ToEntity(painelId))
+                );
+
+            return dispositivos;
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -105,28 +127,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         }
     }
 
-    // /// Nao Precisa
-    // public async Task<List<ModuloResponse>?> ObterControladoresPorPainelAsync(
-    //     Guid painelId,
-    //     CancellationToken cancellationToken = default
-    // )
-    // {
-    //     var response = await _httpClient.GetAsync(
-    //         $"/automacao/v1/paineis/{painelId}/controladores",
-    //         cancellationToken
-    //     );
-
-    //     if (!response.IsSuccessStatusCode)
-    //     {
-    //         _logger.LogError("Erro ao obter controladores: {StatusCode}", response.StatusCode);
-    //         return null;
-    //     }
-
-    //     var json = await response.Content.ReadAsStringAsync(cancellationToken);
-    //     return JsonConvert.DeserializeObject<List<ModuloResponse>>(json, _jsonSettings);
-    // }
-
-    public async Task<List<Porta>?> ObterPortasPorControladorAsync(
+    public async Task<List<Features.Shared.Response.Porta>?> ObterPortasPorControladorAsync(
         Guid painelId,
         Guid controladorId,
         CancellationToken cancellationToken = default
@@ -149,7 +150,18 @@ public sealed class AutomacaoApi : IAutomacaoApi
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<List<Porta>>(json, _jsonSettings);
+
+            var portas = JsonConvert.DeserializeObject<List<Features.Shared.Response.Porta>>(
+                json,
+                _jsonSettings
+            );
+
+            if (portas is not null)
+                _armazenamentoAutomacao.Portas.AddRange(
+                    portas.Select(p => p.ToEntity(controladorId))
+                );
+
+            return portas;
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -163,7 +175,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         }
     }
 
-    public async Task<List<Porta>?> ObterPortasPorModuloAsync(
+    public async Task<List<Features.Shared.Response.Porta>?> ObterPortasPorModuloAsync(
         Guid painelId,
         Guid moduloId,
         CancellationToken cancellationToken
@@ -184,8 +196,17 @@ public sealed class AutomacaoApi : IAutomacaoApi
                 );
                 return null;
             }
+
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<List<Porta>>(json, _jsonSettings);
+            var portas = JsonConvert.DeserializeObject<List<Features.Shared.Response.Porta>>(
+                json,
+                _jsonSettings
+            );
+
+            if (portas is not null)
+                _armazenamentoAutomacao.Portas.AddRange(portas.Select(p => p.ToEntity(moduloId)));
+
+            return portas;
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -199,7 +220,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         }
     }
 
-    public async Task<List<Interface>?> ObterInterfacesPorControladorAsync(
+    public async Task<List<Features.Shared.Response.Interface>?> ObterInterfacesPorControladorAsync(
         Guid painelId,
         Guid controladorId,
         CancellationToken cancellationToken = default
@@ -222,7 +243,16 @@ public sealed class AutomacaoApi : IAutomacaoApi
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<List<Interface>>(json, _jsonSettings);
+            var interfaces = JsonConvert.DeserializeObject<
+                List<Features.Shared.Response.Interface>
+            >(json, _jsonSettings);
+
+            if (interfaces is not null)
+                _armazenamentoAutomacao.Interfaces.AddRange(
+                    interfaces.Select(i => i.ToEntity(controladorId))
+                );
+
+            return interfaces;
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -236,7 +266,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         }
     }
 
-    public async Task<List<Interface>?> ObterInterfacesPorModuloAsync(
+    public async Task<List<Features.Shared.Response.Interface>?> ObterInterfacesPorModuloAsync(
         Guid painelId,
         Guid moduloId,
         CancellationToken cancellationToken
@@ -259,7 +289,16 @@ public sealed class AutomacaoApi : IAutomacaoApi
             }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonConvert.DeserializeObject<List<Interface>>(json, _jsonSettings);
+            var interfaces = JsonConvert.DeserializeObject<
+                List<Features.Shared.Response.Interface>
+            >(json, _jsonSettings);
+
+            if (interfaces is not null)
+                _armazenamentoAutomacao.Interfaces.AddRange(
+                    interfaces.Select(i => i.ToEntity(moduloId))
+                );
+
+            return interfaces;
         }
         catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {

@@ -2,10 +2,7 @@ namespace WorkerService.Features.Shared.Extensions;
 
 public static class Porta
 {
-    public static Domain.Entities.Porta ToEntity(
-        this Features.Shared.Response.Porta response,
-        Guid moduloId
-    )
+    public static Domain.Entities.Porta ToEntity(this Response.Porta response, Guid moduloId)
     {
         if (response is null)
             ArgumentNullException.ThrowIfNull(response);

@@ -130,9 +130,7 @@ public class SincronizarInterfacesHandler
         {
             var salvar = await _context.SaveChangesAsync(cancellationToken);
             if (salvar > 0)
-            {
                 _logger.LogInformation("Interfaces sincronizadas");
-            }
         }
         catch (Exception ex)
         {

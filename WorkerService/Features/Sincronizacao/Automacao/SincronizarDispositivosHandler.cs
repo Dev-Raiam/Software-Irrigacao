@@ -75,9 +75,7 @@ public class SincronizarDispositivosHandler
         {
             var salvar = await _context.SaveChangesAsync(cancellationToken);
             if (salvar > 0)
-            {
                 _logger.LogInformation("Dispositivos sincronizados");
-            }
         }
         catch (Exception ex)
         {

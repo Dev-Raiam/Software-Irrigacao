@@ -6,6 +6,7 @@ using Toolbox.Core.Messages;
 using WorkerService.Configurations;
 using WorkerService.Features.Shared.Extensions;
 using WorkerService.Infrastructure.Data;
+using WorkerService.State;
 
 namespace WorkerService.Features.Sincronizacao.Automacao;
 
@@ -14,20 +15,20 @@ public class SincronizarPaineisCommand : Command { }
 public class SincronizarPainelHandler : CommandHandler, ICommandHandler<SincronizarPaineisCommand>
 {
     private readonly IAutomacaoApi _automacaoApi;
-    private readonly ContaConfiguracao _contaConfiguracao;
+    private readonly CredenciaisAplicacao _credenciaisAplicacao;
     private readonly WorkerServiceContext _context;
     private readonly ILogger<SincronizarPainelHandler> _logger;
 
     public SincronizarPainelHandler(
         IAutomacaoApi automacaoApi,
-        ContaConfiguracao contaConfiguracao,
+        CredenciaisAplicacao credenciaisAplicacao,
         IUnitOfWork<WorkerServiceContext> uow,
         ILogger<SincronizarPainelHandler> logger
     )
         : base(uow)
     {
         _automacaoApi = automacaoApi;
-        _contaConfiguracao = contaConfiguracao;
+        _credenciaisAplicacao = credenciaisAplicacao;
         _context = uow.Context;
         _logger = logger;
     }
@@ -38,7 +39,7 @@ public class SincronizarPainelHandler : CommandHandler, ICommandHandler<Sincroni
     )
     {
         var paineisResponse = await _automacaoApi.ObterPaineisAsync(
-            _contaConfiguracao.ContaId,
+            _credenciaisAplicacao.ContaId,
             cancellationToken
         );
         if (paineisResponse is not null)
@@ -50,6 +51,7 @@ public class SincronizarPainelHandler : CommandHandler, ICommandHandler<Sincroni
                 var painelExistente = await _context
                     .Paineis.Include(p => p.Modulos)
                     .FirstOrDefaultAsync(p => p.Id == painel.Id, cancellationToken);
+
                 if (painelExistente == null)
                 {
                     await _context.Paineis.AddAsync(painel, cancellationToken);
@@ -70,9 +72,7 @@ public class SincronizarPainelHandler : CommandHandler, ICommandHandler<Sincroni
             {
                 var salvar = await _context.SaveChangesAsync(cancellationToken);
                 if (salvar > 0)
-                {
                     _logger.LogInformation("Paineis sincronizados");
-                }
             }
             catch (Exception ex)
             {

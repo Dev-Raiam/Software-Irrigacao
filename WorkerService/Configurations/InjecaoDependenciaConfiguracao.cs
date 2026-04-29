@@ -2,16 +2,15 @@ using System.Reflection;
 using MQTTnet;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
-using WorkerService.Features.Configuracao.ConfiguracaoSistema;
 using WorkerService.Features.Configuracao.Credenciais.Interfaces;
 using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
-using WorkerService.Features.Infrastructure.Auth;
 using WorkerService.Features.Prontidao;
-using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Features.Sincronizacao.Automacao;
+using WorkerService.Infrastructure.Auth;
 using WorkerService.Infrastructure.Criptografia;
 using WorkerService.Infrastructure.Http;
 using WorkerService.Infrastructure.Mqtt;
+using WorkerService.State;
 using WorkerService.Workers;
 
 namespace WorkerService.Configurations;
@@ -24,6 +23,7 @@ public static class InjecaoDependenciaConfiguracao
     )
     {
         services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguration"));
+        services.Configure<MqttConfiguracao>(configuration.GetSection("MqttConfiguracao"));
         services.AddHttpContextAccessor();
         services.AddMediator(
             Assembly.GetExecutingAssembly(),
@@ -51,9 +51,8 @@ public static class InjecaoDependenciaConfiguracao
             .AddHttpMessageHandler<ManipuladorTokenAcesso>();
 
         services.AddSingleton<ArmazenamentoToken>();
-        services.AddSingleton<IntegracaoConfiguracao>();
-        services.AddSingleton<TopicoConfiguracao>();
-        services.AddSingleton<ContaConfiguracao>();
+        services.AddSingleton<CredenciaisAplicacao>();
+        services.AddSingleton<ArmazenamentoAutomacao>();
 
         // Registrar as instâncias concretas
         services.AddSingleton<MqttClienteRemoto>(provider => new MqttClienteRemoto(
@@ -76,7 +75,6 @@ public static class InjecaoDependenciaConfiguracao
         services.AddScoped<SincronizarAutomacao>();
         services.AddScoped<GerenciadorCredenciais>();
         services.AddScoped<ICriptografia, Criptografia>();
-        services.AddScoped<ConfigurarSistema>();
 
         services.AddTransient<ManipuladorTokenAcesso>();
     }

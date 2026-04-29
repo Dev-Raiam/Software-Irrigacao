@@ -18,8 +18,10 @@ public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servic
                 var execucaoCompleta = await _servicoProntidao.PrepararAplicacaoAsync(
                     stoppingToken
                 );
+
                 if (execucaoCompleta)
                 {
+                    _logger.LogInformation("Aplicação Configurada!!!");
                     _servicoProntidao.MarcarPronto();
                     break;
                 }
@@ -28,6 +30,7 @@ public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servic
                     _logger.LogInformation("Aguardando configurações...");
                     _avisoEmitido = true;
                 }
+
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }
             catch (OperationCanceledException)

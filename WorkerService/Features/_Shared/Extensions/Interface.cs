@@ -3,7 +3,7 @@ namespace WorkerService.Features.Shared.Extensions;
 public static class Interface
 {
     public static Domain.Entities.Interface ToEntity(
-        this Features.Shared.Response.Interface response,
+        this Response.Interface response,
         Guid moduloId
     )
     {

@@ -39,7 +39,7 @@ public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
             new AcionarBomba { Id = Guid.NewGuid() },
             _settings
         );
-        await _mqttRemoto.Publicar("comando/acionar-bomba", comando, cancellationToken);
+        await _mqttRemoto.PublicarAsync("comando/acionar-bomba", comando, cancellationToken);
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

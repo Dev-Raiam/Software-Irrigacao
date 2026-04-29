@@ -7,38 +7,27 @@ using WorkerService.Features.Shared.Abstractions;
 
 namespace WorkerService.Infrastructure.Mqtt
 {
-    public abstract class MqttCliente() : IMqttCliente
+    public abstract class MqttCliente : IMqttCliente
     {
+        private readonly string _nomeInstancia = null!;
+        private bool _reconectando = false;
+        private bool _conectando = false;
+        public bool Conectado => _mqttCliente.IsConnected;
         protected readonly IMqttClient _mqttCliente = null!;
         protected readonly ILogger<MqttCliente> _logger = null!;
 
-        private readonly string _nomeInstancia = null!;
-        protected bool _reconectando = false;
-        protected bool _conectando = false;
-
-        protected List<Dictionary<Guid, DateTime>> _comandosPendentes = [];
-        protected readonly Guid _comandoId = Guid.NewGuid();
-        protected readonly JsonSerializerOptions _jsonOptions = new()
-        {
-            IndentSize = 2,
-            WriteIndented = true,
-        };
-
-        public bool Conectado => _mqttCliente.IsConnected;
-
-        protected MqttCliente(
+        public MqttCliente(
             string nomeInstancia,
             IMqttClient mqttCliente,
             ILogger<MqttCliente> logger
         )
-            : this()
         {
             _mqttCliente = mqttCliente;
             _logger = logger;
             _nomeInstancia = nomeInstancia;
         }
 
-        public async Task<bool> Conectar(
+        public async Task<bool> ConectarAsync(
             string servidor,
             int porta,
             string clienteId,
@@ -51,6 +40,7 @@ namespace WorkerService.Infrastructure.Mqtt
                 return _mqttCliente.IsConnected;
 
             _conectando = true;
+
             var options = new MqttClientOptionsBuilder()
                 .WithTcpServer(servidor, porta)
                 .WithCredentials(usuario, senha)
@@ -63,13 +53,9 @@ namespace WorkerService.Infrastructure.Mqtt
                 var resposta = await _mqttCliente.ConnectAsync(options, cancellationToken);
 
                 if (resposta.ResultCode != MqttClientConnectResultCode.Success)
-                {
                     _logger.LogError("Falha ao conectar ao MQTT: {Codigo}", resposta.ResultCode);
-                }
                 else
-                {
                     _logger.LogInformation($"Conectado ao broker MQTT {_nomeInstancia}");
-                }
             }
             catch (MqttConnectingFailedException ex)
             {
@@ -87,58 +73,8 @@ namespace WorkerService.Infrastructure.Mqtt
             {
                 _conectando = false;
             }
+
             return _mqttCliente.IsConnected;
-        }
-
-        public async Task AssinarTopico(
-            string topico,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (!_mqttCliente.IsConnected)
-                return;
-
-            await _mqttCliente.SubscribeAsync(topico, cancellationToken: cancellationToken);
-        }
-
-        public async Task Publicar(
-            string topico,
-            object mensagem,
-            CancellationToken cancellationToken
-        )
-        {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic(topico)
-                .WithResponseTopic("topico-resposta")
-                .WithCorrelationData(Guid.NewGuid().ToByteArray())
-                .WithPayload(JsonSerializer.Serialize(mensagem, _jsonOptions))
-                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-                // .WithRetainFlag()
-                .Build();
-
-            _comandosPendentes.Add(
-                new Dictionary<Guid, DateTime> { { _comandoId, DateTime.UtcNow } }
-            );
-            Console.WriteLine($"Lista de Comandos: {_comandosPendentes.Count}");
-            await _mqttCliente.PublishAsync(message, cancellationToken);
-        }
-
-        public async Task Publicar(
-            string topico,
-            string mensagem,
-            CancellationToken cancellationToken,
-            MqttApplicationMessageBuilder? messageBuilder = null!
-        )
-        {
-            var message =
-                messageBuilder?.Build()
-                ?? new MqttApplicationMessageBuilder()
-                    .WithTopic(topico)
-                    .WithPayload(mensagem)
-                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-                    // .WithRetainFlag()
-                    .Build();
-            await _mqttCliente.PublishAsync(message, cancellationToken);
         }
 
         public abstract void ExecutarCallbackMensageria(CancellationToken cancellationToken);
@@ -149,6 +85,7 @@ namespace WorkerService.Infrastructure.Mqtt
             {
                 if (_reconectando)
                     return;
+
                 _reconectando = true;
 
                 while (!_mqttCliente.IsConnected && !cancellationToken.IsCancellationRequested)
@@ -185,7 +122,37 @@ namespace WorkerService.Infrastructure.Mqtt
             };
         }
 
-        public async Task Desconectar(CancellationToken cancellationToken)
+        public async Task AssinarTopicoAsync(
+            string topico,
+            CancellationToken cancellationToken = default
+        )
+        {
+            if (!_mqttCliente.IsConnected)
+                return;
+
+            await _mqttCliente.SubscribeAsync(topico, cancellationToken: cancellationToken);
+        }
+
+        public async Task PublicarAsync(
+            string topico,
+            string mensagem,
+            CancellationToken cancellationToken,
+            MqttApplicationMessageBuilder? messageBuilder = null!
+        )
+        {
+            var message =
+                messageBuilder?.Build()
+                ?? new MqttApplicationMessageBuilder()
+                    .WithTopic(topico)
+                    .WithPayload(mensagem)
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                    // .WithRetainFlag()
+                    .Build();
+
+            await _mqttCliente.PublishAsync(message, cancellationToken);
+        }
+
+        public async Task DesconectarAsync(CancellationToken cancellationToken)
         {
             await _mqttCliente.DisconnectAsync(cancellationToken: cancellationToken);
         }

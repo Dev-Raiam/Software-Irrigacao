@@ -1,10 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using WorkerService.Configurations;
-using WorkerService.Features.Prontidao;
-using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Infrastructure.Data;
 using WorkerService.Infrastructure.Mqtt;
+using WorkerService.State;
 
 namespace WorkerService.Workers;
 
@@ -12,14 +11,16 @@ public class MqttWorker(
     MqttClienteRemoto _mqttClienteRemoto,
     MqttClienteLocal _mqttClienteLocal,
     ILogger<MqttWorker> _logger,
-    IServiceProvider _serviceProvider
+    IServiceProvider _serviceProvider,
+    IOptions<MqttConfiguracao> _mqttConfig
 ) : BackgroundService
 {
-    public bool ConexaoIniciada { get; private set; } = false;
-    public List<Guid> DispositivosIds { get; private set; } = [];
-    public bool ConexaoLocalAtiva { get; private set; } = false;
-    public bool ConexaoRemotaAtiva { get; private set; } = false;
-    public bool AvisoEmitido { get; private set; } = false;
+    private readonly MqttConfiguracao _config = _mqttConfig.Value;
+    private bool ConexaoIniciada = false;
+    private List<Guid> DispositivosIds = [];
+    private bool ConexaoLocalAtiva = false;
+    private bool ConexaoRemotaAtiva = false;
+    private bool AvisoEmitido = false;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -53,60 +54,34 @@ public class MqttWorker(
                     return;
                 }
 
-                // string brokerLocal = "broker.emqx.io";
-                // string brokerNuvem = "broker.freemqtt.com";
-                string brokerLocal = "localhost";
-                string brokerRemoto = "broker.freemqtt.com";
-                int port = 1883;
-                Guid clientIdRemoto = Guid.NewGuid();
-                Guid clientIdLocal = Guid.NewGuid();
-
-                await _mqttClienteLocal.Conectar(
-                    brokerLocal,
-                    port,
-                    clientIdLocal.ToString(),
-                    // "freemqtt",
-                    // "public",
+                await _mqttClienteLocal.ConectarAsync(
+                    _config.BrokerLocal,
+                    _config.Porta,
+                    Guid.NewGuid().ToString(),
                     null,
                     null,
                     stoppingToken
                 );
-                await _mqttClienteRemoto.Conectar(
-                    brokerRemoto,
-                    port,
-                    clientIdRemoto.ToString(),
-                    "freemqtt",
-                    "public",
-                    // null,
-                    // null,
+                await _mqttClienteRemoto.ConectarAsync(
+                    _config.BrokerRemoto,
+                    _config.Porta,
+                    Guid.NewGuid().ToString(),
+                    _config.UsuarioRemoto,
+                    _config.SenhaRemoto,
                     stoppingToken
                 );
 
                 if (_mqttClienteRemoto.Conectado && !ConexaoRemotaAtiva)
                 {
                     ConexaoRemotaAtiva = true;
-                    /// Escutar Comandos da API MQTT
-                    foreach (var dispositivoId in DispositivosIds)
-                    {
-                        await _mqttClienteRemoto.AssinarTopico(
-                            $"comando/{dispositivoId}/api",
-                            stoppingToken
-                        );
-                    }
+                    await _mqttClienteRemoto.AssinarTopicoAsync("rapido", stoppingToken);
                     _mqttClienteRemoto.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteRemoto.ExecutarCallbackDesconectado(stoppingToken);
                 }
                 if (_mqttClienteLocal.Conectado && !ConexaoLocalAtiva)
                 {
                     ConexaoLocalAtiva = true;
-                    await _mqttClienteRemoto.AssinarTopico("rapido", stoppingToken);
-                    // foreach (var dispositivoId in DispositivosIds)
-                    // {
-                    //     await _mqttClienteLocal.AssinarTopico(
-                    //         $"resposta/{dispositivoId}/api",
-                    //         stoppingToken
-                    //     );
-                    // }
+                    await _mqttClienteLocal.AssinarTopicoAsync("rapido", stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackDesconectado(stoppingToken);
                 }

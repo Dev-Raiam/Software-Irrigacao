@@ -17,12 +17,13 @@ public class SincronizacaoWorker(
         {
             try
             {
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+
                 using var scope = _serviceProvider.CreateScope();
                 var sincronizarAutomacao =
                     scope.ServiceProvider.GetRequiredService<SincronizarAutomacao>();
 
                 await sincronizarAutomacao.Executar(stoppingToken);
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
             catch (OperationCanceledException)
             {
