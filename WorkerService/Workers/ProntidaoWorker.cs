@@ -1,9 +1,11 @@
-using WorkerService.Features.Prontidao;
+using WorkerService.State;
 
 namespace WorkerService.Workers;
 
-public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servicoProntidao)
-    : BackgroundService
+public class ProntidaoWorker(
+    ILogger<ProntidaoWorker> _logger,
+    ConfiguracaoInicializacao configuracaoInicializacao
+) : BackgroundService
 {
     private bool _avisoEmitido = false;
 
@@ -15,14 +17,12 @@ public class ProntidaoWorker(ILogger<ProntidaoWorker> _logger, Prontidao _servic
         {
             try
             {
-                var execucaoCompleta = await _servicoProntidao.PrepararAplicacaoAsync(
-                    stoppingToken
-                );
+                var execucaoCompleta = await configuracaoInicializacao.Iniciar(stoppingToken);
 
                 if (execucaoCompleta)
                 {
                     _logger.LogInformation("Aplicação Configurada!!!");
-                    _servicoProntidao.MarcarPronto();
+                    configuracaoInicializacao.ConfiguracaoInicializacaoConcluida();
                     break;
                 }
                 else if (!_avisoEmitido)

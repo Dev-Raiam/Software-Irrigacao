@@ -5,19 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Sincronizacao;
+namespace WorkerService.Features.Roteadores.Sincronizacao;
 
-public class SincronizarPaineisHandler : CommandHandler, ICommandHandler<SincronizarPaineis>
+public class SincronizarPortasHandler : CommandHandler, ICommandHandler<SincronizarPortas>
 {
-    public SincronizarPaineisHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public SincronizarPortasHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        SincronizarPaineis request,
+        SincronizarPortas request,
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(SincronizarPaineis)}");
+        Console.WriteLine($"Executando {nameof(SincronizarPortas)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

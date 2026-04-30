@@ -3,10 +3,8 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using WorkerService.Configurations;
 using WorkerService.Features.Shared.Extensions;
-using WorkerService.Features.Shared.Response;
-using WorkerService.Features.Sincronizacao.Automacao;
+using WorkerService.Features.Sincronizacao.Automacao.Interfaces;
 using WorkerService.State;
 
 namespace WorkerService.Infrastructure.Http;

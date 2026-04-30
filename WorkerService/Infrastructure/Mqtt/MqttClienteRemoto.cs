@@ -16,7 +16,8 @@ namespace WorkerService.Infrastructure.Mqtt
         ILogger<MqttCliente> logger
     ) : MqttCliente(nomeInstancia, mqttCliente, logger)
     {
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
+        private List<Command> _filaComandos = new();
+        private readonly JsonSerializerSettings _settings = new()
         {
             Formatting = Formatting.None,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
@@ -37,30 +38,18 @@ namespace WorkerService.Infrastructure.Mqtt
 
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                     var mensagem = JsonConvert.DeserializeObject(payload, _settings)!;
-                    // Console.WriteLine(
-                    //     $"Mensagem recebida Topico de Resposta: {e.ApplicationMessage.ResponseTopic}"
-                    // );
+
                     if (mensagem is Command command)
                     {
-                        //Console.WriteLine(payload);
-                        //Console.WriteLine(command.GetType().FullName);
-                        var result = (ResponseResult)
-                            await mediator.Execute(
-                                (dynamic)command,
-                                cancellationToken: cancellationToken
-                            );
-
-                        // var response = new MqttApplicationMessageBuilder()
-                        //     .WithTopic(e.ApplicationMessage.ResponseTopic)
-                        //     .WithPayload(
-                        //         Encoding.UTF8.GetBytes(
-                        //             JsonConvert.SerializeObject(result, _settings)
-                        //         )
-                        //     )
-                        //     .Build();
-
-                        // if (!string.IsNullOrEmpty(e.ApplicationMessage.ResponseTopic))
-                        //     await _mqttCliente.PublishAsync(response, cancellationToken);
+                        _filaComandos.Add(command);
+                        // var result = (ResponseResult)
+                        //     await mediator.Execute(
+                        //         (dynamic)command,
+                        //         cancellationToken: cancellationToken
+                        //     );
+                        Console.WriteLine(
+                            $"Fila de Comandos: {JsonConvert.SerializeObject(_filaComandos)}"
+                        );
                     }
                     if (mensagem is Event @event)
                     {

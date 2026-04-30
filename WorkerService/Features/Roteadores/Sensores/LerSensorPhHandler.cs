@@ -1,23 +1,23 @@
-using Toolbox.Automacao.Irrigacao.Comandos.Controle;
+using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Controle;
+namespace WorkerService.Features.Roteadores.Sensores;
 
-public class FecharValvulaHandler : CommandHandler, ICommandHandler<FecharValvula>
+public class LerSensorPhHandler : CommandHandler, ICommandHandler<LerSensorPh>
 {
-    public FecharValvulaHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public LerSensorPhHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        FecharValvula request,
+        LerSensorPh request,
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(FecharValvula)}");
+        Console.WriteLine($"Executando {nameof(LerSensorPh)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

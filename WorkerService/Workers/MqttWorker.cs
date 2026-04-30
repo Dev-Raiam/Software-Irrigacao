@@ -36,15 +36,18 @@ public class MqttWorker(
                 if (DispositivosIds.Count > 0)
                 {
                     await Task.Delay(5000, stoppingToken);
+
                     DispositivosIds = await _context
                         .Dispositivos.AsNoTracking()
                         .Select(d => d.Id)
                         .ToListAsync(stoppingToken);
+
                     if (DispositivosIds.Count == 0 && !AvisoEmitido)
                     {
                         _logger.LogWarning(
                             "Nenhum dispositivo encontrado nova tentativa a 5 segundos..."
                         );
+
                         AvisoEmitido = true;
                     }
                     if (DispositivosIds.Count > 0)
@@ -62,6 +65,7 @@ public class MqttWorker(
                     null,
                     stoppingToken
                 );
+
                 await _mqttClienteRemoto.ConectarAsync(
                     _config.BrokerRemoto,
                     _config.Porta,
@@ -74,21 +78,34 @@ public class MqttWorker(
                 if (_mqttClienteRemoto.Conectado && !ConexaoRemotaAtiva)
                 {
                     ConexaoRemotaAtiva = true;
-                    await _mqttClienteRemoto.AssinarTopicoAsync("rapido", stoppingToken);
+
+                    await _mqttClienteRemoto.AssinarTopicoAsync(
+                        "comando/03800edb-8dff-4e2b-9ad8-00f0af1cdebf",
+                        stoppingToken
+                    );
+
                     _mqttClienteRemoto.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteRemoto.ExecutarCallbackDesconectado(stoppingToken);
                 }
+
                 if (_mqttClienteLocal.Conectado && !ConexaoLocalAtiva)
                 {
                     ConexaoLocalAtiva = true;
-                    await _mqttClienteLocal.AssinarTopicoAsync("rapido", stoppingToken);
+
+                    // await _mqttClienteLocal.AssinarTopicoAsync(
+                    //     "comando/03800edb-8dff-4e2b-9ad8-00f0af1cdebf",
+                    //     stoppingToken
+                    // );
+
                     _mqttClienteLocal.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackDesconectado(stoppingToken);
                 }
+
                 if (_mqttClienteRemoto.Conectado && _mqttClienteLocal.Conectado)
                 {
                     ConexaoIniciada = true;
                 }
+
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
             catch (OperationCanceledException)

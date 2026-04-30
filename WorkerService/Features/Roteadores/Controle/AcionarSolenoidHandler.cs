@@ -8,7 +8,7 @@ using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 using WorkerService.Infrastructure.Mqtt;
 
-namespace WorkerService.Features.Handlers.Controle;
+namespace WorkerService.Features.Roteadores.Controle;
 
 public class AcionarSolenoidHandler : CommandHandler, ICommandHandler<AcionarSolenoide>
 {

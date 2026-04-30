@@ -1,7 +1,4 @@
 using Toolbox.Core.Mediator;
-using WorkerService.Configurations;
-using WorkerService.Features.Shared.Abstractions;
-using WorkerService.Infrastructure.Mqtt;
 
 namespace WorkerService.Features.Sincronizacao.Automacao;
 
@@ -25,11 +22,7 @@ public class SincronizarAutomacao(ILogger<SincronizarAutomacao> _logger, IMediat
             new SincronizarInterfacesCommand(),
             cancellationToken: cancellationToken
         );
-        // await _mqttClienteRemoto.Publicar(
-        //     "topico-request",
-        //     new { acionar = true },
-        //     cancellationToken
-        // );
+
         _logger.LogInformation("Sincronização dos dados de Automação executada com sucesso");
     }
 }

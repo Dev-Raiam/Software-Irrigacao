@@ -5,19 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Sensores;
+namespace WorkerService.Features.Roteadores.Sensores;
 
-public class LerSensorUmidadeHandler : CommandHandler, ICommandHandler<LerSensorUmidade>
+public class LerSensorTemperaturaHandler : CommandHandler, ICommandHandler<LerSensorTemperatura>
 {
-    public LerSensorUmidadeHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public LerSensorTemperaturaHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        LerSensorUmidade request,
-        CancellationToken cancellationToken = default
+        LerSensorTemperatura request,
+        CancellationToken cancellationToken
     )
     {
-        Console.WriteLine($"Executando {nameof(LerSensorUmidade)}");
+        Console.WriteLine($"Executando {nameof(LerSensorTemperatura)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

@@ -39,6 +39,7 @@ namespace WorkerService.Infrastructure.Mqtt
 
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                     var mensagem = JsonConvert.DeserializeObject(payload, _settings)!;
+
                     if (mensagem is Command command)
                     {
                         await mediator.Execute(

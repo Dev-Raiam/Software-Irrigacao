@@ -5,19 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Controle;
+namespace WorkerService.Features.Roteadores.Controle;
 
-public class AbrirValvulaHandler : CommandHandler, ICommandHandler<AbrirValvula>
+public class DesligarBombaHandler : CommandHandler, ICommandHandler<DesligarBomba>
 {
-    public AbrirValvulaHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public DesligarBombaHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        AbrirValvula request,
-        CancellationToken cancellationToken
+        DesligarBomba request,
+        CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(AbrirValvula)}");
+        Console.WriteLine($"Executando {nameof(DesligarBomba)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

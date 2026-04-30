@@ -5,19 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Sensores;
+namespace WorkerService.Features.Roteadores.Sensores;
 
-public class LerSensorDistanciaHandler : CommandHandler, ICommandHandler<LerSensorDistancia>
+public class LerSensorTensaoHandler : CommandHandler, ICommandHandler<LerSensorTensao>
 {
-    public LerSensorDistanciaHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public LerSensorTensaoHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        LerSensorDistancia request,
-        CancellationToken cancellationToken
+        LerSensorTensao request,
+        CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(LerSensorDistancia)}");
+        Console.WriteLine($"Executando {nameof(LerSensorTensao)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

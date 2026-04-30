@@ -6,7 +6,7 @@ using Toolbox.Core.Api.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Configurations;
-using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
+using WorkerService.Features.Configuracao.Credenciais;
 using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Infrastructure.Data;
 using WorkerService.State;

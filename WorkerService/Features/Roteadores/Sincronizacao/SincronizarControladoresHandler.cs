@@ -5,7 +5,7 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Sincronizacao;
+namespace WorkerService.Features.Roteadores.Sincronizacao;
 
 public class SincronizarControladoresHandler
     : CommandHandler,

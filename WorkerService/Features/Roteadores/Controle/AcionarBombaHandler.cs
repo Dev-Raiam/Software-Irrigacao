@@ -8,11 +8,11 @@ using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 using WorkerService.Infrastructure.Mqtt;
 
-namespace WorkerService.Features.Handlers.Controle;
+namespace WorkerService.Features.Roteadores.Controle;
 
 public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
 {
-    private readonly MqttClienteRemoto _mqttRemoto;
+    private readonly MqttClienteLocal _mqttLocal;
     private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
     {
         Formatting = Formatting.None,
@@ -23,10 +23,13 @@ public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
         TypeNameHandling = TypeNameHandling.Objects,
     };
 
-    public AcionarBombaHandler(MqttClienteRemoto mqttRemoto, IUnitOfWork<WorkerServiceContext> uow)
+    public AcionarBombaHandler(
+        MqttClienteLocal mqttClienteLocal,
+        IUnitOfWork<WorkerServiceContext> uow
+    )
         : base(uow)
     {
-        _mqttRemoto = mqttRemoto;
+        _mqttLocal = mqttClienteLocal;
     }
 
     public async Task<ResponseResult> Handle(
@@ -39,7 +42,11 @@ public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
             new AcionarBomba { Id = Guid.NewGuid() },
             _settings
         );
-        await _mqttRemoto.PublicarAsync("comando/acionar-bomba", comando, cancellationToken);
+        await _mqttLocal.PublicarAsync(
+            "comando/03800edb-8dff-4e2b-9ad8-00f0af1cdebf",
+            comando,
+            cancellationToken
+        );
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

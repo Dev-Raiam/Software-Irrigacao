@@ -5,19 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Sensores;
+namespace WorkerService.Features.Roteadores.Sensores;
 
-public class LerSensorPhHandler : CommandHandler, ICommandHandler<LerSensorPh>
+public class LerSensorPressaoHandler : CommandHandler, ICommandHandler<LerSensorPressao>
 {
-    public LerSensorPhHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public LerSensorPressaoHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        LerSensorPh request,
+        LerSensorPressao request,
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(LerSensorPh)}");
+        Console.WriteLine($"Executando {nameof(LerSensorPressao)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

@@ -2,10 +2,10 @@ using System.Reflection;
 using MQTTnet;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
+using WorkerService.Features.Configuracao.Credenciais;
 using WorkerService.Features.Configuracao.Credenciais.Interfaces;
-using WorkerService.Features.Configuracao.GerenciamentoCredenciais;
-using WorkerService.Features.Prontidao;
 using WorkerService.Features.Sincronizacao.Automacao;
+using WorkerService.Features.Sincronizacao.Automacao.Interfaces;
 using WorkerService.Infrastructure.Auth;
 using WorkerService.Infrastructure.Criptografia;
 using WorkerService.Infrastructure.Http;
@@ -30,38 +30,16 @@ public static class InjecaoDependenciaConfiguracao
             typeof(AcionarBomba).GetTypeInfo().Assembly
         );
         services.AddDataProtection();
-        // //Configura o Serviço No Windows
-        // services.AddWindowsService(options =>
-        // {
-        //     options.ServiceName = ".Net Worker Service Automacao";
-        // });
-        //WORKERS SERVICES
-        services.AddHostedService<ProntidaoWorker>();
-        services.AddHostedService<SincronizacaoWorker>();
-        services.AddHostedService<MqttWorker>();
-
-        services.AddWindowsService(options =>
-        {
-            options.ServiceName = "SoftwareAutomacao";
-        });
-
-        services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
-        services
-            .AddHttpClient<IAutomacaoApi, AutomacaoApi>()
-            .AddHttpMessageHandler<ManipuladorTokenAcesso>();
-
         services.AddSingleton<ArmazenamentoToken>();
         services.AddSingleton<CredenciaisAplicacao>();
         services.AddSingleton<ArmazenamentoAutomacao>();
 
-        // Registrar as instâncias concretas
         services.AddSingleton<MqttClienteRemoto>(provider => new MqttClienteRemoto(
             "Remoto",
             new MqttClientFactory().CreateMqttClient(),
             provider,
             provider.GetRequiredService<ILogger<MqttCliente>>()
         ));
-
         services.AddSingleton<MqttClienteLocal>(provider => new MqttClienteLocal(
             "Local",
             new MqttClientFactory().CreateMqttClient(),
@@ -69,13 +47,18 @@ public static class InjecaoDependenciaConfiguracao
             provider.GetRequiredService<ILogger<MqttCliente>>()
         ));
 
-        services.AddSingleton<Prontidao>();
+        services.AddSingleton<ConfiguracaoInicializacao>();
         services.AddSingleton<GerenciadorToken>();
-
         services.AddScoped<SincronizarAutomacao>();
         services.AddScoped<GerenciadorCredenciais>();
         services.AddScoped<ICriptografia, Criptografia>();
-
         services.AddTransient<ManipuladorTokenAcesso>();
+        services.AddHostedService<ProntidaoWorker>();
+        services.AddHostedService<SincronizacaoWorker>();
+        services.AddHostedService<MqttWorker>();
+        services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
+        services
+            .AddHttpClient<IAutomacaoApi, AutomacaoApi>()
+            .AddHttpMessageHandler<ManipuladorTokenAcesso>();
     }
 }

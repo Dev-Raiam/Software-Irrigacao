@@ -5,21 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Controle;
+namespace WorkerService.Features.Roteadores.Controle;
 
-public class AcionarInversorFrequenciaHandler
-    : CommandHandler,
-        ICommandHandler<AcionarInversorFrequencia>
+public class FecharValvulaHandler : CommandHandler, ICommandHandler<FecharValvula>
 {
-    public AcionarInversorFrequenciaHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public FecharValvulaHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        AcionarInversorFrequencia request,
+        FecharValvula request,
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(AcionarInversorFrequencia)}");
+        Console.WriteLine($"Executando {nameof(FecharValvula)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

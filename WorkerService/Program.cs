@@ -7,8 +7,9 @@ using Serilog;
 using WorkerService.Configurations;
 using WorkerService.Infrastructure.SeedData;
 using WorkerService.Presentation.Endpoints;
+using WorkerService.State;
 
-Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+//Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -24,11 +25,8 @@ Log.Logger = new LoggerConfiguration()
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.RegistrarContexto();
-
-await SeedData.Seed(builder.Services.BuildServiceProvider());
-
-builder.Services.RegistrarServicos(builder.Configuration);
 builder.Services.RegistrarAuthenticacao();
+builder.Services.RegistrarServicos(builder.Configuration);
 builder.Services.AddSerilog();
 builder.Services.AddRateLimiter(options =>
 {
@@ -44,6 +42,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+await SeedData.Seed(app.Services);
 
 app.UseAuthentication();
 app.UseAuthorization();

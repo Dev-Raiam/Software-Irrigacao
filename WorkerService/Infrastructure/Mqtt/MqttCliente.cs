@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using MQTTnet;
+﻿using MQTTnet;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;

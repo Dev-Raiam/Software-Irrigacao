@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
-using WorkerService.Configurations;
 using WorkerService.Features.Shared.Extensions;
+using WorkerService.Features.Sincronizacao.Automacao.Interfaces;
 using WorkerService.Infrastructure.Data;
 using WorkerService.State;
 

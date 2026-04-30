@@ -1,4 +1,3 @@
-using WorkerService.Features.Shared.Abstractions;
 using WorkerService.State;
 
 namespace WorkerService.Infrastructure.Auth;

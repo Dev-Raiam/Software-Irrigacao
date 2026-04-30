@@ -1,23 +1,23 @@
-using Toolbox.Automacao.Irrigacao.Comandos.Controle;
+using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Controle;
+namespace WorkerService.Features.Roteadores.Sensores;
 
-public class AcionarMotoBombaHandler : CommandHandler, ICommandHandler<AcionarMotoBomba>
+public class LerSensorCorrenteHandler : CommandHandler, ICommandHandler<LerSensorCorrente>
 {
-    public AcionarMotoBombaHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public LerSensorCorrenteHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        AcionarMotoBomba request,
+        LerSensorCorrente request,
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(AcionarMotoBomba)}");
+        Console.WriteLine($"Executando {nameof(LerSensorCorrente)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }

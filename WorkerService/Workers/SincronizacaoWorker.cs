@@ -1,25 +1,36 @@
-using WorkerService.Features.Prontidao;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http.Json;
 using WorkerService.Features.Sincronizacao.Automacao;
+using WorkerService.State;
 
 namespace WorkerService.Workers;
 
 public class SincronizacaoWorker(
     ILogger<SincronizacaoWorker> _logger,
-    IServiceProvider _serviceProvider,
-    Prontidao _servicoProntidao
+    IServiceProvider serviceProvider,
+    ConfiguracaoInicializacao configuracaoInicializacao,
+    ArmazenamentoAutomacao armazenamentoAutomacao
 ) : BackgroundService
 {
+    private readonly JsonSerializerOptions JsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _servicoProntidao.AguardarAsync(stoppingToken);
+        await configuracaoInicializacao.AguardarConfiguracaoInicializacaoAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            Console.WriteLine(JsonSerializer.Serialize(armazenamentoAutomacao, JsonOptions));
+
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = serviceProvider.CreateScope();
                 var sincronizarAutomacao =
                     scope.ServiceProvider.GetRequiredService<SincronizarAutomacao>();
 

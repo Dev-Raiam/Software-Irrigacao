@@ -5,7 +5,7 @@ using WorkerService.Features.Shared.Abstractions;
 using WorkerService.Infrastructure.Data;
 using WorkerService.State;
 
-namespace WorkerService.Features.Configuracao.GerenciamentoCredenciais
+namespace WorkerService.Features.Configuracao.Credenciais
 {
     public sealed class GerenciadorCredenciais(
         WorkerServiceContext _context,

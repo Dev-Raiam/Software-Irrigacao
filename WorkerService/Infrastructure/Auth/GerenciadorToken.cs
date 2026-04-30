@@ -1,4 +1,3 @@
-using WorkerService.Features.Shared.Abstractions;
 using WorkerService.State;
 
 namespace WorkerService.Infrastructure.Auth;
@@ -23,7 +22,7 @@ public sealed class GerenciadorToken(
                 _credenciaisAplicacao.IntegracaoContextoId,
                 cancellationToken
             );
-            if (token != null)
+            if (token is not null)
             {
                 _armazenamentoToken.AdicionarToken(token);
                 _logger.LogInformation("Token obtido: {Token}", token.TokenAcesso);

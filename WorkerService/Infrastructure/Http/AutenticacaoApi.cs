@@ -33,14 +33,14 @@ public sealed class AutenticacaoApi : IAutenticacaoApi
         CancellationToken cancellationToken
     )
     {
-        var body = new
+        var integracao = new
         {
             Chave = chave,
             Segredo = segredo,
             ContextoId = contextoId,
         };
 
-        var json = JsonSerializer.Serialize(body);
+        var json = JsonSerializer.Serialize(integracao);
 
         HttpContent content = new StringContent(
             json,
@@ -59,14 +59,17 @@ public sealed class AutenticacaoApi : IAutenticacaoApi
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError("Erro ao autenticar: {StatusCode}", response.StatusCode);
+                return null;
             }
             var tokenResponse = await response.Content.ReadFromJsonAsync<Token>(cancellationToken);
 
             if (tokenResponse is not null)
+            {
                 tokenResponse = tokenResponse with
                 {
                     Expira = tokenResponse.Expira.AddSeconds(-15),
                 };
+            }
 
             return tokenResponse;
         }

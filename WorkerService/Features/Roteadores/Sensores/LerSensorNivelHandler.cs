@@ -5,19 +5,19 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using WorkerService.Infrastructure.Data;
 
-namespace WorkerService.Features.Handlers.Sensores;
+namespace WorkerService.Features.Roteadores.Sensores;
 
-public class LerSensorCorrenteHandler : CommandHandler, ICommandHandler<LerSensorCorrente>
+public class LerSensorNivelHandler : CommandHandler, ICommandHandler<LerSensorNivel>
 {
-    public LerSensorCorrenteHandler(IUnitOfWork<WorkerServiceContext> uow)
+    public LerSensorNivelHandler(IUnitOfWork<WorkerServiceContext> uow)
         : base(uow) { }
 
     public async Task<ResponseResult> Handle(
-        LerSensorCorrente request,
+        LerSensorNivel request,
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(LerSensorCorrente)}");
+        Console.WriteLine($"Executando {nameof(LerSensorNivel)}");
         await Task.Delay(1, cancellationToken);
         return Ok<ResponseResult>();
     }
