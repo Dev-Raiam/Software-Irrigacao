@@ -1,35 +1,32 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Microsoft.Extensions.Options;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Data;
-using Toolbox.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using WorkerService.Features.Hardware;
 using WorkerService.Infrastructure.Data;
 using WorkerService.Infrastructure.Mqtt;
+using WorkerService.State;
 
 namespace WorkerService.Features.Roteadores.Controle;
 
 public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
 {
-    private readonly MqttClienteLocal _mqttLocal;
-    private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
-    {
-        Formatting = Formatting.None,
-        DateFormatHandling = DateFormatHandling.IsoDateFormat,
-        DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
-        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-        NullValueHandling = NullValueHandling.Ignore,
-        TypeNameHandling = TypeNameHandling.Objects,
-    };
+    private readonly MqttClienteLocal _mqttCliente;
+    private readonly ArmazenamentoAutomacao _armazenamento;
+    private readonly MqttConfiguracao _mqttConfiguracao;
 
     public AcionarBombaHandler(
-        MqttClienteLocal mqttClienteLocal,
-        IUnitOfWork<WorkerServiceContext> uow
+        MqttClienteLocal mqttCliente,
+        IUnitOfWork<WorkerServiceContext> uow,
+        ArmazenamentoAutomacao armazenamento,
+        IOptions<MqttConfiguracao> mqttConfiguracao
     )
         : base(uow)
     {
-        _mqttLocal = mqttClienteLocal;
+        _mqttCliente = mqttCliente;
+        _armazenamento = armazenamento;
+        _mqttConfiguracao = mqttConfiguracao.Value;
     }
 
     public async Task<ResponseResult> Handle(
@@ -37,17 +34,24 @@ public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
         CancellationToken cancellationToken = default
     )
     {
-        Console.WriteLine($"Executando {nameof(AcionarBomba)}");
-        var comando = JsonConvert.SerializeObject(
-            new AcionarBomba { Id = Guid.NewGuid() },
-            _settings
-        );
-        await _mqttLocal.PublicarAsync(
-            "comando/03800edb-8dff-4e2b-9ad8-00f0af1cdebf",
-            comando,
+        var dispositivo = _armazenamento.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
+
+        if (dispositivo is null)
+            return NotFound();
+
+        var porta = _armazenamento
+            .Portas.Where(p => p.DispositivoConectadoId == dispositivo.Id)
+            .FirstOrDefault();
+
+        if (porta is null)
+            return NotFound();
+
+        await _mqttCliente.PublicarAsync(
+            _mqttConfiguracao.TopicoLocal,
+            ControleDigital.Acionar(porta.EnderecoLogico!),
             cancellationToken
         );
-        await Task.Delay(1, cancellationToken);
+
         return Ok<ResponseResult>();
     }
 }

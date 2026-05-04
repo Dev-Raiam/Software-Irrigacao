@@ -1,37 +1,32 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Microsoft.Extensions.Options;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Data;
-using Toolbox.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using WorkerService.Features.Hardware;
 using WorkerService.Infrastructure.Data;
 using WorkerService.Infrastructure.Mqtt;
+using WorkerService.State;
 
 namespace WorkerService.Features.Roteadores.Controle;
 
 public class AcionarSolenoidHandler : CommandHandler, ICommandHandler<AcionarSolenoide>
 {
-    private readonly MqttClienteRemoto _mqttRemoto;
-    private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
-    {
-        Formatting = Formatting.None,
-        DateFormatHandling = DateFormatHandling.IsoDateFormat,
-        DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
-        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-        NullValueHandling = NullValueHandling.Ignore,
-        TypeNameHandling = TypeNameHandling.Objects,
-    };
-    private readonly WorkerServiceContext _context;
+    private readonly MqttClienteLocal _mqttCliente;
+    private readonly ArmazenamentoAutomacao _armazenamento;
+    private readonly MqttConfiguracao _mqttConfiguracao;
 
     public AcionarSolenoidHandler(
+        MqttClienteLocal mqttCliente,
         IUnitOfWork<WorkerServiceContext> uow,
-        MqttClienteRemoto mqttRemoto
+        ArmazenamentoAutomacao armazenamento,
+        IOptions<MqttConfiguracao> mqttConfiguracao
     )
         : base(uow)
     {
-        _context = uow.Context;
-        _mqttRemoto = mqttRemoto;
+        _mqttCliente = mqttCliente;
+        _armazenamento = armazenamento;
+        _mqttConfiguracao = mqttConfiguracao.Value;
     }
 
     public async Task<ResponseResult> Handle(
@@ -39,24 +34,24 @@ public class AcionarSolenoidHandler : CommandHandler, ICommandHandler<AcionarSol
         CancellationToken cancellationToken = default
     )
     {
-        // Console.WriteLine(
-        //     $"sssssssssssssssssssssssssssssssssssExecutando {nameof(AcionarSolenoide)}"
-        // );
+        var dispositivo = _armazenamento.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
 
-        // var dispositivo = _context.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
-        // if (dispositivo == null)
-        // {
-        //     AddError("Dispositivo não encontrado");
-        //     return NotFound();
-        // }
-        // Console.WriteLine($"Dispositivo encontrado: {dispositivo.Id}");
-        // //var comando = JsonConvert.SerializeObject(new AcionarSolenoide(), _settings);
-        // await _mqttRemoto.PublicarAsync(
-        //     "comando/solenoide",
-        //     dispositivo.Descricao,
-        //     cancellationToken
-        // );
-        await Task.Delay(1, cancellationToken);
+        if (dispositivo is null)
+            return NotFound();
+
+        var porta = _armazenamento
+            .Portas.Where(p => p.DispositivoConectadoId == dispositivo.Id)
+            .FirstOrDefault();
+
+        if (porta is null)
+            return NotFound();
+
+        await _mqttCliente.PublicarAsync(
+            _mqttConfiguracao.TopicoLocal,
+            ControleDigital.Acionar(porta.EnderecoLogico!),
+            cancellationToken
+        );
+
         return Ok<ResponseResult>();
     }
 }

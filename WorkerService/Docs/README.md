@@ -1,205 +1,201 @@
-# WorkerService - Controle de Hardware e Irrigação
+# WorkerService - Controle de Automação e Irrigação
 
-## 🏗️ Arquitetura
+## Arquitetura
 
-Este projeto implementa uma arquitetura baseada em **Features (Vertical Slice)** otimizada para controle de hardware via Worker Service.
+Arquitetura baseada em **Vertical Slice** com **CQRS** e **Mediator Pattern**, comunicação bidirecional via **MQTT** (broker remoto ↔ broker local) e sincronização periódica com API REST.
 
 ### Estrutura de Pastas
 
 ```
 WorkerService/
 │
-├── Infrastructure/                          🏗️ INFRAESTRUTURA
-│   ├── ApiClients/
-│   │   ├── IAutomacaoApiClient.cs          📡 Interface API Automação
-│   │   └── AutomacaoApiClient.cs           📡 Implementação HTTP Client
+├── Features/                                   REGRAS DE NEGÓCIO
+│   ├── Configuracao/
+│   │   ├── ConfiguracaoSistema/                Credenciais e Inicialização
+│   │   │   ├── AdicionarCredenciais.cs
+│   │   │   ├── AtualizarCredenciais.cs
+│   │   │   ├── ConfigurarSistemaHandler.cs
+│   │   │   └── ConfiguracaoInicializacaoHandler.cs
+│   │   └── Credenciais/                        Gerenciamento de Credenciais
+│   │       ├── GerenciadorCredenciais.cs
+│   │       └── _Interfaces/ICriptografia.cs
 │   │
-│   ├── Hardware/
-│   │   ├── IClpService.cs                  🔌 Interface CLP
-│   │   └── ClpService.cs                   🔌 Comunicação Modbus/GPIO
+│   ├── Sincronizacao/Automacao/                Sync API → Banco Local
+│   │   ├── SincronizarAutomacao.cs             (orquestrador)
+│   │   ├── SincronizarPaineisHandler.cs
+│   │   ├── SincronizarModulosHandler.cs
+│   │   ├── SincronizarPortasHandler.cs
+│   │   ├── SincronizarInterfacesHandler.cs
+│   │   └── SincronizarDispositivosHandler.cs
 │   │
-│   └── Persistence/
-│       ├── ApplicationDbContext.cs         💾 EF Core DbContext
-│       └── Entities/
-│           ├── Painel.cs                   🗄️ Entidade Painel
-│           ├── Modulo.cs                   🗄️ Entidade Módulo/Controlador
-│           ├── Dispositivo.cs              🗄️ Entidade Dispositivo
-│           ├── Porta.cs                    🗄️ Entidade Porta (I/O)
-│           ├── PlanoIrrigacao.cs           🗄️ Entidade Plano de Irrigação
-│           └── SetorIrrigacao.cs           🗄️ Entidade Setor de Irrigação
+│   └── Roteadores/                             Roteamento de Comandos MQTT
+│       ├── Controle/                           (AcionarBomba, AbrirValvula, etc.)
+│       ├── Sensores/                           (LerSensor*)
+│       └── Sincronizacao/                      (SincronizarPaineis, etc.)
 │
-├── Features/                                🎯 REGRAS DE NEGÓCIO (Vertical Slice)
-│   │
-│   ├── Sincronizacao/                      🔄 Sincronizar API → Banco Local
-│   │   └── SincronizarAutomacao/
-│   │       ├── SincronizarAutomacaoCommand.cs
-│   │       └── SincronizarAutomacaoHandler.cs
-│   │
-│   ├── Irrigacao/                          💧 CORE: Executar Irrigação
-│   │   ├── IniciarIrrigacao/
-│   │   │   ├── IniciarIrrigacaoCommand.cs  👉 Comando: Iniciar
-│   │   │   └── IniciarIrrigacaoHandler.cs  ← Busca porta → Liga CLP
-│   │   │
-│   │   ├── PararIrrigacao/
-│   │   │   ├── PararIrrigacaoCommand.cs    👉 Comando: Parar
-│   │   │   └── PararIrrigacaoHandler.cs    ← Desliga CLP
-│   │   │
-│   │   └── LerEstadoIrrigacao/
-│   │       ├── LerEstadoQuery.cs           👉 Query: Estado
-│   │       └── LerEstadoHandler.cs         ← Lê estado do CLP
-│   │
-│   └── Monitoramento/                      📊 Monitorar Sensores
-│       └── LerSensor/
-│           ├── LerSensorQuery.cs           👉 Query: Ler Sensor
-│           └── LerSensorHandler.cs         ← Lê valor analógico CLP
+├── Infrastructure/
+│   ├── Auth/                                   Token JWT
+│   │   ├── GerenciadorToken.cs
+│   │   ├── ManipuladorTokenAcesso.cs
+│   │   └── IAutenticacaoApi.cs
+│   ├── Http/                                   Clientes HTTP
+│   │   ├── AutenticacaoApi.cs
+│   │   └── AutomacaoApi.cs
+│   ├── Mqtt/                                   Comunicação MQTT
+│   │   ├── MqttCliente.cs                      (base)
+│   │   ├── MqttClienteRemoto.cs                (broker nuvem)
+│   │   └── MqttClienteLocal.cs                 (broker local/hardware)
+│   ├── Data/                                   EF Core + SQLite
+│   │   └── WorkerServiceContext.cs
+│   └── Criptografia/
+│       └── Criptografia.cs
 │
-└── Workers/                                 ⏰ BACKGROUND SERVICES
-    ├── SincronizacaoWorker.cs              🔄 Sincroniza APIs (30s)
-    └── IrrigacaoWorker.cs                  ⏰ Executa planos de irrigação (10s)
+├── State/                                      ESTADO EM MEMÓRIA (Singletons)
+│   ├── CredenciaisAplicacao.cs                 (PainelId, ContaId, Integração)
+│   ├── ArmazenamentoToken.cs                   (JWT ativo)
+│   ├── ArmazenamentoAutomacao.cs               (dados sincronizados)
+│   ├── ConfiguracaoInicializacao.cs            (gate de prontidão)
+│   ├── ApiConfiguracao.cs
+│   └── MqttConfiguracao.cs
+│
+└── Workers/                                    BACKGROUND SERVICES
+    ├── ProntidaoWorker.cs                      (aguarda credenciais)
+    ├── SincronizacaoWorker.cs                  (sync a cada 30s)
+    └── MqttWorker.cs                           (gerencia conexões MQTT)
 ```
 
-## 🔄 Fluxos Principais
+## Fluxos Principais
 
-### 1. Sincronização (API → Banco Local)
-```
-API Automação → SincronizacaoWorker → SincronizarAutomacaoHandler
-                                              ↓
-                                    [Painel, Dispositivos, Portas]
-                                              ↓
-                                        SQLite Local
-```
+### 1. Inicialização do Sistema
 
-**Frequência:** A cada 30 segundos
-
-### 2. Controle de Irrigação (Comando → Hardware)
 ```
-IrrigacaoWorker → Verifica Planos Ativos
-                        ↓
-            IniciarIrrigacaoHandler → Busca Porta no Banco
-                        ↓
-                  ClpService.LigarPorta(enderecoLogico)
-                        ↓
-                  Hardware (CLP/GPIO)
+ProntidaoWorker (loop a cada 10s)
+  → ConfiguracaoInicializacao.Iniciar()
+      → IniciarConfiguracaoInicializacaoHandler
+          → GerenciadorCredenciais (lê credenciais do SQLite)
+          → CredenciaisAplicacao (carrega em memória)
+  → ConfiguracaoInicializacaoConcluida()  ← libera os outros Workers
 ```
 
-**Frequência:** A cada 10 segundos (verifica setores em execução)
+Os outros workers bloqueiam em `AguardarConfiguracaoInicializacaoAsync()` até este gate ser liberado.
 
-### 3. Monitoramento de Estado (Hardware → Leitura)
+### 2. Sincronização de Automação
+
 ```
-LerSensorHandler → ClpService.LerValorAnalogicoAsync()
-                        ↓
-                  Hardware (CLP)
-                        ↓
-                  Retorna valor (pressão, vazão, etc)
+SincronizacaoWorker (loop a cada 30s)
+  → aguarda gate de prontidão
+  → SincronizarAutomacao.Executar()
+      → SincronizarPaineisHandler     → API REST → SQLite + ArmazenamentoAutomacao
+      → SincronizarModulosHandler     → API REST → SQLite
+      → SincronizarPortasHandler      → API REST → SQLite
+      → SincronizarInterfacesHandler  → API REST → SQLite
+      → SincronizarDispositivosHandler → API REST → SQLite
 ```
 
-## 🎯 Padrões Utilizados
+### 3. Roteamento de Comandos via MQTT
 
-### CQRS (Command Query Responsibility Segregation)
-- **Commands**: Alteram estado (IniciarIrrigacao, PararIrrigacao, SincronizarAutomacao)
-- **Queries**: Apenas leitura (LerEstado, LerSensor)
+```
+Sistema Externo / API
+  → publica no broker REMOTO: "comando/{painelId}"
+      payload: { "$type": "...AcionarBomba, Toolbox.Automacao.Irrigacao", "id": "...", ... }
+
+MqttClienteRemoto (callback)
+  → JsonConvert.DeserializeObject (TypeNameHandling.Objects)
+      → instancia tipo concreto pelo $type
+  → mediator.Execute((dynamic)command)
+      → AcionarBombaHandler
+          → serializa comando com $type
+          → publica no broker LOCAL: "comando/{painelId}"
+
+Hardware / CLP local
+  → MqttClienteLocal recebe e executa
+```
+
+### 4. Autenticação JWT (Automática)
+
+```
+ManipuladorTokenAcesso (DelegatingHandler)
+  → verifica se token em ArmazenamentoToken é válido
+  → se expirado: GerenciadorToken.ObterTokenAsync()
+      → AutenticacaoApi.AutenticarAsync(chave, segredo, contextoId)
+      → armazena novo token
+  → injeta Bearer token em todas as requisições HTTP
+```
+
+## Padrões Utilizados
 
 ### Vertical Slice Architecture
-Cada feature é **independente** e contém:
-- Command/Query (DTO de entrada)
-- Handler (lógica de negócio)
-- Todas as dependências necessárias
+Cada feature contém Command + Handler — sem camadas horizontais compartilhadas.
 
-### Repository Pattern (Implícito via EF Core)
-- `ApplicationDbContext` atua como Unit of Work
-- `DbSet<T>` atua como Repository
+### CQRS via Mediator
+- `ICommandHandler<T>` — altera estado, retorna `ResponseResult`
+- `mediator.Execute((dynamic)command)` — late binding para resolução em runtime pelo tipo concreto
 
-## 🔌 Comunicação com Hardware
+### Gate de Prontidão (TaskCompletionSource)
+`ConfiguracaoInicializacao` usa `TaskCompletionSource` para bloquear workers dependentes até as credenciais serem carregadas.
 
-### Interface IClpService
-```csharp
-Task<bool> LigarPortaAsync(string enderecoLogico);
-Task<bool> DesligarPortaAsync(string enderecoLogico);
-Task<bool> LerEstadoPortaAsync(string enderecoLogico);
-Task<double> LerValorAnalogicoAsync(string enderecoLogico);
-```
+### Serialização MQTT com TypeNameHandling
+Comandos trafegam com `$type` no JSON (Newtonsoft.Json `TypeNameHandling.Objects`), permitindo deserialização polimórfica automática no receptor C#.
 
-**Implementação Atual:** Mock (ClpService.cs)
-**Próximos Passos:** Implementar Modbus TCP/RTU ou GPIO
+## Tópicos MQTT
 
-## 💧 Sistema de Irrigação
+| Tópico | Direção | Descrição |
+|---|---|---|
+| `comando/{painelId}` | Remoto → Worker | Comandos vindos da nuvem |
+| `comando/{painelId}` | Worker → Local | Reencaminhamento ao hardware |
 
-### Entidades Principais
+## Dependências Externas
 
-**PlanoIrrigacao**
-- Nome, Descrição
-- HorarioInicio, DuracaoMinutos
-- Ativo (bool)
-- Setores (collection)
+| Pacote | Uso |
+|---|---|
+| `Toolbox.Core.Api` (NuGet) | Mediator, CommandHandler, ResponseResult |
+| `Toolbox.Automacao.Irrigacao` (ProjectRef) | Tipos de Command (AcionarBomba, etc.) |
+| `MQTTnet` | Cliente MQTT |
+| `Newtonsoft.Json` | Serialização polimórfica |
+| `EF Core + SQLite` | Persistência local |
+| `Serilog` | Logging estruturado |
 
-**SetorIrrigacao**
-- Nome, Ordem
-- DuracaoMinutos
-- PortaId (FK para Porta física)
-- Status (Aguardando, Executando, Concluído, Cancelado, Erro)
-
-### Fluxo de Execução
-
-1. **IrrigacaoWorker** verifica planos ativos a cada 10s
-2. Se horário atual está dentro da janela do plano:
-   - Verifica se há setor em execução
-   - Se tempo do setor expirou → Para irrigação → Inicia próximo setor
-   - Se não há setor executando → Inicia primeiro setor
-3. Quando todos os setores concluem → Marca plano como executado → Reseta setores
-
-## 🚀 Como Executar
+## Como Executar
 
 ### Pré-requisitos
 - .NET 10.0
-- SQLite
+- Broker MQTT local e remoto acessíveis
+- SQLite (criado automaticamente via migrations)
 
 ### Configuração (appsettings.json)
 ```json
 {
-  "ConnectionStrings": {
-    "LocalDatabase": "Data Source=automacao.db"
+  "MqttConfiguracao": {
+    "BrokerLocal": "localhost",
+    "BrokerRemoto": "broker.exemplo.com",
+    "Porta": 1883,
+    "UsuarioRemoto": "usuario",
+    "SenhaRemoto": "senha"
   },
-  "ApiSettings": {
-    "BaseUrl": "https://api.automacao.com",
-    "BearerToken": "seu-token-aqui",
-    "PainelId": "guid-do-painel",
-    "TimeoutSeconds": 30
+  "ApiConfiguration": {
+    "BaseUrl": "https://api.toolbox.app.br"
   }
 }
 ```
+
+> As credenciais (PainelId, ContaId, Integração) são configuradas via comando `AdicionarCredenciais` e armazenadas criptografadas no SQLite local.
 
 ### Executar
 ```bash
 dotnet run
 ```
 
-## 📊 Logs
+## Workers e Logs
 
-Os Workers geram logs estruturados:
-- **SincronizacaoWorker**: Sincronizações, erros de API
-- **IrrigacaoWorker**: Início/fim de irrigação, transições de setores
-- **Handlers**: Operações de hardware, erros de comunicação
+| Worker | Frequência | Log esperado |
+|---|---|---|
+| `ProntidaoWorker` | a cada 10s até pronto | `Aplicação Configurada!!!` |
+| `SincronizacaoWorker` | a cada 30s | `Paineis sincronizados`, etc. |
+| `MqttWorker` | contínuo | `Conectado ao broker MQTT` |
 
-## 🔧 Extensibilidade
+## Adicionar Novo Comando
 
-### Adicionar Nova Feature
-1. Criar pasta em `Features/NomeFeature/`
-2. Criar Command/Query
-3. Criar Handler com lógica de negócio
-4. Registrar Handler no `Program.cs`
-5. Usar no Worker ou expor via API
-
-### Adicionar Novo Protocolo de Hardware
-1. Criar implementação de `IClpService`
-2. Registrar no `Program.cs`
-3. Configurar parâmetros de conexão
-
-## 📝 Próximos Passos
-
-- [ ] Implementar Modbus TCP/RTU real
-- [ ] Adicionar retry policies (Polly)
-- [ ] Implementar fila de comandos (Channels)
-- [ ] Adicionar testes unitários
-- [ ] Criar API REST para controle manual
-- [ ] Implementar histórico de execuções
-- [ ] Dashboard de monitoramento em tempo real
+1. Criar classe em `Toolbox.Automacao.Irrigacao/Comandos/`
+2. Criar handler em `Features/Roteadores/{Categoria}/`
+3. Handler implementa `ICommandHandler<NovoComando>` e publica no broker local
+4. O mediator registra automaticamente via `Assembly.GetExecutingAssembly()`

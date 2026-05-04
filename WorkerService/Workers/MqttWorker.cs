@@ -26,6 +26,7 @@ public class MqttWorker(
     {
         var scope = _serviceProvider.CreateScope();
         var _context = scope.ServiceProvider.GetRequiredService<WorkerServiceContext>();
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -105,6 +106,10 @@ public class MqttWorker(
                 {
                     ConexaoIniciada = true;
                 }
+                // if (_mqttClienteRemoto.Conectado)
+                // {
+                //     ConexaoIniciada = true;
+                // }
 
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }

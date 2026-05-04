@@ -25,6 +25,12 @@ namespace WorkerService.Features.Shared.Abstractions
             CancellationToken cancellationToken,
             MqttApplicationMessageBuilder? messageBuilder = null
         );
+        Task PublicarAsync(
+            string topico,
+            object mensagem,
+            CancellationToken cancellationToken,
+            MqttApplicationMessageBuilder? messageBuilder = null
+        );
         Task DesconectarAsync(CancellationToken cancellationToken);
     }
 }

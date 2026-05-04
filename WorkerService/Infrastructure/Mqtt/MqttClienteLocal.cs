@@ -19,7 +19,7 @@ namespace WorkerService.Infrastructure.Mqtt
     {
         private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
         {
-            Formatting = Formatting.None,
+            Formatting = Formatting.Indented,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
             DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -38,6 +38,7 @@ namespace WorkerService.Infrastructure.Mqtt
                     var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+
                     var mensagem = JsonConvert.DeserializeObject(payload, _settings)!;
 
                     if (mensagem is Command command)

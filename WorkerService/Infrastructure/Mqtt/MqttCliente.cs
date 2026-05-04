@@ -1,4 +1,6 @@
-﻿using MQTTnet;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using MQTTnet;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
@@ -14,6 +16,14 @@ namespace WorkerService.Infrastructure.Mqtt
         public bool Conectado => _mqttCliente.IsConnected;
         protected readonly IMqttClient _mqttCliente = null!;
         protected readonly ILogger<MqttCliente> _logger = null!;
+
+        private readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+            IndentSize = 4,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        };
 
         public MqttCliente(
             string nomeInstancia,
@@ -154,6 +164,25 @@ namespace WorkerService.Infrastructure.Mqtt
         public async Task DesconectarAsync(CancellationToken cancellationToken)
         {
             await _mqttCliente.DisconnectAsync(cancellationToken: cancellationToken);
+        }
+
+        public async Task PublicarAsync(
+            string topico,
+            object mensagem,
+            CancellationToken cancellationToken,
+            MqttApplicationMessageBuilder? messageBuilder = null
+        )
+        {
+            var message =
+                messageBuilder?.Build()
+                ?? new MqttApplicationMessageBuilder()
+                    .WithTopic(topico)
+                    .WithPayload(JsonSerializer.Serialize(mensagem, _jsonOptions))
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                    // .WithRetainFlag()
+                    .Build();
+
+            await _mqttCliente.PublishAsync(message, cancellationToken);
         }
     }
 }
