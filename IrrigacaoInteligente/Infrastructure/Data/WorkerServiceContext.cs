@@ -1,0 +1,51 @@
+using Microsoft.EntityFrameworkCore;
+using Toolbox.Core.Api.Data;
+using Toolbox.Core.Models;
+using IrrigacaoInteligente.Domain.Entities;
+
+namespace IrrigacaoInteligente.Infrastructure.Data;
+
+public class User : IUser
+{
+    public string? Name { get; set; }
+    public string? Email { get; set; }
+
+    public long? Id => null;
+
+    public string? Role => null;
+
+    public long? TenantId => null;
+
+    public Guid? ClientId => null;
+
+    public Guid? FeatureId => null;
+
+    public Guid? CollaboratorId => null;
+
+    public bool Authenticated => true;
+}
+
+public class IrrigacaoInteligenteContext : DbContext, IDataContext
+{
+    public DbSet<Painel> Paineis { get; set; } = null!;
+    public DbSet<Modulo> Modulos { get; set; } = null!;
+    public DbSet<Dispositivo> Dispositivos { get; set; } = null!;
+    public DbSet<Porta> Portas { get; set; } = null!;
+    public DbSet<Interface> Interfaces { get; set; } = null!;
+    public DbSet<ConfiguracaoSistema> ConfiguracoesSistema { get; set; } = null!;
+
+    public IUser User { get; }
+
+    public IrrigacaoInteligenteContext(DbContextOptions<IrrigacaoInteligenteContext> options)
+        : base(options)
+    {
+        User = new User();
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(IrrigacaoInteligenteContext).Assembly);
+    }
+}
