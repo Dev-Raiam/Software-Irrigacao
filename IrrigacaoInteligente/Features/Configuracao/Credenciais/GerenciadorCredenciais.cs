@@ -12,16 +12,19 @@ namespace IrrigacaoInteligente.Features.Configuracao.Credenciais
         private readonly IrrigacaoInteligenteContext _context;
         private readonly ICriptografia _servicoCriptografia;
         private readonly CredenciaisAplicacao _credenciaisAplicacao;
+        private readonly ILogger<GerenciadorCredenciais> _logger;
 
         public GerenciadorCredenciais(
             IrrigacaoInteligenteContext context,
             ICriptografia servicoCriptografia,
-            CredenciaisAplicacao credenciaisAplicacao
+            CredenciaisAplicacao credenciaisAplicacao,
+            ILogger<GerenciadorCredenciais> logger
         )
         {
             _context = context;
             _servicoCriptografia = servicoCriptografia;
             _credenciaisAplicacao = credenciaisAplicacao;
+            _logger = logger;
         }
 
         #region Consultas
@@ -73,8 +76,16 @@ namespace IrrigacaoInteligente.Features.Configuracao.Credenciais
                 cancellationToken
             );
 
-            chave!.Atualizar(_servicoCriptografia.Descriptografar(chave.Valor));
-            segredo!.Atualizar(_servicoCriptografia.Descriptografar(segredo.Valor));
+            try
+            {
+                chave!.Atualizar(_servicoCriptografia.Descriptografar(chave.Valor));
+                segredo!.Atualizar(_servicoCriptografia.Descriptografar(segredo.Valor));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao descriptografar credenciais de integração");
+                return false;
+            }
 
             _credenciaisAplicacao.AdicionarIntegracao(
                 chave.Valor,
@@ -132,12 +143,21 @@ namespace IrrigacaoInteligente.Features.Configuracao.Credenciais
             if (await VerificarIntegracao(cancellationToken))
                 return false;
 
-            var integracao = new List<Domain.Entities.ConfiguracaoSistema>
+            var integracao = new List<Domain.Entities.ConfiguracaoSistema>();
+
+            try
             {
-                new(ChavesBanco.Integracao.Chave, _servicoCriptografia.Criptografar(chave)),
-                new(ChavesBanco.Integracao.Segredo, _servicoCriptografia.Criptografar(segredo)),
-                new(ChavesBanco.Integracao.ContextoId, contextoId.ToString()),
-            };
+                integracao.AddRange([
+                    new(ChavesBanco.Integracao.Chave, _servicoCriptografia.Criptografar(chave)),
+                    new(ChavesBanco.Integracao.Segredo, _servicoCriptografia.Criptografar(segredo)),
+                    new(ChavesBanco.Integracao.ContextoId, contextoId.ToString()),
+                ]);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao adicionar integração");
+                return false;
+            }
 
             await _context.ConfiguracoesSistema.AddRangeAsync(integracao, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
@@ -229,7 +249,7 @@ namespace IrrigacaoInteligente.Features.Configuracao.Credenciais
                 cancellationToken
             );
 
-            if (!existeChave && !existeSegredo && !existeContextoId)
+            if (!existeChave || !existeSegredo || !existeContextoId)
                 return false;
 
             return true;

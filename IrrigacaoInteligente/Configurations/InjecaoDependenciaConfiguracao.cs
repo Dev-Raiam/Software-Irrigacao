@@ -9,6 +9,7 @@ using IrrigacaoInteligente.Infrastructure.Http;
 using IrrigacaoInteligente.Infrastructure.Mqtt;
 using IrrigacaoInteligente.State;
 using IrrigacaoInteligente.Workers;
+using Microsoft.AspNetCore.DataProtection;
 using MQTTnet;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
@@ -29,10 +30,18 @@ public static class InjecaoDependenciaConfiguracao
             Assembly.GetExecutingAssembly(),
             typeof(AcionarBomba).GetTypeInfo().Assembly
         );
-        services.AddDataProtection();
+        services
+            .AddDataProtection()
+            .SetApplicationName("IrrigacaoInteligente")
+            .PersistKeysToFileSystem(
+                new DirectoryInfo(@"D:\Desenvolvimento\Backend\SoftwareIrrigacao")
+            );
+
         services.AddSingleton<ArmazenamentoToken>();
         services.AddSingleton<CredenciaisAplicacao>();
         services.AddSingleton<ArmazenamentoAutomacao>();
+        services.AddSingleton<ICriptografia, Criptografia>();
+        services.AddScoped<GerenciadorCredenciais>();
 
         services.AddSingleton<MqttClienteRemoto>(provider => new MqttClienteRemoto(
             new MqttClientFactory().CreateMqttClient(),
@@ -48,11 +57,9 @@ public static class InjecaoDependenciaConfiguracao
         services.AddSingleton<ConfiguracaoInicializacao>();
         services.AddSingleton<GerenciadorToken>();
         services.AddScoped<SincronizarAutomacao>();
-        services.AddScoped<GerenciadorCredenciais>();
-        services.AddScoped<ICriptografia, Criptografia>();
         services.AddTransient<ManipuladorTokenAcesso>();
         services.AddHostedService<ProntidaoWorker>();
-        services.AddHostedService<SincronizacaoWorker>();
+        // services.AddHostedService<SincronizacaoWorker>();
         services.AddHostedService<MqttWorker>();
         services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
         services

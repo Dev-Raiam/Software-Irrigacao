@@ -7,6 +7,7 @@ using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.State;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Toolbox.Automacao.Irrigacao.Comandos.Sincronizacao;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
@@ -40,10 +41,7 @@ public class ConfigurarSistemaHandler
         CancellationToken cancellationToken
     )
     {
-        if (
-            !_credenciaisAplicacao.Invalida
-            || await _gerenciadorCredenciais.VerificarCredenciaisExistentes(cancellationToken)
-        )
+        if (!_credenciaisAplicacao.Invalida)
             return Conflict("Configurações já Carregadas");
 
         await _gerenciadorCredenciais.AdicionarPainelId(request.PainelId, cancellationToken);

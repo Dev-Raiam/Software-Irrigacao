@@ -16,10 +16,8 @@ public class MqttWorker : BackgroundService
     private readonly MqttConfiguracao _config;
     private readonly ConfiguracaoInicializacao _configuracaoInicializacao;
     private bool ConexaoIniciada = false;
-    private List<Guid> DispositivosIds = [];
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
-    private bool AvisoEmitido = false;
 
     public MqttWorker(
         MqttClienteRemoto mqttClienteRemoto,
@@ -42,7 +40,7 @@ public class MqttWorker : BackgroundService
     {
         await _configuracaoInicializacao.AguardarConfiguracaoInicializacaoAsync(stoppingToken);
 
-        var scope = _serviceProvider.CreateScope();
+        using var scope = _serviceProvider.CreateScope();
         var _context = scope.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
 
         while (!stoppingToken.IsCancellationRequested)
@@ -51,30 +49,6 @@ public class MqttWorker : BackgroundService
             {
                 if (ConexaoIniciada)
                     break;
-
-                if (DispositivosIds.Count > 0)
-                {
-                    await Task.Delay(5000, stoppingToken);
-
-                    DispositivosIds = await _context
-                        .Dispositivos.AsNoTracking()
-                        .Select(d => d.Id)
-                        .ToListAsync(stoppingToken);
-
-                    if (DispositivosIds.Count == 0 && !AvisoEmitido)
-                    {
-                        _logger.LogWarning(
-                            "Nenhum dispositivo encontrado nova tentativa a 5 segundos..."
-                        );
-
-                        AvisoEmitido = true;
-                    }
-                    if (DispositivosIds.Count > 0)
-                    {
-                        _logger.LogInformation("Dispositivos encontrados");
-                    }
-                    return;
-                }
 
                 await _mqttClienteLocal.ConectarAsync(
                     _config.BrokerLocal,
@@ -124,10 +98,6 @@ public class MqttWorker : BackgroundService
                 {
                     ConexaoIniciada = true;
                 }
-                // if (_mqttClienteRemoto.Conectado)
-                // {
-                //     ConexaoIniciada = true;
-                // }
 
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }

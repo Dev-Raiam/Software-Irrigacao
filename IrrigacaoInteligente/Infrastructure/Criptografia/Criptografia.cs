@@ -9,7 +9,7 @@ public sealed class Criptografia : ICriptografia
 
     public Criptografia(IDataProtectionProvider provider)
     {
-        _protector = provider.CreateProtector("Automacao.Credenciais.v1");
+        _protector = provider.CreateProtector("Automacao.Credenciais.v2");
     }
 
     public string Criptografar(string entrada) => _protector.Protect(entrada);

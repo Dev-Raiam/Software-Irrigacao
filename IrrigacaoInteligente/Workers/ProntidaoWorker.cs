@@ -4,23 +4,20 @@ namespace IrrigacaoInteligente.Workers;
 
 public class ProntidaoWorker : BackgroundService
 {
-    private readonly ILogger<ProntidaoWorker> _logger;
     private readonly ConfiguracaoInicializacao _configuracaoInicializacao;
-    private bool _avisoEmitido = false;
+    private readonly ILogger<ProntidaoWorker> _logger;
 
     public ProntidaoWorker(
-        ILogger<ProntidaoWorker> logger,
-        ConfiguracaoInicializacao configuracaoInicializacao
+        ConfiguracaoInicializacao configuracaoInicializacao,
+        ILogger<ProntidaoWorker> logger
     )
     {
-        _logger = logger;
         _configuracaoInicializacao = configuracaoInicializacao;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
-
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -29,17 +26,14 @@ public class ProntidaoWorker : BackgroundService
 
                 if (execucaoCompleta)
                 {
-                    _logger.LogInformation("Aplicação Configurada!!!");
+                    await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+
                     _configuracaoInicializacao.ConfiguracaoInicializacaoConcluida();
+
                     break;
                 }
-                else if (!_avisoEmitido)
-                {
-                    _logger.LogInformation("Aguardando configurações...");
-                    _avisoEmitido = true;
-                }
 
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
             catch (OperationCanceledException)
             {

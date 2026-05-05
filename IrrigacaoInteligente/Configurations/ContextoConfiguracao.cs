@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using IrrigacaoInteligente.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace IrrigacaoInteligente.Configurations;
 

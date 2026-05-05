@@ -1,11 +1,11 @@
 using System.Net;
+using IrrigacaoInteligente.Features.Configuracao.ConfiguracaoSistema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Toolbox.Core.Mediator;
-using IrrigacaoInteligente.Features.Configuracao.ConfiguracaoSistema;
 
 namespace IrrigacaoInteligente.Presentation.Endpoints;
 
