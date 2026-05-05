@@ -1,6 +1,6 @@
 namespace IrrigacaoInteligente.Features.Hardware;
 
-public class ControleAnalogico
+public class ComandoAnalogico
 {
     public string Tipo { get; private init; } = null!;
     public string Sinal { get; private init; } = null!;
@@ -8,23 +8,23 @@ public class ControleAnalogico
     public string Porta { get; private init; } = null!;
     public int? Valor { get; private set; }
 
-    public static ControleAnalogico Ler(string porta) =>
+    public static ComandoAnalogico Ler(string porta) =>
         new()
         {
-            Tipo = "analogico",
+            Tipo = Hardware.Tipo.ANALOGICA,
             Sinal = Hardware.Sinal.ENTRADA,
             Operacao = Hardware.Operacao.READ,
             Porta = porta,
         };
 
-    public ControleAnalogico SetarValor(string porta, int valor)
+    public static ComandoAnalogico SetarValor(string porta, int valor)
     {
         if (valor < 0)
             throw new ArgumentException("Valor não pode ser negativo");
 
         return new()
         {
-            Tipo = "analogico",
+            Tipo = Hardware.Tipo.ANALOGICA,
             Sinal = Hardware.Sinal.SAIDA,
             Operacao = Hardware.Operacao.WRITE,
             Porta = porta,

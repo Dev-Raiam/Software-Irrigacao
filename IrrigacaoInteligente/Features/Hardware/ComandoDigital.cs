@@ -1,6 +1,6 @@
 namespace IrrigacaoInteligente.Features.Hardware;
 
-public class ControleDigital
+public class ComandoDigital
 {
     public string Tipo { get; private init; } = null!;
     public string Sinal { get; private init; } = null!;
@@ -8,30 +8,30 @@ public class ControleDigital
     public string Porta { get; private init; } = null!;
     public bool? Valor { get; private init; }
 
-    public static ControleDigital Acionar(string porta) =>
+    public static ComandoDigital Acionar(string porta) =>
         new()
         {
-            Tipo = "digital",
+            Tipo = Hardware.Tipo.DIGITAL,
             Sinal = Hardware.Sinal.SAIDA,
             Operacao = Hardware.Operacao.WRITE,
             Porta = porta,
             Valor = true,
         };
 
-    public static ControleDigital Desligar(string porta) =>
+    public static ComandoDigital Desligar(string porta) =>
         new()
         {
-            Tipo = "digital",
+            Tipo = Hardware.Tipo.DIGITAL,
             Sinal = Hardware.Sinal.SAIDA,
             Operacao = Hardware.Operacao.WRITE,
             Porta = porta,
             Valor = false,
         };
 
-    public static ControleDigital Ler(string porta) =>
+    public static ComandoDigital Ler(string porta) =>
         new()
         {
-            Tipo = "digital",
+            Tipo = Hardware.Tipo.DIGITAL,
             Sinal = Hardware.Sinal.ENTRADA,
             Operacao = Hardware.Operacao.READ,
             Porta = porta,

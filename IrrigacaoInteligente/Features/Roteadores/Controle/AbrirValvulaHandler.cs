@@ -49,7 +49,7 @@ public class AbrirValvulaHandler : CommandHandler, ICommandHandler<AbrirValvula>
 
         await _mqttClient.PublicarAsync(
             _mqttConfiguracao.TopicoLocal,
-            ControleDigital.Acionar(porta.EnderecoLogico!),
+            ComandoDigital.Acionar(porta.EnderecoLogico!),
             cancellationToken
         );
 

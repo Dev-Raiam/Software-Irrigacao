@@ -11,3 +11,9 @@ public static class Sinal
     public static string ENTRADA { get; } = "entrada";
     public static string SAIDA { get; } = "saida";
 }
+
+public static class Tipo
+{
+    public static string DIGITAL { get; } = "digital";
+    public static string ANALOGICA { get; } = "analogica";
+}

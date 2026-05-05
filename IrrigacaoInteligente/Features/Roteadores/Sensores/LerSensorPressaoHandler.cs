@@ -1,13 +1,12 @@
-using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
-using Toolbox.Core.Api.Data;
-using Toolbox.Core.Data;
-using Toolbox.Core.Mediator;
-using Toolbox.Core.Messages;
 using IrrigacaoInteligente.Features.Hardware;
 using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.Infrastructure.Mqtt;
 using IrrigacaoInteligente.State;
+using Microsoft.Extensions.Options;
+using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
+using Toolbox.Core.Api.Data;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 
 namespace IrrigacaoInteligente.Features.Roteadores.Sensores;
 
@@ -49,7 +48,7 @@ public class LerSensorPressaoHandler : CommandHandler, ICommandHandler<LerSensor
 
         await _mqttClient.PublicarAsync(
             _mqttConfiguracao.TopicoLocal,
-            ControleAnalogico.Ler(porta.EnderecoLogico!),
+            ComandoAnalogico.Ler(porta.EnderecoLogico!),
             cancellationToken
         );
 

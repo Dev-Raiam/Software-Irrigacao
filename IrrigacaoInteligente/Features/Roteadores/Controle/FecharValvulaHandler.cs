@@ -1,13 +1,13 @@
+using IrrigacaoInteligente.Features.Hardware;
+using IrrigacaoInteligente.Infrastructure.Data;
+using IrrigacaoInteligente.Infrastructure.Mqtt;
+using IrrigacaoInteligente.State;
 using Microsoft.Extensions.Options;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
-using IrrigacaoInteligente.Features.Hardware;
-using IrrigacaoInteligente.Infrastructure.Data;
-using IrrigacaoInteligente.Infrastructure.Mqtt;
-using IrrigacaoInteligente.State;
 
 namespace IrrigacaoInteligente.Features.Roteadores.Controle;
 
@@ -49,7 +49,7 @@ public class FecharValvulaHandler : CommandHandler, ICommandHandler<FecharValvul
 
         await _mqttCliente.PublicarAsync(
             _mqttConfiguracao.TopicoLocal,
-            ControleDigital.Desligar(porta.EnderecoLogico!),
+            ComandoDigital.Desligar(porta.EnderecoLogico!),
             cancellationToken
         );
 
