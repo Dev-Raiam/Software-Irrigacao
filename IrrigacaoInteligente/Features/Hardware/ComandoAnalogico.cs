@@ -1,7 +1,10 @@
+using Org.BouncyCastle.Crypto.Engines;
+
 namespace IrrigacaoInteligente.Features.Hardware;
 
 public class ComandoAnalogico
 {
+    public Guid CorrelacaoId { get; private init; }
     public string Tipo { get; private init; } = null!;
     public string Sinal { get; private init; } = null!;
     public string Operacao { get; private init; } = null!;
