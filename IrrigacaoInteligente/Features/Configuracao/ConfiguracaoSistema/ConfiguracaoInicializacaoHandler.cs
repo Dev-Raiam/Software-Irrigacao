@@ -15,18 +15,24 @@ public class ConfiguracaoInicializacaoHandler
         ICommandHandler<IniciarConfiguracaoInicializacao>
 {
     private readonly CredenciaisAplicacao _credenciaisAplicacao;
+    private readonly ArmazenamentoAutomacao _armazenamentoAutomacao;
+    private readonly IMediator _mediator;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ConfiguracaoInicializacaoHandler> _logger;
 
     public ConfiguracaoInicializacaoHandler(
         IUnitOfWork<IrrigacaoInteligenteContext> uow,
         CredenciaisAplicacao credenciaisAplicacao,
+        ArmazenamentoAutomacao armazenamentoAutomacao,
+        IMediator mediator,
         IServiceProvider serviceProvider,
         ILogger<ConfiguracaoInicializacaoHandler> logger
     )
         : base(uow)
     {
         _credenciaisAplicacao = credenciaisAplicacao;
+        _armazenamentoAutomacao = armazenamentoAutomacao;
+        _mediator = mediator;
         _serviceProvider = serviceProvider;
         _logger = logger;
     }
@@ -51,6 +57,11 @@ public class ConfiguracaoInicializacaoHandler
         {
             _logger.LogInformation("Configurações Carregadas com Sucesso!!!");
 
+            if (_armazenamentoAutomacao.Invalido)
+                await _mediator.Execute(
+                    new SincronizarControladores(),
+                    cancellationToken: cancellationToken
+                );
             return Ok<ResponseResult>();
         }
 

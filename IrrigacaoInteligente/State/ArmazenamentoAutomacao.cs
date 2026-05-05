@@ -9,5 +9,12 @@ namespace IrrigacaoInteligente.State
         public List<Porta> Portas { get; set; } = [];
         public List<Interface> Interfaces { get; set; } = [];
         public List<Dispositivo> Dispositivos { get; set; } = [];
+
+        public bool Invalido =>
+            Paineis.Count == 0
+            || Modulos.Count == 0
+            || Portas.Count == 0
+            || Interfaces.Count == 0
+            || Dispositivos.Count == 0;
     }
 }

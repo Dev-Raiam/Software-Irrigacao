@@ -20,11 +20,13 @@ public class ConfigurarSistemaHandler
         ICommandHandler<AtualizarCredenciais>
 {
     private readonly GerenciadorCredenciais _gerenciadorCredenciais;
+    private readonly IMediator _mediator;
     private readonly IrrigacaoInteligenteContext _context;
     private readonly CredenciaisAplicacao _credenciaisAplicacao;
 
     public ConfigurarSistemaHandler(
         GerenciadorCredenciais gerenciadorCredenciais,
+        IMediator mediator,
         IUnitOfWork<IrrigacaoInteligenteContext> uow,
         IrrigacaoInteligenteContext context,
         CredenciaisAplicacao credenciaisAplicacao
@@ -32,6 +34,7 @@ public class ConfigurarSistemaHandler
         : base(uow)
     {
         _gerenciadorCredenciais = gerenciadorCredenciais;
+        _mediator = mediator;
         _context = context;
         _credenciaisAplicacao = credenciaisAplicacao;
     }
@@ -90,6 +93,11 @@ public class ConfigurarSistemaHandler
         _context.RemoveRange(paineis);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _mediator.Execute(
+            new SincronizarControladores(),
+            cancellationToken: cancellationToken
+        );
 
         return Ok("Credenciais atualizadas com sucesso");
     }
