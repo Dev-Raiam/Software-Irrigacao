@@ -26,17 +26,20 @@ public static class SeedData
 
         await context.Database.MigrateAsync();
 
-        var paineis = await context.Paineis.AsNoTracking().ToListAsync();
-        var modulos = await context.Modulos.AsNoTracking().ToListAsync();
-        var portas = await context.Portas.AsNoTracking().ToListAsync();
-        var interfaces = await context.Interfaces.AsNoTracking().ToListAsync();
-        var dispositivos = await context.Dispositivos.AsNoTracking().ToListAsync();
+        // var paineis = await context.Paineis.AsNoTracking().ToListAsync();
+        // var modulos = await context.Modulos.AsNoTracking().ToListAsync();
+        // var portas = await context.Portas.AsNoTracking().ToListAsync();
+        // var interfaces = await context.Interfaces.AsNoTracking().ToListAsync();
+        // var dispositivos = await context.Dispositivos.AsNoTracking().ToListAsync();
 
-        armazenamentoAutomacao.Paineis.AddRange(paineis);
-        armazenamentoAutomacao.Modulos.AddRange(modulos);
-        armazenamentoAutomacao.Portas.AddRange(portas);
-        armazenamentoAutomacao.Interfaces.AddRange(interfaces);
-        armazenamentoAutomacao.Dispositivos.AddRange(dispositivos);
+        var controlador = await context.Controladores.AsNoTracking().FirstOrDefaultAsync();
+
+        armazenamentoAutomacao.Dados = controlador?.Configuracao ?? string.Empty;
+        // armazenamentoAutomacao.Paineis.AddRange(paineis);
+        // armazenamentoAutomacao.Modulos.AddRange(modulos);
+        // armazenamentoAutomacao.Portas.AddRange(portas);
+        // armazenamentoAutomacao.Interfaces.AddRange(interfaces);
+        // armazenamentoAutomacao.Dispositivos.AddRange(dispositivos);
 
         await gerenciadorCredenciais.ObterContaId(CancellationToken.None);
         await gerenciadorCredenciais.ObterPainelId(CancellationToken.None);

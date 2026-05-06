@@ -80,17 +80,17 @@ public class ConfigurarSistemaHandler
         _credenciaisAplicacao.AtualizarConta(request.ContaId);
         _credenciaisAplicacao.AtualizarPainel(request.PainelId);
 
-        var interfaces = await _context.Interfaces.ToListAsync(cancellationToken);
-        var portas = await _context.Portas.ToListAsync(cancellationToken);
-        var dispositivos = await _context.Dispositivos.ToListAsync(cancellationToken);
-        var modulos = await _context.Modulos.ToListAsync(cancellationToken);
-        var paineis = await _context.Paineis.ToListAsync(cancellationToken);
+        // var interfaces = await _context.Interfaces.ToListAsync(cancellationToken);
+        // var portas = await _context.Portas.ToListAsync(cancellationToken);
+        // var dispositivos = await _context.Dispositivos.ToListAsync(cancellationToken);
+        // var modulos = await _context.Modulos.ToListAsync(cancellationToken);
+        // var paineis = await _context.Paineis.ToListAsync(cancellationToken);
 
-        _context.RemoveRange(interfaces);
-        _context.RemoveRange(portas);
-        _context.RemoveRange(dispositivos);
-        _context.RemoveRange(modulos);
-        _context.RemoveRange(paineis);
+        // _context.RemoveRange(interfaces);
+        // _context.RemoveRange(portas);
+        // _context.RemoveRange(dispositivos);
+        // _context.RemoveRange(modulos);
+        // _context.RemoveRange(paineis);
 
         await _context.SaveChangesAsync(cancellationToken);
 

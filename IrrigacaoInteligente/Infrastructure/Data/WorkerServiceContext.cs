@@ -1,7 +1,7 @@
+using IrrigacaoInteligente.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Models;
-using IrrigacaoInteligente.Domain.Entities;
 
 namespace IrrigacaoInteligente.Infrastructure.Data;
 
@@ -27,12 +27,13 @@ public class User : IUser
 
 public class IrrigacaoInteligenteContext : DbContext, IDataContext
 {
-    public DbSet<Painel> Paineis { get; set; } = null!;
-    public DbSet<Modulo> Modulos { get; set; } = null!;
-    public DbSet<Dispositivo> Dispositivos { get; set; } = null!;
-    public DbSet<Porta> Portas { get; set; } = null!;
-    public DbSet<Interface> Interfaces { get; set; } = null!;
+    // public DbSet<Painel> Paineis { get; set; } = null!;
+    // public DbSet<Modulo> Modulos { get; set; } = null!;
+    // public DbSet<Dispositivo> Dispositivos { get; set; } = null!;
+    // public DbSet<Porta> Portas { get; set; } = null!;
+    // public DbSet<Interface> Interfaces { get; set; } = null!;
     public DbSet<ConfiguracaoSistema> ConfiguracoesSistema { get; set; } = null!;
+    public DbSet<Controlador> Controladores { get; set; } = null!;
 
     public IUser User { get; }
 

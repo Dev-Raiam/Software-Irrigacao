@@ -1,11 +1,12 @@
 using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
+using IrrigacaoInteligente.Features.Shared.Extensions;
+using IrrigacaoInteligente.Features.Sincronizacao.Automacao.Interfaces;
+using IrrigacaoInteligente.State;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using IrrigacaoInteligente.Features.Shared.Extensions;
-using IrrigacaoInteligente.Features.Sincronizacao.Automacao.Interfaces;
-using IrrigacaoInteligente.State;
 
 namespace IrrigacaoInteligente.Infrastructure.Http;
 
@@ -32,7 +33,7 @@ public sealed class AutomacaoApi : IAutomacaoApi
         _httpClient.BaseAddress = new Uri(_apiConfiguracao.BaseUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(_apiConfiguracao.TimeoutSeconds);
         _httpClient.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.data.full.v1+json")
+            new MediaTypeWithQualityHeaderValue("application/vnd.data.integration.v1+json")
         );
 
         _jsonSettings = new JsonSerializerSettings
@@ -306,6 +307,45 @@ public sealed class AutomacaoApi : IAutomacaoApi
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "Erro de rede ao obter Interfaces por Modulo");
+            return null;
+        }
+    }
+
+    public async Task<string?> ObterControladoresPorPainelAsync(
+        Guid painelId,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"/automacao/v1/paineis/{painelId}/controladores?status=todos",
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    "Erro ao obter Controladores por Painel: {StatusCode}",
+                    response.StatusCode
+                );
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            _armazenamentoAutomacao.Dados = json;
+
+            return json;
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(ex, "Tempo esgotado ao obter Controladores por Painel");
+            return null;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Erro de rede ao obter Controladores por Painel");
             return null;
         }
     }

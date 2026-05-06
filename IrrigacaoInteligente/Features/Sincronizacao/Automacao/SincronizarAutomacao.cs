@@ -15,20 +15,24 @@ public class SincronizarAutomacao
 
     public async Task Executar(CancellationToken cancellationToken)
     {
+        // await _mediator.Execute(
+        //     new SincronizarPaineisCommand(),
+        //     cancellationToken: cancellationToken
+        // );
+        // await _mediator.Execute(
+        //     new SincronizarDispositivosCommand(),
+        //     cancellationToken: cancellationToken
+        // );
+        // await _mediator.Execute(
+        //     new SincronizarPortasCommand(),
+        //     cancellationToken: cancellationToken
+        // );
+        // await _mediator.Execute(
+        //     new SincronizarInterfacesCommand(),
+        //     cancellationToken: cancellationToken
+        // );
         await _mediator.Execute(
-            new SincronizarPaineisCommand(),
-            cancellationToken: cancellationToken
-        );
-        await _mediator.Execute(
-            new SincronizarDispositivosCommand(),
-            cancellationToken: cancellationToken
-        );
-        await _mediator.Execute(
-            new SincronizarPortasCommand(),
-            cancellationToken: cancellationToken
-        );
-        await _mediator.Execute(
-            new SincronizarInterfacesCommand(),
+            new SincronizarControladorCommand(),
             cancellationToken: cancellationToken
         );
 

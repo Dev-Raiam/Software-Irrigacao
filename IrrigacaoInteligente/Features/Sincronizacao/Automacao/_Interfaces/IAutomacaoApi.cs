@@ -29,4 +29,8 @@ public interface IAutomacaoApi
         Guid moduloId,
         CancellationToken cancellationToken
     );
+    Task<string?> ObterControladoresPorPainelAsync(
+        Guid painelId,
+        CancellationToken cancellationToken
+    );
 }
