@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using System.Reflection.PortableExecutable;
+using IrrigacaoInteligente.Features.Automacao.Interfaces;
 using IrrigacaoInteligente.Features.Shared.Extensions;
-using IrrigacaoInteligente.Features.Sincronizacao.Automacao.Interfaces;
 using IrrigacaoInteligente.State;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;

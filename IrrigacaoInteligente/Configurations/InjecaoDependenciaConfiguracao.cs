@@ -1,8 +1,8 @@
 using System.Reflection;
+using IrrigacaoInteligente.Features.Automacao;
+using IrrigacaoInteligente.Features.Automacao.Interfaces;
 using IrrigacaoInteligente.Features.Configuracao.Credenciais;
 using IrrigacaoInteligente.Features.Configuracao.Credenciais.Interfaces;
-using IrrigacaoInteligente.Features.Sincronizacao.Automacao;
-using IrrigacaoInteligente.Features.Sincronizacao.Automacao.Interfaces;
 using IrrigacaoInteligente.Infrastructure.Auth;
 using IrrigacaoInteligente.Infrastructure.Criptografia;
 using IrrigacaoInteligente.Infrastructure.Http;

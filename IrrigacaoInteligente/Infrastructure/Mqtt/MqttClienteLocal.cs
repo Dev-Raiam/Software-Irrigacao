@@ -1,6 +1,6 @@
 using System.Text;
 using System.Threading.Tasks;
-using IrrigacaoInteligente.Features.Sincronizacao.Automacao;
+using IrrigacaoInteligente.Features.Automacao;
 using MQTTnet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
