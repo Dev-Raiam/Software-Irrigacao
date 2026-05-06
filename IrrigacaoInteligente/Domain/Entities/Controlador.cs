@@ -7,9 +7,9 @@ public class Controlador
     public Guid Id { get; private set; }
     public string Configuracao { get; private set; } = null!;
 
-    public Controlador(string configuracao)
+    public Controlador(Guid id, string configuracao)
     {
-        Id = Guid.NewGuid();
+        Id = id;
         Configuracao = configuracao;
     }
 

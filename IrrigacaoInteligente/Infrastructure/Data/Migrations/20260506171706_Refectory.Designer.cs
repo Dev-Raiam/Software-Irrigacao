@@ -3,6 +3,7 @@ using System;
 using IrrigacaoInteligente.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(IrrigacaoInteligenteContext))]
-    partial class IrrigacaoInteligenteContextModelSnapshot : ModelSnapshot
+    [Migration("20260506171706_Refectory")]
+    partial class Refectory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");

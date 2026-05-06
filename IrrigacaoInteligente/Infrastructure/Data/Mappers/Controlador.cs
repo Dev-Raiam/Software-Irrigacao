@@ -7,7 +7,7 @@ public class Controlador : IEntityTypeConfiguration<Domain.Entities.Controlador>
 {
     public void Configure(EntityTypeBuilder<Domain.Entities.Controlador> builder)
     {
-        builder.ToTable("controlador");
+        builder.ToTable("controladores");
         builder.HasKey(c => c.Id);
     }
 }

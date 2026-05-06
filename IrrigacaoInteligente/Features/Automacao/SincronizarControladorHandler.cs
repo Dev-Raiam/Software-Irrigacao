@@ -1,3 +1,4 @@
+using System.Text.Json;
 using IrrigacaoInteligente.Domain.Entities;
 using IrrigacaoInteligente.Features.Automacao.Interfaces;
 using IrrigacaoInteligente.Features.Shared.Extensions;
@@ -40,22 +41,29 @@ public class SincronizarControladorHandler
         CancellationToken cancellationToken
     )
     {
-        var configuracaoControlador = await _automacaoApi.ObterControladoresPorPainelAsync(
+        var controladores = await _automacaoApi.ObterControladoresPorPainelAsync(
             _credenciaisAplicacao.PainelId,
             cancellationToken
         );
 
-        if (configuracaoControlador is not null)
+        if (controladores is not null)
         {
-            var configuracao = _context.Controladores.OrderBy(c => c.Id).FirstOrDefault();
+            await _context.Controladores.ExecuteDeleteAsync();
 
-            if (configuracao is not null)
+            var controladoresDeserializados = JsonSerializer.Deserialize<
+                List<Dictionary<string, object>>
+            >(controladores);
+
+            foreach (var controlador in controladoresDeserializados!)
             {
-                configuracao.Atualizar(configuracaoControlador);
-            }
-            else
-            {
-                _context.Controladores.Add(new Controlador(configuracaoControlador));
+                var controladorSerializado = JsonSerializer.Serialize(controlador);
+
+                _context.Controladores.Add(
+                    new Controlador(
+                        Guid.Parse(controlador["id"].ToString()!),
+                        controladorSerializado
+                    )
+                );
             }
 
             await _context.SaveChangesAsync(cancellationToken);

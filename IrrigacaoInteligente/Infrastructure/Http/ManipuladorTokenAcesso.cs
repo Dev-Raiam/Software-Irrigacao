@@ -19,7 +19,11 @@ public class ManipuladorTokenAcesso : DelegatingHandler
     {
         var token = await _gerenciadorToken.ObterTokenValido(cancellationToken);
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token!.TokenAcesso);
+        if (token is not null)
+            request.Headers.Authorization = new AuthenticationHeaderValue(
+                "Bearer",
+                token.TokenAcesso
+            );
 
         return await base.SendAsync(request, cancellationToken);
     }
