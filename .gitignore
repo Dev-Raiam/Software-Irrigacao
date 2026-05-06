@@ -16,8 +16,7 @@ Logs/
 appsettings.Development.json
 
 # Secrets
-credenciais.json
-**/Security/Keys/
+**/key
 
 # IDE
 .vs/

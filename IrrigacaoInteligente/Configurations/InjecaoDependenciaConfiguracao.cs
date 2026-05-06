@@ -34,7 +34,7 @@ public static class InjecaoDependenciaConfiguracao
             .AddDataProtection()
             .SetApplicationName("IrrigacaoInteligente")
             .PersistKeysToFileSystem(
-                new DirectoryInfo(@"D:\Desenvolvimento\Backend\SoftwareIrrigacao")
+                new DirectoryInfo(@"D:\Desenvolvimento\Backend\SoftwareIrrigacao\Key")
             );
 
         services.AddSingleton<ArmazenamentoToken>();
