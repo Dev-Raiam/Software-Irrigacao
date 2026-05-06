@@ -1,4 +1,4 @@
-﻿using IrrigacaoInteligente.Features.Configuracao.Credenciais.Interfaces;
+﻿using IrrigacaoInteligente.Features.Credenciais.Interfaces;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace IrrigacaoInteligente.Infrastructure.Criptografia;

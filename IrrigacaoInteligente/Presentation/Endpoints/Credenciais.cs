@@ -1,5 +1,6 @@
 using System.Net;
-using IrrigacaoInteligente.Features.Configuracao.ConfiguracaoSistema;
+using IrrigacaoInteligente.Features.Configuracao;
+using IrrigacaoInteligente.Features.Credenciais;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -9,12 +10,12 @@ using Toolbox.Core.Mediator;
 
 namespace IrrigacaoInteligente.Presentation.Endpoints;
 
-public static class ConfiguracaoSistema
+public static class Credenciais
 {
     public static void MapCredencial(this IEndpointRouteBuilder app)
     {
         app.MapPost(
-                "/configuracao-sistema/credenciais",
+                "/configuracao/credenciais",
                 async (
                     [FromBody] AdicionarCredenciais command,
                     [FromServices] IMediator mediator,
@@ -31,7 +32,7 @@ public static class ConfiguracaoSistema
     public static void MapAtualizarConta(this IEndpointRouteBuilder app)
     {
         app.MapPut(
-                "/configuracao-sistema/credenciais",
+                "/configuracao/credenciais",
                 async (
                     [FromBody] AtualizarCredenciais command,
                     [FromServices] IMediator mediator,

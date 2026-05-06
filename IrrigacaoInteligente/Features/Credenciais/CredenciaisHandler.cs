@@ -1,20 +1,13 @@
-using System.Runtime.CompilerServices;
-using Azure;
-using IrrigacaoInteligente.Configurations;
-using IrrigacaoInteligente.Features.Configuracao.Credenciais;
-using IrrigacaoInteligente.Features.Shared.Abstractions;
 using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.State;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Toolbox.Automacao.Irrigacao.Comandos.Sincronizacao;
 using Toolbox.Core.Api.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
-namespace IrrigacaoInteligente.Features.Configuracao.ConfiguracaoSistema;
+namespace IrrigacaoInteligente.Features.Credenciais;
 
-public class ConfigurarSistemaHandler
+public class CredenciaisHandler
     : CommandHandler,
         ICommandHandler<AdicionarCredenciais>,
         ICommandHandler<AtualizarCredenciais>
@@ -24,7 +17,7 @@ public class ConfigurarSistemaHandler
     private readonly IrrigacaoInteligenteContext _context;
     private readonly CredenciaisAplicacao _credenciaisAplicacao;
 
-    public ConfigurarSistemaHandler(
+    public CredenciaisHandler(
         GerenciadorCredenciais gerenciadorCredenciais,
         IMediator mediator,
         IUnitOfWork<IrrigacaoInteligenteContext> uow,
@@ -54,6 +47,14 @@ public class ConfigurarSistemaHandler
             request.Integracao.Segredo,
             request.Integracao.ContextoId,
             cancellationToken
+        );
+
+        _credenciaisAplicacao.AdicionarConta(request.ContaId);
+        _credenciaisAplicacao.AdicionarPainel(request.PainelId);
+        _credenciaisAplicacao.AdicionarIntegracao(
+            request.Integracao.Chave,
+            request.Integracao.Segredo,
+            request.Integracao.ContextoId
         );
 
         return Ok("Configurações Salvas com sucesso");

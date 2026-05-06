@@ -14,7 +14,7 @@ public class MqttWorker : BackgroundService
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly MqttConfiguracao _mqttConfiguracao;
-    private readonly ConfiguracaoInicializacao _configuracaoInicializacao;
+    private readonly Aplicacao _aplicacao;
     private bool ConexaoIniciada = false;
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
@@ -25,7 +25,7 @@ public class MqttWorker : BackgroundService
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
         IOptions<MqttConfiguracao> mqttConfiguracao,
-        ConfiguracaoInicializacao configuracaoInicializacao
+        Aplicacao aplicacao
     )
     {
         _mqttClienteRemoto = mqttClienteRemoto;
@@ -33,12 +33,12 @@ public class MqttWorker : BackgroundService
         _logger = logger;
         _serviceProvider = serviceProvider;
         _mqttConfiguracao = mqttConfiguracao.Value;
-        _configuracaoInicializacao = configuracaoInicializacao;
+        _aplicacao = aplicacao;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _configuracaoInicializacao.AguardarConfiguracaoInicializacaoAsync(stoppingToken);
+        await _aplicacao.AguardarConfiguracaoAplicacao(stoppingToken);
 
         using var scope = _serviceProvider.CreateScope();
         var _context = scope.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();

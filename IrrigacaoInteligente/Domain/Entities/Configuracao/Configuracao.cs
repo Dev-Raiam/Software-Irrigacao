@@ -1,13 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace IrrigacaoInteligente.Domain.Entities;
 
-public class ConfiguracaoSistema
+public class Configuracao
 {
-    protected ConfiguracaoSistema() { }
+    protected Configuracao() { }
 
-    public ConfiguracaoSistema(string chave, string valor)
+    public Configuracao(string chave, string valor)
     {
         Chave = chave;
         Valor = valor;

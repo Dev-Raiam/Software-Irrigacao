@@ -1,10 +1,7 @@
-using System.Threading.Tasks;
-using IrrigacaoInteligente.Features.Configuracao.Credenciais;
-using IrrigacaoInteligente.Features.Shared.Abstractions;
+using IrrigacaoInteligente.Features.Credenciais;
 using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.State;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Crypto.Modes;
 
 namespace IrrigacaoInteligente.Infrastructure.SeedData;
 
@@ -15,6 +12,7 @@ public static class SeedData
         using var scoped = serviceProvider.CreateScope();
 
         var context = scoped.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
+
         var gerenciadorCredenciais =
             scoped.ServiceProvider.GetRequiredService<GerenciadorCredenciais>();
 
@@ -41,8 +39,29 @@ public static class SeedData
         // armazenamentoAutomacao.Interfaces.AddRange(interfaces);
         // armazenamentoAutomacao.Dispositivos.AddRange(dispositivos);
 
-        await gerenciadorCredenciais.ObterContaId(CancellationToken.None);
-        await gerenciadorCredenciais.ObterPainelId(CancellationToken.None);
-        await gerenciadorCredenciais.ObterCredencialIntegracao(CancellationToken.None);
+        var contaId = await gerenciadorCredenciais.ObterContaId(CancellationToken.None);
+        var painelId = await gerenciadorCredenciais.ObterPainelId(CancellationToken.None);
+        var credenciaisIntegracao = await gerenciadorCredenciais.ObterCredencialIntegracao(
+            CancellationToken.None
+        );
+        var chave = credenciaisIntegracao.chave;
+        var segredo = credenciaisIntegracao.segredo;
+        var contextoId = credenciaisIntegracao.contextoId;
+
+        if (
+            contaId is not null
+            && painelId is not null
+            && chave is not null
+            && segredo is not null
+            && contextoId is not null
+        )
+        {
+            armazenamentoCredenciais.AdicionarConta(contaId.Value);
+            armazenamentoCredenciais.AdicionarPainel(painelId.Value);
+            armazenamentoCredenciais.AdicionarIntegracao(chave, segredo, contextoId.Value);
+        }
+
+        // armazenamentoCredenciais.PainelId = painelId;
+        // armazenamentoCredenciais.CredenciaisIntegracao = credenciaisIntegracao;
     }
 }

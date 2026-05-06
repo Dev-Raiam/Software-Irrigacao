@@ -1,19 +1,19 @@
-using IrrigacaoInteligente.Features.Configuracao.ConfiguracaoSistema;
+using IrrigacaoInteligente.Features.Configuracao;
 using Toolbox.Core.Mediator;
 
 namespace IrrigacaoInteligente.State;
 
-public class ConfiguracaoInicializacao
+public class Aplicacao
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly TaskCompletionSource _pronto = new("Task-Prontidão");
-    private readonly ILogger<ConfiguracaoInicializacao> _logger;
+    private readonly ILogger<Aplicacao> _logger;
     private readonly CredenciaisAplicacao _credenciaisAplicacao;
     private bool _avisoEmitido = false;
 
-    public ConfiguracaoInicializacao(
+    public Aplicacao(
         IServiceProvider serviceProvider,
-        ILogger<ConfiguracaoInicializacao> logger,
+        ILogger<Aplicacao> logger,
         CredenciaisAplicacao credenciaisAplicacao
     )
     {
@@ -22,7 +22,7 @@ public class ConfiguracaoInicializacao
         _credenciaisAplicacao = credenciaisAplicacao;
     }
 
-    public async Task<bool> Iniciar(CancellationToken cancellationToken)
+    public async Task<bool> ValidarEstado(CancellationToken cancellationToken)
     {
         if (_pronto.Task.IsCompleted)
             return true;
@@ -37,15 +37,15 @@ public class ConfiguracaoInicializacao
         }
 
         var responseResult = await mediator.Execute(
-            new IniciarConfiguracaoInicializacao(),
+            new ValidarEstadoAplicacao(),
             cancellationToken: cancellationToken
         );
 
         return responseResult.HttpStatusCode == System.Net.HttpStatusCode.OK;
     }
 
-    public Task AguardarConfiguracaoInicializacaoAsync(CancellationToken cancellationToken) =>
+    public Task AguardarConfiguracaoAplicacao(CancellationToken cancellationToken) =>
         _pronto.Task.WaitAsync(cancellationToken);
 
-    public void ConfiguracaoInicializacaoConcluida() => _pronto.TrySetResult();
+    public void Configurada() => _pronto.TrySetResult();
 }

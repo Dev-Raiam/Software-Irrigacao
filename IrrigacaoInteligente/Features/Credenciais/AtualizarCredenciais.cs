@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Toolbox.Core.Messages;
 
-namespace IrrigacaoInteligente.Features.Configuracao.ConfiguracaoSistema;
+namespace IrrigacaoInteligente.Features.Credenciais;
 
 public class AtualizarCredenciais : Command
 {

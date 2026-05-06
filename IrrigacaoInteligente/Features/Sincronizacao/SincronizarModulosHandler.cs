@@ -5,7 +5,7 @@ using Toolbox.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
-namespace IrrigacaoInteligente.Features.Roteadores.Sincronizacao;
+namespace IrrigacaoInteligente.Features.Sincronizacao;
 
 public class SincronizarModulosHandler : CommandHandler, ICommandHandler<SincronizarModulos>
 {

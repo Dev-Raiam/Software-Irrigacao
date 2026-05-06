@@ -1,8 +1,8 @@
 using System.Reflection;
 using IrrigacaoInteligente.Features.Automacao;
 using IrrigacaoInteligente.Features.Automacao.Interfaces;
-using IrrigacaoInteligente.Features.Configuracao.Credenciais;
-using IrrigacaoInteligente.Features.Configuracao.Credenciais.Interfaces;
+using IrrigacaoInteligente.Features.Credenciais;
+using IrrigacaoInteligente.Features.Credenciais.Interfaces;
 using IrrigacaoInteligente.Infrastructure.Auth;
 using IrrigacaoInteligente.Infrastructure.Criptografia;
 using IrrigacaoInteligente.Infrastructure.Http;
@@ -54,7 +54,7 @@ public static class InjecaoDependenciaConfiguracao
             provider.GetRequiredService<ILogger<MqttCliente>>()
         ));
 
-        services.AddSingleton<ConfiguracaoInicializacao>();
+        services.AddSingleton<Aplicacao>();
         services.AddSingleton<GerenciadorToken>();
         services.AddScoped<SincronizarAutomacao>();
         services.AddTransient<ManipuladorTokenAcesso>();

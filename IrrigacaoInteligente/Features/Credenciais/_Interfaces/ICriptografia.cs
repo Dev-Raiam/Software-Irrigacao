@@ -1,4 +1,4 @@
-﻿namespace IrrigacaoInteligente.Features.Configuracao.Credenciais.Interfaces
+﻿namespace IrrigacaoInteligente.Features.Credenciais.Interfaces
 {
     public interface ICriptografia
     {

@@ -4,15 +4,12 @@ namespace IrrigacaoInteligente.Workers;
 
 public class ProntidaoWorker : BackgroundService
 {
-    private readonly ConfiguracaoInicializacao _configuracaoInicializacao;
+    private readonly Aplicacao _aplicacao;
     private readonly ILogger<ProntidaoWorker> _logger;
 
-    public ProntidaoWorker(
-        ConfiguracaoInicializacao configuracaoInicializacao,
-        ILogger<ProntidaoWorker> logger
-    )
+    public ProntidaoWorker(Aplicacao aplicacao, ILogger<ProntidaoWorker> logger)
     {
-        _configuracaoInicializacao = configuracaoInicializacao;
+        _aplicacao = aplicacao;
         _logger = logger;
     }
 
@@ -22,13 +19,13 @@ public class ProntidaoWorker : BackgroundService
         {
             try
             {
-                var execucaoCompleta = await _configuracaoInicializacao.Iniciar(stoppingToken);
+                var aplicacaoEstado = await _aplicacao.ValidarEstado(stoppingToken);
 
-                if (execucaoCompleta)
+                if (aplicacaoEstado)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
 
-                    _configuracaoInicializacao.ConfiguracaoInicializacaoConcluida();
+                    _aplicacao.Configurada();
 
                     break;
                 }

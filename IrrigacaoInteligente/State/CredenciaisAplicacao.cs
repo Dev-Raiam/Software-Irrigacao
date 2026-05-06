@@ -24,15 +24,11 @@ namespace IrrigacaoInteligente.State
             PainelId = painelId;
         }
 
-        public void AdicionarIntegracao(
-            string integracaoChave,
-            string integracaoSegredo,
-            Guid integracaoContextoId
-        )
+        public void AdicionarIntegracao(string chave, string segredo, Guid contextoId)
         {
-            IntegracaoChave = integracaoChave;
-            IntegracaoSegredo = integracaoSegredo;
-            IntegracaoContextoId = integracaoContextoId;
+            IntegracaoChave = chave;
+            IntegracaoSegredo = segredo;
+            IntegracaoContextoId = contextoId;
         }
 
         public void Atualizar(

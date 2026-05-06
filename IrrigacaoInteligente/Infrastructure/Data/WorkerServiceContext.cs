@@ -32,7 +32,7 @@ public class IrrigacaoInteligenteContext : DbContext, IDataContext
     // public DbSet<Dispositivo> Dispositivos { get; set; } = null!;
     // public DbSet<Porta> Portas { get; set; } = null!;
     // public DbSet<Interface> Interfaces { get; set; } = null!;
-    public DbSet<ConfiguracaoSistema> ConfiguracoesSistema { get; set; } = null!;
+    public DbSet<Configuracao> Configuracoes { get; set; } = null!;
     public DbSet<Controlador> Controladores { get; set; } = null!;
 
     public IUser User { get; }
