@@ -21,7 +21,7 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.RegistrarContexto();
+builder.Services.RegistrarContexto(builder.Configuration);
 builder.Services.RegistrarAuthenticacao();
 builder.Services.RegistrarServicos(builder.Configuration);
 builder.Services.AddSerilog();

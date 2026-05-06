@@ -1,29 +1,27 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
-using IrrigacaoInteligente.Configurations;
-using IrrigacaoInteligente.Features.Shared.Abstractions;
 using IrrigacaoInteligente.Infrastructure.Auth;
 using IrrigacaoInteligente.State;
+using Microsoft.Extensions.Options;
 
 namespace IrrigacaoInteligente.Infrastructure.Http;
 
 public sealed class AutenticacaoApi : IAutenticacaoApi
 {
     private readonly HttpClient _httpClient;
-    private readonly ApiConfiguracao _apiConfiguracao;
+    private readonly ApiOptions _apiOptions;
     private readonly ILogger<AutenticacaoApi> _logger;
 
     public AutenticacaoApi(
         HttpClient httpClient,
-        IOptions<ApiConfiguracao> apiConfiguracao,
+        IOptions<ApiOptions> apiOptions,
         ILogger<AutenticacaoApi> logger
     )
     {
         _httpClient = httpClient;
-        _apiConfiguracao = apiConfiguracao.Value;
+        _apiOptions = apiOptions.Value;
         _logger = logger;
-        _httpClient.BaseAddress = new Uri(_apiConfiguracao.BaseUrl);
+        _httpClient.BaseAddress = new Uri(_apiOptions.BaseUrl);
     }
 
     public async Task<Token?> Autenticar(
@@ -61,6 +59,7 @@ public sealed class AutenticacaoApi : IAutenticacaoApi
                 _logger.LogError("Erro ao autenticar: {StatusCode}", response.StatusCode);
                 return null;
             }
+
             var tokenResponse = await response.Content.ReadFromJsonAsync<Token>(cancellationToken);
 
             if (tokenResponse is not null)

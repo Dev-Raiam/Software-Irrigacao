@@ -5,10 +5,13 @@ namespace IrrigacaoInteligente.Configurations;
 
 public static class ContextoConfiguracao
 {
-    public static void RegistrarContexto(this IServiceCollection services)
+    public static void RegistrarContexto(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         services.AddDbContext<IrrigacaoInteligenteContext>(options =>
-            options.UseSqlite("Data Source=worker-service.db")
+            options.UseSqlite(configuration.GetSection("PathDatabase:Path").Value)
         );
     }
 }

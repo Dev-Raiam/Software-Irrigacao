@@ -47,7 +47,7 @@ public class AcionarBombaHandler : CommandHandler, ICommandHandler<AcionarBomba>
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoDigital.Acionar(porta.EnderecoLogico!),
             cancellationToken
         );

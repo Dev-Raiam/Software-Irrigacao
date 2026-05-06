@@ -23,7 +23,7 @@ public static class InjecaoDependenciaConfiguracao
         IConfiguration configuration
     )
     {
-        services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguration"));
+        services.Configure<ApiOptions>(configuration.GetSection("ApiOptions"));
         services.Configure<MqttConfiguracao>(configuration.GetSection("MqttConfiguracao"));
         services.AddHttpContextAccessor();
         services.AddMediator(

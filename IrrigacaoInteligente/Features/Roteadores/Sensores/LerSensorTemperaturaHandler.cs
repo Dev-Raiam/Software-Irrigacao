@@ -47,7 +47,7 @@ public class LerSensorTemperaturaHandler : CommandHandler, ICommandHandler<LerSe
             return NotFound();
 
         await _mqttClient.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoAnalogico.Ler(porta.EnderecoLogico!),
             cancellationToken
         );

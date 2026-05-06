@@ -47,7 +47,7 @@ public class DesligarSolenoidHandler : CommandHandler, ICommandHandler<DesligarS
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoDigital.Desligar(porta.EnderecoLogico!),
             cancellationToken
         );

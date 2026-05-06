@@ -13,7 +13,7 @@ public class MqttWorker : BackgroundService
     private readonly MqttClienteLocal _mqttClienteLocal;
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly MqttConfiguracao _config;
+    private readonly MqttConfiguracao _mqttConfiguracao;
     private readonly ConfiguracaoInicializacao _configuracaoInicializacao;
     private bool ConexaoIniciada = false;
     private bool ConexaoLocalAtiva = false;
@@ -24,7 +24,7 @@ public class MqttWorker : BackgroundService
         MqttClienteLocal mqttClienteLocal,
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
-        IOptions<MqttConfiguracao> mqttConfig,
+        IOptions<MqttConfiguracao> mqttConfiguracao,
         ConfiguracaoInicializacao configuracaoInicializacao
     )
     {
@@ -32,7 +32,7 @@ public class MqttWorker : BackgroundService
         _mqttClienteLocal = mqttClienteLocal;
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _config = mqttConfig.Value;
+        _mqttConfiguracao = mqttConfiguracao.Value;
         _configuracaoInicializacao = configuracaoInicializacao;
     }
 
@@ -51,20 +51,20 @@ public class MqttWorker : BackgroundService
                     break;
 
                 await _mqttClienteLocal.ConectarAsync(
-                    _config.BrokerLocal,
-                    _config.Porta,
+                    _mqttConfiguracao.Servidor,
+                    _mqttConfiguracao.Porta,
                     Guid.NewGuid().ToString(),
-                    null,
-                    null,
+                    _mqttConfiguracao.Usuario,
+                    _mqttConfiguracao.Senha,
                     stoppingToken
                 );
 
                 await _mqttClienteRemoto.ConectarAsync(
-                    _config.BrokerRemoto,
-                    _config.Porta,
+                    "broker.freemqtt.com",
+                    1883,
                     Guid.NewGuid().ToString(),
-                    _config.UsuarioRemoto,
-                    _config.SenhaRemoto,
+                    "freemqtt",
+                    "public",
                     stoppingToken
                 );
 
@@ -84,11 +84,6 @@ public class MqttWorker : BackgroundService
                 if (_mqttClienteLocal.Conectado && !ConexaoLocalAtiva)
                 {
                     ConexaoLocalAtiva = true;
-
-                    // await _mqttClienteLocal.AssinarTopicoAsync(
-                    //     "comando/03800edb-8dff-4e2b-9ad8-00f0af1cdebf",
-                    //     stoppingToken
-                    // );
 
                     _mqttClienteLocal.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackDesconectado(stoppingToken);

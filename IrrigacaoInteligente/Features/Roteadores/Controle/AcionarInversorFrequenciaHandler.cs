@@ -49,7 +49,7 @@ public class AcionarInversorFrequenciaHandler
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoDigital.Acionar(porta.EnderecoLogico!),
             cancellationToken
         );

@@ -49,7 +49,7 @@ public class DefinirFrequenciaInversorHandler
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             //Calculo para Transformar frequencia em Valor Inteiro
             ComandoAnalogico.SetarValor(porta.EnderecoLogico!, (int)request.Frequencia),
             cancellationToken

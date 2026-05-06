@@ -47,7 +47,7 @@ public class LerSensorDistanciaHandler : CommandHandler, ICommandHandler<LerSens
             return NotFound();
 
         await _mqttClient.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoAnalogico.Ler(porta.EnderecoLogico!),
             cancellationToken
         );

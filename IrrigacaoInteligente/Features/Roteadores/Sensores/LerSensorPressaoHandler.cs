@@ -47,7 +47,7 @@ public class LerSensorPressaoHandler : CommandHandler, ICommandHandler<LerSensor
             return NotFound();
 
         await _mqttClient.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoAnalogico.Ler(porta.EnderecoLogico!),
             cancellationToken
         );

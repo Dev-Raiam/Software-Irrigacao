@@ -48,7 +48,7 @@ public class FecharValvulaHandler : CommandHandler, ICommandHandler<FecharValvul
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoDigital.Desligar(porta.EnderecoLogico!),
             cancellationToken
         );

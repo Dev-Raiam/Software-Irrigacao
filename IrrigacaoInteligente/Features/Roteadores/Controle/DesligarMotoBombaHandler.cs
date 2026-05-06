@@ -47,7 +47,7 @@ public class DesligarMotoBombaHandler : CommandHandler, ICommandHandler<Desligar
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoDigital.Desligar(porta.EnderecoLogico!),
             cancellationToken
         );

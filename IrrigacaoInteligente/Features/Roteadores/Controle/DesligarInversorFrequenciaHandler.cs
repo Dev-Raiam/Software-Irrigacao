@@ -49,7 +49,7 @@ public class DesligarInversorFrequenciaHandler
             return NotFound();
 
         await _mqttCliente.PublicarAsync(
-            _mqttConfiguracao.TopicoLocal,
+            _mqttConfiguracao.TopicoCmdLocal,
             ComandoDigital.Desligar(porta.EnderecoLogico!),
             cancellationToken
         );

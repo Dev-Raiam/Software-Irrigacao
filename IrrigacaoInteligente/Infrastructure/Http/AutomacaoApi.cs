@@ -13,27 +13,27 @@ namespace IrrigacaoInteligente.Infrastructure.Http;
 public sealed class AutomacaoApi : IAutomacaoApi
 {
     private readonly HttpClient _httpClient;
-    private readonly ApiConfiguracao _apiConfiguracao;
+    private readonly ApiOptions _apiOptions;
     private readonly ArmazenamentoAutomacao _armazenamentoAutomacao;
     private readonly JsonSerializerSettings _jsonSettings;
     private readonly ILogger<AutomacaoApi> _logger;
 
     public AutomacaoApi(
         HttpClient httpClient,
-        IOptions<ApiConfiguracao> apiConfiguracao,
+        IOptions<ApiOptions> apiOptions,
         ArmazenamentoAutomacao armazenamentoAutomacao,
         ILogger<AutomacaoApi> logger
     )
     {
         _httpClient = httpClient;
-        _apiConfiguracao = apiConfiguracao.Value;
+        _apiOptions = apiOptions.Value;
         _armazenamentoAutomacao = armazenamentoAutomacao;
         _logger = logger;
 
-        _httpClient.BaseAddress = new Uri(_apiConfiguracao.BaseUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(_apiConfiguracao.TimeoutSeconds);
+        _httpClient.BaseAddress = new Uri(_apiOptions.BaseUrl);
+        _httpClient.Timeout = TimeSpan.FromSeconds(_apiOptions.TimeoutSeconds);
         _httpClient.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.data.integration.v1+json")
+            new MediaTypeWithQualityHeaderValue(_apiOptions.MediaType)
         );
 
         _jsonSettings = new JsonSerializerSettings
