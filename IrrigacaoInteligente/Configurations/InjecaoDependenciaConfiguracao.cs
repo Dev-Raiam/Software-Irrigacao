@@ -56,7 +56,7 @@ public static class InjecaoDependenciaConfiguracao
 
         services.AddSingleton<Aplicacao>();
         services.AddSingleton<GerenciadorToken>();
-        services.AddScoped<SincronizarAutomacao>();
+        // services.AddScoped<SincronizarAutomacao>();
         services.AddTransient<ManipuladorTokenAcesso>();
         services.AddHostedService<ProntidaoWorker>();
         // services.AddHostedService<SincronizacaoWorker>();

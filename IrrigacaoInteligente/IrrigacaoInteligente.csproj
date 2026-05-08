@@ -35,10 +35,15 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
     <PackageReference Include="Toolbox.Core.Api" Version="1.0.0-rc-20260428-1645" />
-    <ProjectReference Include="..\..\Toolbox.Automacao.Irrigacao\Toolbox.Automacao.Irrigacao\Toolbox.Automacao.Irrigacao.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Infrastructure" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Toolbox.Automacao.Irrigacao">
+      <HintPath>..\..\Projetos\src\Toolbox.Automacao.Irrigacao\bin\Debug\net10.0\Toolbox.Automacao.Irrigacao.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
