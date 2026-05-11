@@ -1,4 +1,4 @@
-namespace IrrigacaoInteligente.Domain.Entities.Hardware;
+namespace IrrigacaoInteligente.Domain.Entities;
 
 public class ComandoAnalogico
 {
@@ -12,9 +12,9 @@ public class ComandoAnalogico
     public static ComandoAnalogico Ler(string porta) =>
         new()
         {
-            Tipo = Hardware.Tipo.ANALOGICA,
-            Sinal = Hardware.Sinal.ENTRADA,
-            Operacao = Hardware.Operacao.READ,
+            Tipo = Entities.Tipo.ANALOGICA,
+            Sinal = Entities.Sinal.ENTRADA,
+            Operacao = Entities.Operacao.READ,
             Porta = porta,
         };
 
@@ -25,9 +25,9 @@ public class ComandoAnalogico
 
         return new()
         {
-            Tipo = Hardware.Tipo.ANALOGICA,
-            Sinal = Hardware.Sinal.SAIDA,
-            Operacao = Hardware.Operacao.WRITE,
+            Tipo = Entities.Tipo.ANALOGICA,
+            Sinal = Entities.Sinal.SAIDA,
+            Operacao = Entities.Operacao.WRITE,
             Porta = porta,
             Valor = valor,
         };

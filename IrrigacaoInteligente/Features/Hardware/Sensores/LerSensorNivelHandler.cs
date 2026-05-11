@@ -1,58 +1,58 @@
-using IrrigacaoInteligente.Domain.Entities.Hardware;
-using IrrigacaoInteligente.Infrastructure.Data;
-using IrrigacaoInteligente.Infrastructure.Mqtt;
-using IrrigacaoInteligente.State;
-using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
-using Toolbox.Core.Api.Data;
-using Toolbox.Core.Data;
-using Toolbox.Core.Mediator;
-using Toolbox.Core.Messages;
+// using IrrigacaoInteligente.Domain.Entities.Hardware;
+// using IrrigacaoInteligente.Infrastructure.Data;
+// using IrrigacaoInteligente.Infrastructure.Mqtt;
+// using IrrigacaoInteligente.State;
+// using Microsoft.Extensions.Options;
+// using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
+// using Toolbox.Core.Api.Data;
+// using Toolbox.Core.Data;
+// using Toolbox.Core.Mediator;
+// using Toolbox.Core.Messages;
 
-namespace IrrigacaoInteligente.Features.Hardware.Sensores;
+// namespace IrrigacaoInteligente.Features.Hardware.Sensores;
 
-public class LerSensorNivelHandler : CommandHandler, ICommandHandler<LerSensorNivel>
-{
-    private readonly ArmazenamentoAutomacao _armazenamento;
-    private readonly MqttClienteLocal _mqttClient;
-    private readonly MqttConfiguracao _mqttConfiguracao;
+// public class LerSensorNivelHandler : CommandHandler, ICommandHandler<LerSensorNivel>
+// {
+//     private readonly ArmazenamentoAutomacao _armazenamento;
+//     private readonly MqttClienteLocal _mqttClient;
+//     private readonly MqttConfiguracao _mqttConfiguracao;
 
-    public LerSensorNivelHandler(
-        ArmazenamentoAutomacao armazenamento,
-        MqttClienteLocal mqttClient,
-        IOptions<MqttConfiguracao> mqttConfiguracao,
-        IUnitOfWork<IrrigacaoInteligenteContext> uow
-    )
-        : base(uow)
-    {
-        _armazenamento = armazenamento;
-        _mqttClient = mqttClient;
-        _mqttConfiguracao = mqttConfiguracao.Value;
-    }
+//     public LerSensorNivelHandler(
+//         ArmazenamentoAutomacao armazenamento,
+//         MqttClienteLocal mqttClient,
+//         IOptions<MqttConfiguracao> mqttConfiguracao,
+//         IUnitOfWork<IrrigacaoInteligenteContext> uow
+//     )
+//         : base(uow)
+//     {
+//         _armazenamento = armazenamento;
+//         _mqttClient = mqttClient;
+//         _mqttConfiguracao = mqttConfiguracao.Value;
+//     }
 
-    public async Task<ResponseResult> Handle(
-        LerSensorNivel request,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var dispositivo = _armazenamento.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
+//     public async Task<ResponseResult> Handle(
+//         LerSensorNivel request,
+//         CancellationToken cancellationToken = default
+//     )
+//     {
+//         var dispositivo = _armazenamento.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
 
-        if (dispositivo is null)
-            return NotFound();
+//         if (dispositivo is null)
+//             return NotFound();
 
-        var porta = _armazenamento
-            .Portas.Where(p => p.DispositivoConectadoId == dispositivo.Id)
-            .FirstOrDefault();
+//         var porta = _armazenamento
+//             .Portas.Where(p => p.DispositivoConectadoId == dispositivo.Id)
+//             .FirstOrDefault();
 
-        if (porta is null)
-            return NotFound();
+//         if (porta is null)
+//             return NotFound();
 
-        await _mqttClient.PublicarAsync(
-            _mqttConfiguracao.TopicoCmdLocal,
-            ComandoAnalogico.Ler(porta.EnderecoLogico!),
-            cancellationToken
-        );
+//         await _mqttClient.PublicarAsync(
+//             _mqttConfiguracao.TopicoCmdLocal,
+//             ComandoAnalogico.Ler(porta.EnderecoLogico!),
+//             cancellationToken
+//         );
 
-        return Ok<ResponseResult>();
-    }
-}
+//         return Ok<ResponseResult>();
+//     }
+// }

@@ -1,6 +1,7 @@
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using IrrigacaoInteligente.Features.Automacao;
+using IrrigacaoInteligente.Features.Telemetria;
 using MQTTnet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -13,6 +14,15 @@ namespace IrrigacaoInteligente.Infrastructure.Mqtt
     public class MqttClienteLocal : MqttCliente
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.Objects,
+        };
 
         public MqttClienteLocal(
             IMqttClient mqttCliente,
@@ -23,16 +33,6 @@ namespace IrrigacaoInteligente.Infrastructure.Mqtt
         {
             _serviceProvider = serviceProvider;
         }
-
-        private readonly JsonSerializerSettings _settings = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented,
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.Objects,
-        };
 
         public override void ExecutarCallbackMensageria(CancellationToken cancellationToken)
         {
@@ -45,6 +45,15 @@ namespace IrrigacaoInteligente.Infrastructure.Mqtt
                     var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                     var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+
+                    if (e.ApplicationMessage.Topic == "telemetria/resposta")
+                    {
+                        var commad = new AdicionarTelemetria { Dados = payload };
+
+                        await mediator.Execute(commad, cancellationToken: cancellationToken);
+
+                        return;
+                    }
 
                     var mensagem = JsonConvert.DeserializeObject(payload, _settings)!;
 

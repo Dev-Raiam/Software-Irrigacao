@@ -1,4 +1,4 @@
-namespace IrrigacaoInteligente.Domain.Entities.Hardware;
+namespace IrrigacaoInteligente.Domain.Entities;
 
 public class ComandoDigital
 {
@@ -11,9 +11,9 @@ public class ComandoDigital
     public static ComandoDigital Acionar(string porta) =>
         new()
         {
-            Tipo = Hardware.Tipo.DIGITAL,
-            Sinal = Hardware.Sinal.SAIDA,
-            Operacao = Hardware.Operacao.WRITE,
+            Tipo = Entities.Tipo.DIGITAL,
+            Sinal = Entities.Sinal.SAIDA,
+            Operacao = Entities.Operacao.WRITE,
             Porta = porta,
             Valor = true,
         };
@@ -21,9 +21,9 @@ public class ComandoDigital
     public static ComandoDigital Desligar(string porta) =>
         new()
         {
-            Tipo = Hardware.Tipo.DIGITAL,
-            Sinal = Hardware.Sinal.SAIDA,
-            Operacao = Hardware.Operacao.WRITE,
+            Tipo = Entities.Tipo.DIGITAL,
+            Sinal = Entities.Sinal.SAIDA,
+            Operacao = Entities.Operacao.WRITE,
             Porta = porta,
             Valor = false,
         };
@@ -31,9 +31,9 @@ public class ComandoDigital
     public static ComandoDigital Ler(string porta) =>
         new()
         {
-            Tipo = Hardware.Tipo.DIGITAL,
-            Sinal = Hardware.Sinal.ENTRADA,
-            Operacao = Hardware.Operacao.READ,
+            Tipo = Entities.Tipo.DIGITAL,
+            Sinal = Entities.Sinal.ENTRADA,
+            Operacao = Entities.Operacao.READ,
             Porta = porta,
         };
 }

@@ -38,7 +38,7 @@ public class MqttWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _aplicacao.AguardarConfiguracaoAplicacao(stoppingToken);
+        await _aplicacao.AguardarLiberacaoMqtt(stoppingToken);
 
         using var scope = _serviceProvider.CreateScope();
         var _context = scope.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
@@ -50,23 +50,29 @@ public class MqttWorker : BackgroundService
                 if (ConexaoIniciada)
                     break;
 
-                await _mqttClienteLocal.ConectarAsync(
-                    _mqttConfiguracao.Servidor,
-                    _mqttConfiguracao.Porta,
-                    Guid.NewGuid().ToString(),
-                    _mqttConfiguracao.Usuario,
-                    _mqttConfiguracao.Senha,
-                    stoppingToken
-                );
+                if (!ConexaoLocalAtiva)
+                {
+                    await _mqttClienteLocal.ConectarAsync(
+                        _mqttConfiguracao.Servidor,
+                        _mqttConfiguracao.Porta,
+                        Guid.NewGuid().ToString(),
+                        _mqttConfiguracao.Usuario,
+                        _mqttConfiguracao.Senha,
+                        stoppingToken
+                    );
+                }
 
-                await _mqttClienteRemoto.ConectarAsync(
-                    "broker.freemqtt.com",
-                    1883,
-                    Guid.NewGuid().ToString(),
-                    "freemqtt",
-                    "public",
-                    stoppingToken
-                );
+                if (!ConexaoRemotaAtiva)
+                {
+                    await _mqttClienteRemoto.ConectarAsync(
+                        "broker.freemqtt.com",
+                        1883,
+                        Guid.NewGuid().ToString(),
+                        "freemqtt",
+                        "public",
+                        stoppingToken
+                    );
+                }
 
                 if (_mqttClienteRemoto.Conectado && !ConexaoRemotaAtiva)
                 {
@@ -84,6 +90,11 @@ public class MqttWorker : BackgroundService
                 if (_mqttClienteLocal.Conectado && !ConexaoLocalAtiva)
                 {
                     ConexaoLocalAtiva = true;
+
+                    await _mqttClienteLocal.AssinarTopicoAsync(
+                        "telemetria/resposta",
+                        stoppingToken
+                    );
 
                     _mqttClienteLocal.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackDesconectado(stoppingToken);

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using IrrigacaoInteligente.Features.Credenciais;
 using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.State;
@@ -9,6 +10,8 @@ public static class SeedData
 {
     public static async Task Seed(IServiceProvider serviceProvider)
     {
+        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         using var scoped = serviceProvider.CreateScope();
 
         var context = scoped.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
@@ -30,9 +33,21 @@ public static class SeedData
         // var interfaces = await context.Interfaces.AsNoTracking().ToListAsync();
         // var dispositivos = await context.Dispositivos.AsNoTracking().ToListAsync();
 
-        var controlador = await context.Controladores.AsNoTracking().FirstOrDefaultAsync();
+        var controladores = await context.Controladores.AsNoTracking().ToListAsync();
 
-        armazenamentoAutomacao.Dados = controlador?.Configuracao ?? string.Empty;
+        if (controladores is not null && controladores.Count > 0)
+        {
+            foreach (var controlador in controladores)
+            {
+                var controladorDeserializado = JsonSerializer.Deserialize<Controlador>(
+                    controladores.Select(c => c.Configuracao).First()!,
+                    jsonOptions
+                );
+
+                armazenamentoAutomacao.Controladores.Add(controladorDeserializado!);
+            }
+        }
+
         // armazenamentoAutomacao.Paineis.AddRange(paineis);
         // armazenamentoAutomacao.Modulos.AddRange(modulos);
         // armazenamentoAutomacao.Portas.AddRange(portas);

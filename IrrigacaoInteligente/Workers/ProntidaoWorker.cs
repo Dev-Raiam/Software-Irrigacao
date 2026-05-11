@@ -19,13 +19,13 @@ public class ProntidaoWorker : BackgroundService
         {
             try
             {
-                var aplicacaoEstado = await _aplicacao.ValidarEstado(stoppingToken);
+                var aplicacaoEstado = await _aplicacao.ValidarEstadoAplicacao(stoppingToken);
 
                 if (aplicacaoEstado)
                 {
+                    _logger.LogInformation("Aplicação pronta.");
                     await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
-
-                    _aplicacao.Configurada();
+                    _aplicacao.LiberarAplicacao();
 
                     break;
                 }

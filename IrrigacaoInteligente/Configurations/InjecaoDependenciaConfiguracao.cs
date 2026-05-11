@@ -1,8 +1,7 @@
 using System.Reflection;
-using IrrigacaoInteligente.Features.Automacao;
-using IrrigacaoInteligente.Features.Automacao.Interfaces;
 using IrrigacaoInteligente.Features.Credenciais;
 using IrrigacaoInteligente.Features.Credenciais.Interfaces;
+using IrrigacaoInteligente.Features.Sincronizacao.Interfaces;
 using IrrigacaoInteligente.Infrastructure.Auth;
 using IrrigacaoInteligente.Infrastructure.Criptografia;
 using IrrigacaoInteligente.Infrastructure.Http;
@@ -58,9 +57,12 @@ public static class InjecaoDependenciaConfiguracao
         services.AddSingleton<GerenciadorToken>();
         // services.AddScoped<SincronizarAutomacao>();
         services.AddTransient<ManipuladorTokenAcesso>();
+
         services.AddHostedService<ProntidaoWorker>();
         // services.AddHostedService<SincronizacaoWorker>();
         services.AddHostedService<MqttWorker>();
+        services.AddHostedService<TelemetriaWorker>();
+
         services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
         services
             .AddHttpClient<IAutomacaoApi, AutomacaoApi>()

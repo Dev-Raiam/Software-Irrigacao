@@ -1,12 +1,12 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
-using IrrigacaoInteligente.Domain.Entities;
-using IrrigacaoInteligente.Features.Automacao;
-using IrrigacaoInteligente.Features.Automacao.Interfaces;
+using IrrigacaoInteligente.Features.Sincronizacao.Interfaces;
 using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.State;
 using Microsoft.EntityFrameworkCore;
 using Toolbox.Automacao.Irrigacao.Comandos.Sincronizacao;
 using Toolbox.Core.Api.Data;
+using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
@@ -18,12 +18,19 @@ public class SincronizarControladorHandler
     private readonly IrrigacaoInteligenteContext _context;
     private readonly ILogger<SincronizarControladorHandler> _logger;
     private readonly CredenciaisAplicacao _credenciaisAplicacao;
+    private readonly ArmazenamentoAutomacao _armazenamento;
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     public SincronizarControladorHandler(
         IAutomacaoApi automacaoApi,
         IUnitOfWork<IrrigacaoInteligenteContext> uow,
         ILogger<SincronizarControladorHandler> logger,
-        CredenciaisAplicacao credenciaisAplicacao
+        CredenciaisAplicacao credenciaisAplicacao,
+        ArmazenamentoAutomacao armazenamento
     )
         : base(uow)
     {
@@ -31,6 +38,7 @@ public class SincronizarControladorHandler
         _context = uow.Context;
         _logger = logger;
         _credenciaisAplicacao = credenciaisAplicacao;
+        _armazenamento = armazenamento;
     }
 
     public async Task<ResponseResult> Handle(
@@ -43,27 +51,30 @@ public class SincronizarControladorHandler
             cancellationToken
         );
 
-        if (controladores is not null)
+        if (controladores != null && !controladores.IsEmpty())
         {
+            var controladoresDeserializados = JsonSerializer.Deserialize<List<Controlador>>(
+                JsonSerializer.Serialize(controladores),
+                _jsonSerializerOptions
+            );
+
+            _armazenamento.Controladores.AddRange(controladoresDeserializados!);
+
             await _context.Controladores.ExecuteDeleteAsync(cancellationToken);
 
-            var controladoresDeserializados = JsonSerializer.Deserialize<
-                List<Dictionary<string, object>>
-            >(controladores);
-
-            foreach (var controlador in controladoresDeserializados!)
+            foreach (var controlador in controladores)
             {
-                var controladorSerializado = JsonSerializer.Serialize(controlador);
-
                 _context.Controladores.Add(
-                    new Controlador(
-                        Guid.Parse(controlador["id"].ToString()!),
-                        controladorSerializado
+                    new IrrigacaoInteligente.Domain.Entities.Controlador(
+                        Guid.Parse(controlador["id"].ToString()),
+                        JsonSerializer.Serialize(controlador, _jsonSerializerOptions)
                     )
                 );
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Controladores sincronizados com sucesso !!!");
         }
 
         return Ok<ResponseResult>();

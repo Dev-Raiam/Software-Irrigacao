@@ -34,6 +34,7 @@ public class IrrigacaoInteligenteContext : DbContext, IDataContext
     // public DbSet<Interface> Interfaces { get; set; } = null!;
     public DbSet<Configuracao> Configuracoes { get; set; } = null!;
     public DbSet<Controlador> Controladores { get; set; } = null!;
+    public DbSet<Telemetria> Telemetrias { get; set; } = null!;
 
     public IUser User { get; }
 

@@ -1,4 +1,4 @@
-namespace IrrigacaoInteligente.Domain.Entities.Hardware;
+namespace IrrigacaoInteligente.Domain.Entities;
 
 public static class Operacao
 {
