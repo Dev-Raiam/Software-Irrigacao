@@ -48,7 +48,7 @@ namespace IrrigacaoInteligente.Infrastructure.Mqtt
 
                     if (e.ApplicationMessage.Topic == "telemetria/resposta")
                     {
-                        var commad = new AdicionarTelemetria { Dados = payload };
+                        var commad = new SalvarTelemetria { Dados = payload };
 
                         await mediator.Execute(commad, cancellationToken: cancellationToken);
 

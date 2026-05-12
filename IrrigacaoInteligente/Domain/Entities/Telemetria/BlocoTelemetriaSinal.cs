@@ -1,6 +1,6 @@
 namespace IrrigacaoInteligente.Domain.Entities;
 
-public class BlocoTelemetria
+public class BlocoTelemetriaSinal
 {
     public Guid ControladorId { get; init; }
     public int IntervaloLeitura { get; init; }

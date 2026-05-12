@@ -14,12 +14,18 @@ namespace IrrigacaoInteligente.Features.Telemetria
 {
     public class TelemetriaHandler
         : CommandHandler,
-            ICommandHandler<AdicionarTelemetria>,
+            ICommandHandler<SalvarTelemetria>,
             ICommandHandler<PublicarTelemetria>
     {
         private readonly MqttClienteLocal _mqttClienteLocal;
         private readonly ArmazenamentoAutomacao _armazenamentoAutomacao;
         private readonly IrrigacaoInteligenteContext _context;
+        private readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true,
+            IndentSize = 4,
+        };
 
         public TelemetriaHandler(
             IUnitOfWork<IrrigacaoInteligenteContext> uow,
@@ -35,20 +41,23 @@ namespace IrrigacaoInteligente.Features.Telemetria
         }
 
         public async Task<ResponseResult> Handle(
-            AdicionarTelemetria request,
-            CancellationToken cancellationToken = default
+            SalvarTelemetria request,
+            CancellationToken cancellationToken
         )
         {
-            var leituras = JsonSerializer.Deserialize<List<TelemetriaResponse>>(request.Dados);
+            var telemetriaResposta = JsonSerializer.Deserialize<TelemetriaResposta>(
+                request.Dados,
+                _jsonOptions
+            );
 
-            if (leituras is not null)
+            if (telemetriaResposta is not null)
             {
-                var telemetrias = leituras
-                    .Select(b => new Domain.Entities.Telemetria(
-                        b.ControladorId,
-                        b.DispositivoId,
-                        b.Descricao,
-                        b.Dados
+                var telemetrias = telemetriaResposta
+                    .Leituras.Select(l => new Domain.Entities.Telemetria(
+                        telemetriaResposta.ControladorId,
+                        l.DispositivoId,
+                        l.Descricao,
+                        l.Dados
                     ))
                     .ToList();
 
@@ -56,33 +65,32 @@ namespace IrrigacaoInteligente.Features.Telemetria
             }
 
             await _context.SaveChangesAsync(cancellationToken);
-
-            await Task.Delay(1000);
-
             return Ok<ResponseResult>();
         }
 
         public async Task<ResponseResult> Handle(
             PublicarTelemetria request,
-            CancellationToken cancellationToken = default
+            CancellationToken cancellationToken
         )
         {
-            var blocosLeituras = new List<BlocoTelemetria>();
+            var blocosSinais = new List<BlocoTelemetriaSinal>();
+            // var blocosLeiturasInterface = new List<BlocoTelemetriaProtocolo>();
 
             foreach (var controlador in _armazenamentoAutomacao.Controladores)
             {
-                var blocoEntrada = new BlocoTelemetria()
+                var blocoSinal = new BlocoTelemetriaSinal()
                 {
                     ControladorId = controlador.Id,
                     IntervaloLeitura = 2,
                 };
 
+                // Entradas
                 controlador
                     .Conexoes?.Entradas?.Where(p => p.Status == "Habilitada" && p.Conectado != null)
                     .ToList()
                     .ForEach(p =>
                     {
-                        var leituras = new BlocoTelemetria.Leitura
+                        var dispositivo = new BlocoTelemetriaSinal.Leitura
                         {
                             DispositivoId = p.Conectado!.Id,
                             Endereco = p.Endereco!,
@@ -90,48 +98,20 @@ namespace IrrigacaoInteligente.Features.Telemetria
                             Sinal = p.Sinal,
                         };
 
-                        blocoEntrada.Leituras.Add(leituras);
+                        blocoSinal.Leituras.Add(dispositivo);
                     });
 
-                blocosLeituras.Add(blocoEntrada);
-
-                // controlador
-                //     .Conexoes?.Interfaces?.Where(i =>
-                //         i.Status == "Habilitada" && i.Conectado != null
-                //     )
-                //     .ToList()
-                //     .ForEach(i =>
-                //     {
-                //         var leituras = new BlocoTelemetria.Leitura
-                //         {
-                //             DispositivoId = i.Conectado!.Modulos.ForEach(modulo =>
-                //             {
-                //                 DispositivoId = modulo.Id;
-                //             }),
-                //             Endereco = i.Endereco!,
-                //             Descricao = p.Conectado!.Descricao!,
-                //             Sinal = p.Sinal,
-                //         };
-
-                //         blocoEntrada.Leituras.Add(leituras);
-                //     });
-
-                // blocosLeituras.Add(blocoEntrada);
+                blocosSinais.Add(blocoSinal);
             }
 
-            await _mqttClienteLocal.PublicarAsync(
-                "telemetria/bloco",
-                JsonSerializer.Serialize(
-                    blocosLeituras,
-                    options: new JsonSerializerOptions
-                    {
-                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                        WriteIndented = true,
-                        IndentSize = 4,
-                    }
-                ),
-                cancellationToken
-            );
+            foreach (var blocoSinal in blocosSinais)
+            {
+                await _mqttClienteLocal.PublicarAsync(
+                    $"telemetria/{blocoSinal.ControladorId}/bloco",
+                    JsonSerializer.Serialize(blocoSinal, _jsonOptions),
+                    cancellationToken
+                );
+            }
 
             return Ok<ResponseResult>();
         }

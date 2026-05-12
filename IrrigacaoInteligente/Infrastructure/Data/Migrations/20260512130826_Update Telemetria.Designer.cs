@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(IrrigacaoInteligenteContext))]
-    [Migration("20260506114318_Start")]
-    partial class Start
+    [Migration("20260512130826_Update Telemetria")]
+    partial class UpdateTelemetria
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,7 +20,7 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
 
-            modelBuilder.Entity("IrrigacaoInteligente.Domain.Entities.ConfiguracaoSistema", b =>
+            modelBuilder.Entity("IrrigacaoInteligente.Domain.Entities.Configuracao", b =>
                 {
                     b.Property<string>("Chave")
                         .HasColumnType("TEXT");
@@ -34,7 +34,7 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
                     b.HasIndex("Chave")
                         .IsUnique();
 
-                    b.ToTable("configuracoes_sistema", (string)null);
+                    b.ToTable("configuracoes", (string)null);
                 });
 
             modelBuilder.Entity("IrrigacaoInteligente.Domain.Entities.Controlador", b =>
@@ -49,7 +49,34 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Controladores");
+                    b.ToTable("controladores", (string)null);
+                });
+
+            modelBuilder.Entity("IrrigacaoInteligente.Domain.Entities.Telemetria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ControladorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Dados")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DispositivoId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("telemetrias", (string)null);
                 });
 #pragma warning restore 612, 618
         }

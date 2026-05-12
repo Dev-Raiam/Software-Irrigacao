@@ -64,12 +64,16 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
                     b.Property<string>("Dados")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("PortaId")
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DispositivoId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Telemetrias");
+                    b.ToTable("telemetrias", (string)null);
                 });
 #pragma warning restore 612, 618
         }

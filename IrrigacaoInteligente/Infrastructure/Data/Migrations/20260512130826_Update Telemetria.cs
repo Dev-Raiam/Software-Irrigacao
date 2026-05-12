@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Start : Migration
+    public partial class UpdateTelemetria : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "configuracoes_sistema",
+                name: "configuracoes",
                 columns: table => new
                 {
                     Chave = table.Column<string>(type: "TEXT", nullable: false),
@@ -20,11 +20,11 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_configuracoes_sistema", x => x.Chave);
+                    table.PrimaryKey("PK_configuracoes", x => x.Chave);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Controladores",
+                name: "controladores",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -32,12 +32,28 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Controladores", x => x.Id);
+                    table.PrimaryKey("PK_controladores", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "telemetrias",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ControladorId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    DispositivoId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Descricao = table.Column<string>(type: "TEXT", nullable: false),
+                    CriadoEm = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Dados = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_telemetrias", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_configuracoes_sistema_Chave",
-                table: "configuracoes_sistema",
+                name: "IX_configuracoes_Chave",
+                table: "configuracoes",
                 column: "Chave",
                 unique: true);
         }
@@ -46,10 +62,13 @@ namespace IrrigacaoInteligente.Infrastructure.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "configuracoes_sistema");
+                name: "configuracoes");
 
             migrationBuilder.DropTable(
-                name: "Controladores");
+                name: "controladores");
+
+            migrationBuilder.DropTable(
+                name: "telemetrias");
         }
     }
 }
