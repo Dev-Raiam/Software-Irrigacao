@@ -1,1040 +1,640 @@
-{
-   "id":"879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
-   "master":true,
-   "arquivado":false,
-   "estagio":"Montagem",
-   "descricao":"Controlador master",
-   "marca":"Industrial Shields",
-   "modelo":"Raspberry PLC 58",
-   "conexoes":{
-      "host":"G_irrig",
-      "saidas":[
-         {
-            "id":"dda98284-fe67-49fe-a328-29f98f4ee66b",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.0",
-            "endereco":"Q0.0",
-            "conectado":{
-               "id":"11d5f161-6266-4189-b324-29fd1e165c71",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-003",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+﻿{
+    "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+    "master": true,
+    "estagio": "Montagem",
+    "descricao": "Controlador master",
+    "marca": "Industrial Shields",
+    "modelo": "Raspberry PLC 58",
+    "conexoes": {
+        "host": "G_irrig",
+        "saidas": [
+            {
+                "id": "dda98284-fe67-49fe-a328-29f98f4ee66b",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.0",
+                "endereco": "Q0.0",
+                "conectado": {
+                    "id": "11d5f161-6266-4189-b324-29fd1e165c71",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "38e97691-c048-4943-8705-29f98f4ee66f",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.1",
+                "endereco": "Q0.1",
+                "conectado": {
+                    "id": "965cc8f5-c553-4038-b051-2a09db60127a",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "4734e55f-e152-42b6-980c-29f98f4ee671",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.2",
+                "endereco": "Q0.2",
+                "conectado": {
+                    "id": "d05d81f2-4ca4-4f8c-a3bb-2a09db95519f",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "563d5fa2-f95a-4644-8ad8-29f98f4ee676",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.3",
+                "endereco": "Q0.3",
+                "conectado": {
+                    "id": "ebeb189e-0c51-4f25-b669-2a09dbc14fd6",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "7a67f45f-c7be-46c4-b991-29f98f4ee677",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.4",
+                "endereco": "Q0.4",
+                "conectado": {
+                    "id": "a08b1bfd-59f5-41f4-8448-2a09dc0d032f",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "11350893-6cf2-4073-b4e3-29f98f4ee67a",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.5",
+                "endereco": "Q0.5",
+                "conectado": {
+                    "id": "940f423d-e015-4f1f-90ad-2a09dc48bc3c",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "1f29074a-aac1-4a24-9e2a-29f98f4ee67e",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.6",
+                "endereco": "Q0.6",
+                "conectado": {
+                    "id": "5cbae5dd-55ca-48f8-9a59-2a09dd2ceb34",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "2cd05bf9-e30e-4bdb-b823-29f98f4ee682",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q0.7",
+                "endereco": "Q0.7",
+                "conectado": {
+                    "id": "11c055e0-b383-409a-9b34-2a09dd6e63aa",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "75acc80a-a4fc-4b3f-bdd0-29f98f4ee683",
+                "sinal": "Analógico",
+                "faixa": "0-10V",
+                "status": "Desabilitada",
+                "descricao": "A0.5",
+                "endereco": "A0.5",
+                "conectado": {
+                    "id": "73ac8e3d-f1da-48cb-b0e5-2a07c2c8910f",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "036ef883-6d71-45d9-819e-29f98f4ee6af",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q1.0",
+                "endereco": "Q1.0",
+                "conectado": {
+                    "id": "4312901f-9409-4972-92fd-2a09dda76a15",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "ce06c7d4-d113-480a-9604-29f98f4ee6b2",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q1.1",
+                "endereco": "Q1.1",
+                "conectado": {
+                    "id": "6258ca9f-1297-4e29-9762-2a09dde8133d",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "491a8b2c-1dcb-48ae-b4ae-29f98f4ee6b5",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "Q1.2",
+                "endereco": "Q1.2",
+                "conectado": {
+                    "id": "9b638271-e47a-493b-a19b-2a09de2ea68f",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "a034ac05-8c61-492e-bb88-29f98f4ee6d5",
+                "sinal": "Analógico",
+                "faixa": "0-10V",
+                "status": "Desabilitada",
+                "descricao": "A1.7",
+                "endereco": "A1.7",
+                "conectado": {
+                    "id": "9c48040d-2f0d-4cb8-be10-2a0fefe39020",
+                    "tipo": "Dispositivo"
+                }
             }
-         },
-         {
-            "id":"38e97691-c048-4943-8705-29f98f4ee66f",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.1",
-            "endereco":"Q0.1",
-            "conectado":{
-               "id":"965cc8f5-c553-4038-b051-2a09db60127a",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-004",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        ],
+        "entradas": [
+            {
+                "id": "b1e0811c-db8a-4209-aaad-29f98f4ee62a",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "I0.0",
+                "endereco": "I0.0",
+                "conectado": {
+                    "id": "16705b81-efda-473b-a3f4-2a0792f3cf51",
+                    "tipo": "Dispositivo"
+                }
+            },
+            {
+                "id": "fdf0cf0d-35a1-40e4-b125-29f98f4ee64c",
+                "sinal": "Digital",
+                "faixa": "5-24V",
+                "status": "Habilitada",
+                "descricao": "I0.1",
+                "endereco": "I0.1",
+                "conectado": {
+                    "id": "1df05c56-cf3e-4c73-a4b1-2a07c265a5fb",
+                    "tipo": "Dispositivo"
+                }
             }
-         },
-         {
-            "id":"4734e55f-e152-42b6-980c-29f98f4ee671",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.2",
-            "endereco":"Q0.2",
-            "conectado":{
-               "id":"d05d81f2-4ca4-4f8c-a3bb-2a09db95519f",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-005",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        ],
+        "interfaces": [
+            {
+                "id": "b858e7b2-0b81-44ab-ac76-29f98f4ee032",
+                "tipo": "RS485",
+                "status": "Habilitada",
+                "nome": "RS-485 (1)",
+                "borne": "B1/A1",
+                "endereco": "/dev/ttySC0",
+                "parametros": {
+                    "baudRate": 19200,
+                    "parity": 0,
+                    "dataBits": 8,
+                    "stopBits": 2,
+                    "readTimeout": 2000,
+                    "writeTimeout": 2000
+                },
+                "conectados": [
+                    {
+                        "id": "5b5e52ed-90a0-4787-90ac-29f993bcfb85",
+                        "tipo": "Módulo"
+                    },
+                    {
+                        "id": "73ac8e3d-f1da-48cb-b0e5-2a07c2c8910f",
+                        "tipo": "Dispositivo"
+                    },
+                    {
+                        "id": "9b638271-e47a-493b-a19b-2a09de2ea68f",
+                        "tipo": "Dispositivo"
+                    }
+                ]
             }
-         },
-         {
-            "id":"563d5fa2-f95a-4644-8ad8-29f98f4ee676",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.3",
-            "endereco":"Q0.3",
-            "conectado":{
-               "id":"ebeb189e-0c51-4f25-b669-2a09dbc14fd6",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-006",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        ]
+    },
+    "modulos": [
+        /// Ao Configurar a Porta de Comunicação eu Apenas aceitarei os parametros de configuração da porta sómente se for o Slave ID 1 
+        /// Sempre Leio a Informação primeiro do Modulo e depois leio as informaçoens dos dispositivos conectados a suas portas
+        {
+            "id": "5b5e52ed-90a0-4787-90ac-29f993bcfb85",
+            "descricao": "Gateway wireless",
+            "master": true,
+            "marca": "Tekon",
+            "modelo": "Gateway WGW420",
+            "estagio": "Montagem",
+            "protocolo": "Modbus RTU",
+            "parametros": {
+                "slaveAddress": 1,
+                "baudRate": 115200,
+                "parity": 0,
+                "dataBits": 8,
+                "stopBits": 1,
+                "readTimeout": 1000,
+                "writeTimeout": 1000
+            },
+            "conexoes": {
+                "conectado": {
+                    "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                    "tipo": "Controlador",
+                    "canal": {
+                        "id": "b858e7b2-0b81-44ab-ac76-29f98f4ee032",
+                        "tipo": "Interface"
+                    }
+                },
+
+                /// Ao Ler o modulo Sempre vou direto para Saidas e Entradas e faço a leitura com os dados pertinentes a elas como Endereço que é o Index
+                // Sempre seram portas Fisicas
+                "saidas": [
+                    {
+                        "id": "b1e0811c-db8a-4209-aaad-29f98f4ee62a",
+                        "sinal": "Analogica",
+                        "faixa": "4a20",
+                        "status": "Habilitada",
+                        "descricao": "A1",
+                        "endereco": "89", /// Indereço Index da Porta
+                        "conectado": {
+                            "id": "16705b81-efda-473b-a3f4-2a0792f3cf51", /// Na ves de ler essa porta eu pego o dispositovo que esta conectado a ela e pego o valor e entrego uma telemetria desse dispositivo vinculado aqui na porta
+                            "tipo": "Dispositivo"
+                        }
+                    }
+                ],
+                /// Ao Ler o modulo Sempre vou direto para Saidas e Entradas e faço a leitura com os dados pertinentes a elas como Endereço que é o Index
+                // Sempre seram portas Fisicas
+                "entradas": [
+                ],
+                // Interface de Comunicacao portas fisicas e portas de canais wiriless
+                // Na leitura esqueça essa interface
+                "interfaces": [
+                    {
+                        "id": "a04cd460-9fcd-46dc-af0f-2a1bbdc0ccba",
+                        "tipo": "Wireless",
+                        "status": "Habilitada",
+                        "nome": "Transmissor 05",
+                        "conectados": [
+                            {
+                                "id": "027041f0-1fc3-44c7-b5e4-2a1ba70926d5",
+                                "tipo": "Módulo"
+                            }
+                        ]
+                    }
+                ]
             }
-         },
-         {
-            "id":"7a67f45f-c7be-46c4-b991-29f98f4ee677",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.4",
-            "endereco":"Q0.4",
-            "conectado":{
-               "id":"a08b1bfd-59f5-41f4-8448-2a09dc0d032f",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-007",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            /// Sempre Leio a Informação primeiro do Modulo e depois leio as informaçoens dos dispositivos conectados a suas portas
+            "id": "027041f0-1fc3-44c7-b5e4-2a1ba70926d5",
+            "descricao": "Setor 1",
+            "master": true,
+            "marca": "Tekon",
+            "modelo": "Transmissor TWP-4AI4DI1UT",
+            "estagio": "Montagem",
+            "protocolo": "Modbus RTU",
+            "parametros": {
+                "slaveAddress": 1,
+                "index":5 // Se conter index aqui dentro de parametros  siguinifica que existe Pai
+            },
+            "conexoes": {
+                "conectado": {
+                    "id": "5b5e52ed-90a0-4787-90ac-29f993bcfb85",
+                    "tipo": "Módulo",
+                    "canal": {
+                        "id": "a04cd460-9fcd-46dc-af0f-2a1bbdc0ccba",
+                        "tipo": "Interface"
+                    }
+                },
+                "saidas": [],
+                "entradas": [
+                    {
+                        "id": "b1e0811c-db8a-4209-aaad-29f98f4ee62a",
+                        "sinal": "Analogica",
+                        "faixa": "4a20",
+                        "status": "Habilitada",
+                        "descricao": "A1",
+                        "endereco": "89",/// Indereço Index da Porta
+                        "conectado": {/// Na ves de ler essa porta eu pego o dispositovo que esta conectado a ela e pego o valor e entrego uma telemetria desse dispositivo vinculado aqui na porta
+                            "id": "16705b81-efda-473b-a3f4-2a0792f3cf51",
+                            "tipo": "Dispositivo"
+                        }
+                    }
+                ],
+                "interfaces": []
             }
-         },
-         {
-            "id":"11350893-6cf2-4073-b4e3-29f98f4ee67a",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.5",
-            "endereco":"Q0.5",
-            "conectado":{
-               "id":"940f423d-e015-4f1f-90ad-2a09dc48bc3c",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-008",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        }
+    ],
+    "interfaces": [
+        {
+            "id": "b858e7b2-0b81-44ab-ac76-29f98f4ee032",
+            "tipo": "RS485",
+            "status": "Habilitada",
+            "nome": "RS-485 (1)",
+            "borne": "B1/A1",
+            "endereco": "/dev/ttySC0",
+            "parametros": {
+                "baudRate": 19200,
+                "parity": 0,
+                "dataBits": 8,
+                "stopBits": 2,
+                "readTimeout": 2000,
+                "writeTimeout": 2000
+            },
+            "conectados": [
+                {
+                    "id": "5b5e52ed-90a0-4787-90ac-29f993bcfb85",
+                    "tipo": "Módulo"
+                },
+                {
+                    "id": "73ac8e3d-f1da-48cb-b0e5-2a07c2c8910f",
+                    "tipo": "Dispositivo"
+                },
+                {
+                    "id": "9b638271-e47a-493b-a19b-2a09de2ea68f",
+                    "tipo": "Dispositivo"
+                }
+            ]
+        },
+        {
+            "id": "a04cd460-9fcd-46dc-af0f-2a1bbdc0ccba",
+            "tipo": "Wireless",
+            "status": "Habilitada",
+            "nome": "Transmissor 05",
+            "conectados": [
+                {
+                    "id": "027041f0-1fc3-44c7-b5e4-2a1ba70926d5",
+                    "tipo": "Módulo"
+                }
+            ]
+        }
+    ],
+    "dispositivos": [
+        {
+            "id": "11d5f161-6266-4189-b324-29fd1e165c71",
+            "habilitado": true,
+            "descricao": "IRR-VLV-003",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "dda98284-fe67-49fe-a328-29f98f4ee66b",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"1f29074a-aac1-4a24-9e2a-29f98f4ee67e",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.6",
-            "endereco":"Q0.6",
-            "conectado":{
-               "id":"5cbae5dd-55ca-48f8-9a59-2a09dd2ceb34",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-009",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "16705b81-efda-473b-a3f4-2a0792f3cf51",
+            "habilitado": true,
+            "descricao": "IRR-VLV-001",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "b1e0811c-db8a-4209-aaad-29f98f4ee62a",
+                    "tipo": "Entrada"
+                }
             }
-         },
-         {
-            "id":"2cd05bf9-e30e-4bdb-b823-29f98f4ee682",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q0.7",
-            "endereco":"Q0.7",
-            "conectado":{
-               "id":"11c055e0-b383-409a-9b34-2a09dd6e63aa",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-010",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "1df05c56-cf3e-4c73-a4b1-2a07c265a5fb",
+            "habilitado": true,
+            "descricao": "IRR-VLV-002",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "fdf0cf0d-35a1-40e4-b125-29f98f4ee64c",
+                    "tipo": "Entrada"
+                }
             }
-         },
-         {
-            "id":"75acc80a-a4fc-4b3f-bdd0-29f98f4ee683",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A0.5",
-            "endereco":"A0.5",
-            "conectado":{
-               "id":"73ac8e3d-f1da-48cb-b0e5-2a07c2c8910f",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"Sensor Pres\u00E3o",
-               "tipo":"Sensor de press\u00E3o",
-               "sinal":"Sinal anal\u00F3gico",
-               "categoria":502,
-               "parametros":{
-                  "valorMinimo":0.0,
-                  "valorMaximo":10.0,
-                  "unidadeMedida":"Fahrenheit",
-                  "precisao":10.0,
-                  "tempoResposta":0.0,
-                  "temperaturaOperacaoMin":0.0,
-                  "temperaturaOperacaoMax":10.0
-               }
+        },
+        {
+            "id": "73ac8e3d-f1da-48cb-b0e5-2a07c2c8910f",
+            "habilitado": true,
+            "descricao": "Sensor Presão",
+            "tipo": "Sensor de pressão",
+            "sinal": "Analógico",
+            "categoria": "Sensor de processo",
+            "parametros": {
+                "valorMinimo": 0.0,
+                "valorMaximo": 10.0,
+                "unidadeMedida": "KPa",
+                "precisao": 10.0,
+                "tempoResposta": 0.0,
+                "temperaturaOperacaoMin": 0.0,
+                "temperaturaOperacaoMax": 10.0
+            },
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "b858e7b2-0b81-44ab-ac76-29f98f4ee032",
+                    "tipo": "Interface"
+                }
             }
-         },
-         {
-            "id":"c1ad6032-86a6-4032-8a9a-29f98f4ee684",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A0.6",
-            "endereco":"A0.6"
-         },
-         {
-            "id":"24de3c90-d6ee-415e-a29b-29f98f4ee687",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A0.7",
-            "endereco":"A0.7"
-         },
-         {
-            "id":"036ef883-6d71-45d9-819e-29f98f4ee6af",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.0",
-            "endereco":"Q1.0",
-            "conectado":{
-               "id":"4312901f-9409-4972-92fd-2a09dda76a15",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-011",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "965cc8f5-c553-4038-b051-2a09db60127a",
+            "habilitado": true,
+            "descricao": "IRR-VLV-004",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "38e97691-c048-4943-8705-29f98f4ee66f",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"ce06c7d4-d113-480a-9604-29f98f4ee6b2",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.1",
-            "endereco":"Q1.1",
-            "conectado":{
-               "id":"6258ca9f-1297-4e29-9762-2a09dde8133d",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-012",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "d05d81f2-4ca4-4f8c-a3bb-2a09db95519f",
+            "habilitado": true,
+            "descricao": "IRR-VLV-005",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "4734e55f-e152-42b6-980c-29f98f4ee671",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"491a8b2c-1dcb-48ae-b4ae-29f98f4ee6b5",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.2",
-            "endereco":"Q1.2",
-            "conectado":{
-               "id":"9b638271-e47a-493b-a19b-2a09de2ea68f",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-013",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "ebeb189e-0c51-4f25-b669-2a09dbc14fd6",
+            "habilitado": true,
+            "descricao": "IRR-VLV-006",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "563d5fa2-f95a-4644-8ad8-29f98f4ee676",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"7657177c-189d-4ffc-a00c-29f98f4ee6b8",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.3",
-            "endereco":"Q1.3"
-         },
-         {
-            "id":"8bb9e802-9ff3-4ef2-a248-29f98f4ee6c1",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.4",
-            "endereco":"Q1.4"
-         },
-         {
-            "id":"29577834-01d0-465a-878c-29f98f4ee6c4",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.5",
-            "endereco":"Q1.5"
-         },
-         {
-            "id":"ed5023de-173e-4f7d-830c-29f98f4ee6c8",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.6",
-            "endereco":"Q1.6"
-         },
-         {
-            "id":"a2ef8d25-1898-4933-b8aa-29f98f4ee6cb",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q1.7",
-            "endereco":"Q1.7"
-         },
-         {
-            "id":"16646a95-b8f5-4396-8284-29f98f4ee6cf",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A1.5",
-            "endereco":"A1.5"
-         },
-         {
-            "id":"572a8c22-9909-403c-ab16-29f98f4ee6d2",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A1.6",
-            "endereco":"A1.6"
-         },
-         {
-            "id":"a034ac05-8c61-492e-bb88-29f98f4ee6d5",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A1.7",
-            "endereco":"A1.7",
-            "conectado":{
-               "id":"9c48040d-2f0d-4cb8-be10-2a0fefe39020",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"Fhfhfh",
-               "tipo":"Sensor de n\u00EDvel",
-               "sinal":"Sinal anal\u00F3gico",
-               "categoria":502,
-               "parametros":{
-                  "valorMinimo":5.3,
-                  "valorMaximo":23.12,
-                  "unidadeMedida":0,
-                  "precisao":0.0,
-                  "tempoResposta":0.0,
-                  "temperaturaOperacaoMin":0.0,
-                  "temperaturaOperacaoMax":0.0
-               }
+        },
+        {
+            "id": "a08b1bfd-59f5-41f4-8448-2a09dc0d032f",
+            "habilitado": true,
+            "descricao": "IRR-VLV-007",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "7a67f45f-c7be-46c4-b991-29f98f4ee677",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"b95a06d6-8e97-4952-9f42-29f98f4ee6f8",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.0",
-            "endereco":"Q2.0"
-         },
-         {
-            "id":"0b8cf23b-c1c9-4106-81d7-29f98f4ee6fc",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.1",
-            "endereco":"Q2.1"
-         },
-         {
-            "id":"44e11872-a4a0-4c8a-9bd6-29f98f4ee6ff",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.2",
-            "endereco":"Q2.2"
-         },
-         {
-            "id":"9f2ce5bb-da8a-4a15-90ed-29f98f4ee702",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.3",
-            "endereco":"Q2.3"
-         },
-         {
-            "id":"e4b376a9-af8e-413f-a788-29f98f4ee705",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.4",
-            "endereco":"Q2.4"
-         },
-         {
-            "id":"5e5bc6fc-4926-4b12-9efa-29f98f4ee708",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.5",
-            "endereco":"Q2.5"
-         },
-         {
-            "id":"1be56319-0e97-417a-ac67-29f98f4ee70c",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.6",
-            "endereco":"Q2.6"
-         },
-         {
-            "id":"d54c855b-ae26-4bdf-b314-29f98f4ee70f",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"Q2.7",
-            "endereco":"Q2.7"
-         },
-         {
-            "id":"5d45c832-c6f0-4aef-a7f1-29f98f4ee712",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A2.5",
-            "endereco":"A2.5"
-         },
-         {
-            "id":"60f326d0-c42a-47de-bac6-29f98f4ee716",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A2.6",
-            "endereco":"A2.6"
-         },
-         {
-            "id":"66dca911-afcb-4809-92e8-29f98f4ee719",
-            "tipo":"Saida",
-            "sinal":"Sinal anal\u00F3gico",
-            "faixa":"0-10V",
-            "status":"Desabilitada",
-            "descricao":"A2.7",
-            "endereco":"A2.7"
-         },
-         {
-            "id":"5f4c2693-1fc6-4662-b5b3-29f98f4ee731",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"0-5V",
-            "status":"Desabilitada",
-            "descricao":"OPTO_OUT_1",
-            "endereco":"OPTO_OUT_1"
-         },
-         {
-            "id":"8c3bbcc5-6975-42bf-9c8d-29f98f4ee734",
-            "tipo":"Saida",
-            "sinal":"Sinal digital",
-            "faixa":"0-5V",
-            "status":"Desabilitada",
-            "descricao":"OPTO_OUT_2",
-            "endereco":"OPTO_OUT_2"
-         }
-      ],
-      "entradas":[
-         {
-            "id":"b1e0811c-db8a-4209-aaad-29f98f4ee62a",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.0",
-            "endereco":"I0.0",
-            "conectado":{
-               "id":"16705b81-efda-473b-a3f4-2a0792f3cf51",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-001",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "940f423d-e015-4f1f-90ad-2a09dc48bc3c",
+            "habilitado": true,
+            "descricao": "IRR-VLV-008",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "11350893-6cf2-4073-b4e3-29f98f4ee67a",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"fdf0cf0d-35a1-40e4-b125-29f98f4ee64c",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.1",
-            "endereco":"I0.1",
-            "conectado":{
-               "id":"1df05c56-cf3e-4c73-a4b1-2a07c265a5fb",
-               "arquivado":false,
-               "habilitado":true,
-               "descricao":"IRR-VLV-002",
-               "tipo":"V\u00E1lvula solenoide",
-               "sinal":"Sinal digital",
-               "categoria":6,
-               "parametros":{
-                  
-               }
+        },
+        {
+            "id": "5cbae5dd-55ca-48f8-9a59-2a09dd2ceb34",
+            "habilitado": true,
+            "descricao": "IRR-VLV-009",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "1f29074a-aac1-4a24-9e2a-29f98f4ee67e",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"dd04ad47-d70c-4359-a817-29f98f4ee651",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.2",
-            "endereco":"I0.2"
-         },
-         {
-            "id":"d6518a3b-6193-44b1-a1b3-29f98f4ee656",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.3",
-            "endereco":"I0.3"
-         },
-         {
-            "id":"bf4f5ecd-a59c-4c2f-b0d6-29f98f4ee659",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.4",
-            "endereco":"I0.4"
-         },
-         {
-            "id":"2aa864d0-f40c-4b81-9ec1-29f98f4ee65d",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.5",
-            "endereco":"I0.5"
-         },
-         {
-            "id":"36bb6ef0-a09c-4ce6-9cc9-29f98f4ee661",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I0.6",
-            "endereco":"I0.6"
-         },
-         {
-            "id":"6932ab6a-e99b-4962-a978-29f98f4ee662",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I0.7",
-            "endereco":"I0.7"
-         },
-         {
-            "id":"b5b81039-25b1-49c3-bbf3-29f98f4ee663",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I0.8",
-            "endereco":"I0.8"
-         },
-         {
-            "id":"c3d9e34e-5851-474e-bf78-29f98f4ee664",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I0.9",
-            "endereco":"I0.9"
-         },
-         {
-            "id":"3b4338b9-363f-42b5-8c55-29f98f4ee666",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I0.10",
-            "endereco":"I0.10"
-         },
-         {
-            "id":"fe8368f1-cc47-43d0-92b5-29f98f4ee667",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I0.11",
-            "endereco":"I0.11"
-         },
-         {
-            "id":"101a7d88-0d2f-483a-ab5b-29f98f4ee668",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I0.12",
-            "endereco":"I0.12"
-         },
-         {
-            "id":"6eefe92d-9ad9-4151-a866-29f98f4ee68b",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.0",
-            "endereco":"I1.0"
-         },
-         {
-            "id":"8f3ae6c0-b557-43e6-8a59-29f98f4ee68f",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.1",
-            "endereco":"I1.1"
-         },
-         {
-            "id":"0039d889-c962-49fb-9bee-29f98f4ee696",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.2",
-            "endereco":"I1.2"
-         },
-         {
-            "id":"9cf795c5-3b16-47c7-a0f4-29f98f4ee69a",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.3",
-            "endereco":"I1.3"
-         },
-         {
-            "id":"a55f64b2-73fb-44db-b9f5-29f98f4ee69e",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.4",
-            "endereco":"I1.4"
-         },
-         {
-            "id":"e5d8ddaf-0667-4590-a793-29f98f4ee6a1",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.5",
-            "endereco":"I1.5"
-         },
-         {
-            "id":"8126e279-dae9-4e21-ab01-29f98f4ee6a4",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I1.6",
-            "endereco":"I1.6"
-         },
-         {
-            "id":"28a601c7-0135-4cba-bffc-29f98f4ee6a5",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I1.7",
-            "endereco":"I1.7"
-         },
-         {
-            "id":"b2b61c96-97aa-4594-a9a2-29f98f4ee6a6",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I1.8",
-            "endereco":"I1.8"
-         },
-         {
-            "id":"2c10eb08-3131-4ae1-b1a1-29f98f4ee6a8",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I1.9",
-            "endereco":"I1.9"
-         },
-         {
-            "id":"18cfb782-a1fd-4fc4-9362-29f98f4ee6a9",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I1.10",
-            "endereco":"I1.10"
-         },
-         {
-            "id":"192887cc-c455-4460-9526-29f98f4ee6aa",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I1.11",
-            "endereco":"I1.11"
-         },
-         {
-            "id":"1198862f-1f72-410e-b5de-29f98f4ee6ab",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I1.12",
-            "endereco":"I1.12"
-         },
-         {
-            "id":"4a42ae82-e307-449e-9cbd-29f98f4ee6d8",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.0",
-            "endereco":"I2.0"
-         },
-         {
-            "id":"2e12e2ef-64c6-4f09-8af9-29f98f4ee6db",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.1",
-            "endereco":"I2.1"
-         },
-         {
-            "id":"d58c4a05-fc8c-4865-9350-29f98f4ee6de",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.2",
-            "endereco":"I2.2"
-         },
-         {
-            "id":"17674f2e-0c24-4520-9dbf-29f98f4ee6e1",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.3",
-            "endereco":"I2.3"
-         },
-         {
-            "id":"cfac0886-df3a-4fbf-95e2-29f98f4ee6e8",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.4",
-            "endereco":"I2.4"
-         },
-         {
-            "id":"d42f580c-1905-4da0-a287-29f98f4ee6ec",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.5",
-            "endereco":"I2.5"
-         },
-         {
-            "id":"1814d539-f442-4e70-b766-29f98f4ee6ef",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"5-24V",
-            "status":"Habilitada",
-            "descricao":"I2.6",
-            "endereco":"I2.6"
-         },
-         {
-            "id":"cc8597a2-6a4e-4ee7-9ba0-29f98f4ee6f0",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I2.7",
-            "endereco":"I2.7"
-         },
-         {
-            "id":"c3481824-d41b-48fd-8992-29f98f4ee6f1",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I2.8",
-            "endereco":"I2.8"
-         },
-         {
-            "id":"e0376571-0cce-4760-b3a7-29f98f4ee6f2",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I2.9",
-            "endereco":"I2.9"
-         },
-         {
-            "id":"e2ba8241-39fe-4126-9844-29f98f4ee6f3",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I2.10",
-            "endereco":"I2.10"
-         },
-         {
-            "id":"43254cb6-ebbe-4810-a6c5-29f98f4ee6f5",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I2.11",
-            "endereco":"I2.11"
-         },
-         {
-            "id":"829bffe3-8719-4330-b6b9-29f98f4ee6f6",
-            "tipo":"Entrada",
-            "sinal":"Sinal configur\u00E1vel",
-            "faixa":"Indefinida",
-            "status":"Habilitada",
-            "descricao":"I2.12",
-            "endereco":"I2.12"
-         },
-         {
-            "id":"e78372aa-5134-494d-ac8e-29f98f4ee72b",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"0-5V",
-            "status":"Desabilitada",
-            "descricao":"OPTO_IN_1",
-            "endereco":"OPTO_IN_1"
-         },
-         {
-            "id":"a63ce995-ea44-4e7d-b7ed-29f98f4ee72e",
-            "tipo":"Entrada",
-            "sinal":"Sinal digital",
-            "faixa":"0-5V",
-            "status":"Desabilitada",
-            "descricao":"OPTO_IN_2",
-            "endereco":"OPTO_IN_2"
-         }
-      ],
-      "interfaces":[
-         {
-            "id":"94c83211-6a8e-492a-8c3f-29f98f4eddf7",
-            "tipo":"Wi-Fi",
-            "status":"Desabilitada",
-            "nome":"Wi-Fi"
-         },
-         {
-            "id":"497be299-b3cf-4930-bab4-29f98f4ee01e",
-            "tipo":"Bluetooth",
-            "status":"Desabilitada",
-            "nome":"Bluetooth"
-         },
-         {
-            "id":"3a00103b-8eaa-4c9c-9823-29f98f4ee025",
-            "tipo":"Ethernet",
-            "status":"Desabilitada",
-            "nome":"Ethernet 0",
-            "borne":"ETHERNET 0",
-            "endereco":"/dev/eth0"
-         },
-         {
-            "id":"09d0c642-787a-4540-9af5-29f98f4ee028",
-            "tipo":"Ethernet",
-            "status":"Desabilitada",
-            "nome":"Ethernet 1",
-            "borne":"ETHERNET",
-            "endereco":"/dev/eth1"
-         },
-         {
-            "id":"fc7b42b7-d444-45a8-9f0f-29f98f4ee02a",
-            "tipo":"USB",
-            "status":"Desabilitada",
-            "nome":"USB 2.0",
-            "borne":"USB",
-            "endereco":"/dev/usb0"
-         },
-         {
-            "id":"3076d971-1661-4a51-b4f9-29f98f4ee02c",
-            "tipo":"USB",
-            "status":"Desabilitada",
-            "nome":"USB 2.0",
-            "borne":"USB",
-            "endereco":"/dev/usb1"
-         },
-         {
-            "id":"722fb179-e67c-4523-a2c9-29f98f4ee02d",
-            "tipo":"USB",
-            "status":"Desabilitada",
-            "nome":"USB 3.0",
-            "borne":"USB 3.0",
-            "endereco":"/dev/usb2"
-         },
-         {
-            "id":"7a7605ff-ad63-4334-abcc-29f98f4ee030",
-            "tipo":"USB",
-            "status":"Desabilitada",
-            "nome":"USB 3.0",
-            "borne":"USB 3.0",
-            "endereco":"/dev/usb3"
-         },
-         {
-            "id":"024f33d6-c014-4753-b1ea-29f98f4ee031",
-            "tipo":"Serial",
-            "status":"Desabilitada",
-            "nome":"Serial TTL",
-            "borne":"TX/RX"
-         },
-         {
-            "id":"b858e7b2-0b81-44ab-ac76-29f98f4ee032",
-            "tipo":"RS485",
-            "status":"Habilitada",
-            "nome":"RS-485 (1)",
-            "borne":"B1/A1",
-            "endereco":"/dev/ttySC0",
-            "conectado":{
-               "modulos":[
-                  {
-                     "id":"5b5e52ed-90a0-4787-90ac-29f993bcfb85",
-                     "arquivado":false,
-                     "descricao":"Gateway wireless",
-                     "master":true,
-                     "marca":"Tekon",
-                     "modelo":"Gateway WGW420",
-                     "estagio":"Montagem",
-                     "protocolo":"Modbus RTU"
-                  }
-               ]
+        },
+        {
+            "id": "11c055e0-b383-409a-9b34-2a09dd6e63aa",
+            "habilitado": true,
+            "descricao": "IRR-VLV-010",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "2cd05bf9-e30e-4bdb-b823-29f98f4ee682",
+                    "tipo": "Saída"
+                }
             }
-         },
-         {
-            "id":"5de31d04-92dc-4ab4-8dde-29f98f4ee033",
-            "tipo":"RS485",
-            "status":"Habilitada",
-            "nome":"RS-485 (2)",
-            "borne":"B2/A2",
-            "endereco":"/dev/ttySC1"
-         },
-         {
-            "id":"bf303b37-4241-402f-b863-29f98f4ee034",
-            "tipo":"I2C",
-            "status":"Desabilitada",
-            "nome":"I2C",
-            "borne":"SCL/SDA"
-         },
-         {
-            "id":"a89bf737-11fa-4bde-9b19-29f98f4ee036",
-            "tipo":"SPI",
-            "status":"Desabilitada",
-            "nome":"SPI",
-            "borne":"SO/SI/SCK"
-         },
-         {
-            "id":"6bd67a17-5a3e-4850-95e6-29f98f4ee71a",
-            "tipo":0,
-            "status":"Desabilitada",
-            "nome":"EXP1_RST",
-            "endereco":"EXP1_RST"
-         },
-         {
-            "id":"8034c3cc-8dce-40ec-8281-29f98f4ee71c",
-            "tipo":0,
-            "status":"Desabilitada",
-            "nome":"EXP2_RST",
-            "endereco":"EXP2_RST"
-         },
-         {
-            "id":"e99cde36-e9df-430a-b96a-29f98f4ee722",
-            "tipo":0,
-            "status":"Desabilitada",
-            "nome":"PIN8",
-            "endereco":"PIN8"
-         },
-         {
-            "id":"83da101d-94fe-49f4-b159-29f98f4ee725",
-            "tipo":0,
-            "status":"Desabilitada",
-            "nome":"INT31",
-            "endereco":"INT31"
-         },
-         {
-            "id":"37449dfa-31aa-43c2-9c13-29f98f4ee728",
-            "tipo":0,
-            "status":"Desabilitada",
-            "nome":"P_RELAY",
-            "endereco":"P_RELAY"
-         }
-      ]
-   }
+        },
+        {
+            "id": "4312901f-9409-4972-92fd-2a09dda76a15",
+            "habilitado": true,
+            "descricao": "IRR-VLV-011",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "036ef883-6d71-45d9-819e-29f98f4ee6af",
+                    "tipo": "Saída"
+                }
+            }
+        },
+        {
+            "id": "6258ca9f-1297-4e29-9762-2a09dde8133d",
+            "habilitado": true,
+            "descricao": "IRR-VLV-012",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "ce06c7d4-d113-480a-9604-29f98f4ee6b2",
+                    "tipo": "Saída"
+                }
+            }
+        },
+        {
+            "id": "9b638271-e47a-493b-a19b-2a09de2ea68f",
+            "habilitado": true,
+            "descricao": "IRR-VLV-013",
+            "tipo": "Válvula solenoide",
+            "sinal": "Digital",
+            "categoria": "Atuador",
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "b858e7b2-0b81-44ab-ac76-29f98f4ee032",
+                    "tipo": "Interface"
+                }
+            }
+        },
+        {
+            "id": "9c48040d-2f0d-4cb8-be10-2a0fefe39020",
+            "habilitado": true,
+            "descricao": "Fhfhfh",
+            "tipo": "Sensor de nível",
+            "sinal": "Analógico",
+            "categoria": "Sensor de processo",
+            "parametros": {
+                "valorMinimo": 5.3,
+                "valorMaximo": 23.12,
+                "unidadeMedida": "Centimetro",
+                "precisao": 0.0,
+                "tempoResposta": 0.0,
+                "temperaturaOperacaoMin": 0.0,
+                "temperaturaOperacaoMax": 0.0
+            },
+            "conectado": {
+                "id": "879dfe91-ef24-4fa1-aedd-29f98f4ed9eb",
+                "tipo": "Controlador",
+                "canal": {
+                    "id": "a034ac05-8c61-492e-bb88-29f98f4ee6d5",
+                    "tipo": "Saída"
+                }
+            }
+        }
+    ]
 }

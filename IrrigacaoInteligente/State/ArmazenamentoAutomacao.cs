@@ -4,134 +4,132 @@ namespace IrrigacaoInteligente.State
 {
     public class ArmazenamentoAutomacao
     {
-        public List<Controlador> Controladores { get; set; } = [];
+        public List<Controlador> Controladores { get; private set; } = [];
 
         public bool Invalido => Controladores.Count == 0;
     }
 
     public class Controlador
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
+        public bool Master { get; init; }
+        public string Estagio { get; init; } = null!;
+        public string Descricao { get; init; } = null!;
+        public string Marca { get; init; } = null!;
+        public string Modelo { get; init; } = null!;
+        public Parametros Parametros { get; init; } = new Parametros();
+        public Conexao Conexoes { get; init; } = null!;
+        public IEnumerable<Modulo> Modulos { get; init; } = null!;
+        public IEnumerable<Interface> Interfaces { get; init; } = null!;
+        public IEnumerable<Dispositivo> Dispositivos { get; init; } = null!;
 
-        public bool Master { get; set; }
-
-        public bool Arquivado { get; set; }
-
-        public string? Estagio { get; set; }
-
-        public string? Descricao { get; set; }
-
-        public string? Marca { get; set; }
-
-        public string? Modelo { get; set; }
-
-        public ConexoesModel? Conexoes { get; set; }
+        public class Conexao
+        {
+            public string Host { get; init; } = null!;
+            public IEnumerable<Porta> Saidas { get; init; } = null!;
+            public IEnumerable<Porta> Entradas { get; init; } = null!;
+            public IEnumerable<Interface> Interfaces { get; init; } = null!;
+        }
     }
 
-    public class ConexoesModel
+    public class Modulo
     {
-        public string? Host { get; set; }
+        public Guid Id { get; init; }
+        public string Descricao { get; init; } = null!;
+        public bool Master { get; init; }
+        public string Marca { get; init; } = null!;
+        public string Modelo { get; init; } = null!;
+        public string Estagio { get; init; } = null!;
+        public string Protocolo { get; init; } = null!;
+        public Parametros Parametros { get; init; } = new Parametros();
+        public Conexao Conexoes { get; init; } = null!;
 
-        public List<PortaModel> Saidas { get; set; } = [];
-
-        public List<PortaModel> Entradas { get; set; } = [];
-
-        public List<InterfaceModel> Interfaces { get; set; } = [];
+        public class Conexao
+        {
+            public Interface.Conexao? Conectado { get; init; }
+            public IEnumerable<Porta> Saidas { get; init; } = null!;
+            public IEnumerable<Porta> Entradas { get; init; } = null!;
+            public IEnumerable<Interface> Interfaces { get; init; } = null!;
+        }
     }
 
-    public class PortaModel
+    public class Dispositivo
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
+        public bool Habilitado { get; init; }
+        public string Descricao { get; init; } = null!;
+        public string Tipo { get; init; } = null!;
+        public string Sinal { get; init; } = null!;
+        public string Categoria { get; init; } = null!;
+        public Parametros Parametros { get; init; } = new Parametros();
+        public Conexao? Conectado { get; init; }
 
-        public string? Tipo { get; set; }
-
-        public string? Sinal { get; set; }
-
-        public string? Faixa { get; set; }
-
-        public string? Status { get; set; }
-
-        public string? Descricao { get; set; }
-
-        public string? Endereco { get; set; }
-
-        public DispositivoModel? Conectado { get; set; }
+        public class Conexao
+        {
+            public Guid Id { get; init; }
+            public string Tipo { get; init; } = null!;
+            public Canal Canal { get; init; } = null!;
+        }
     }
 
-    public class DispositivoModel
+    public class Interface
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
+        public string Tipo { get; init; } = null!;
+        public string Status { get; init; } = null!;
+        public string Nome { get; init; } = null!;
+        public string? Borne { get; init; }
+        public string? Endereco { get; init; }
+        public Parametros Parametros { get; init; } = new Parametros();
+        public IEnumerable<Porta.Conexao> Conectados { get; init; } = null!;
 
-        public bool Arquivado { get; set; }
-
-        public bool Habilitado { get; set; }
-
-        public string? Descricao { get; set; }
-
-        public string? Tipo { get; set; }
-
-        public string? Sinal { get; set; }
-
-        public int Categoria { get; set; }
-
-        public ParametrosModel? Parametros { get; set; }
+        public class Conexao
+        {
+            public Guid Id { get; init; }
+            public string Tipo { get; init; } = null!;
+            public Canal Canal { get; init; } = null!;
+        }
     }
 
-    public class ParametrosModel
+    public class Porta
     {
-        public double? ValorMinimo { get; set; }
+        public Guid Id { get; init; }
+        public string Sinal { get; init; } = null!;
+        public string Faixa { get; init; } = null!;
+        public string Status { get; init; } = null!;
+        public string Descricao { get; init; } = null!;
+        public string? Borne { get; init; }
+        public string? Endereco { get; init; }
 
-        public double? ValorMaximo { get; set; }
+        // public Modbus? Modbus { get; init; }
+        public Conexao? Conectado { get; init; }
 
-        public dynamic? UnidadeMedida { get; set; }
-
-        public double? Precisao { get; set; }
-
-        public double? TempoResposta { get; set; }
-
-        public double? TemperaturaOperacaoMin { get; set; }
-
-        public double? TemperaturaOperacaoMax { get; set; }
+        public class Conexao
+        {
+            public Guid Id { get; init; }
+            public string Tipo { get; init; } = null!;
+        }
     }
 
-    public class InterfaceModel
+    public class Canal
     {
-        public Guid Id { get; set; }
-
-        public dynamic? Tipo { get; set; }
-
-        public string? Status { get; set; }
-
-        public string? Nome { get; set; }
-
-        public string? Borne { get; set; }
-
-        public string? Endereco { get; set; }
-
-        public InterfaceConectadoModel? Conectado { get; set; }
+        public Guid Id { get; init; }
+        public string Tipo { get; init; } = null!;
     }
 
-    public class InterfaceConectadoModel
+    // public class Modbus
+    // {
+    //     public int? Indice { get; init; }
+    //     public int? Endereco { get; init; }
+    // }
+
+    public class Parametros
     {
-        public List<ModuloModel> Modulos { get; set; } = [];
-    }
+        [JsonIgnore]
+        public bool PossuiParametros => Parametro?.Count > 0;
 
-    public class ModuloModel
-    {
-        public Guid Id { get; set; }
-
-        public bool Arquivado { get; set; }
-
-        public string? Descricao { get; set; }
-
-        public bool Master { get; set; }
-
-        public string? Marca { get; set; }
-
-        public string? Modelo { get; set; }
-
-        public string? Estagio { get; set; }
-
-        public string? Protocolo { get; set; }
+        [JsonExtensionData]
+        public Dictionary<string, object> Parametro { get; init; } =
+            new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
     }
 }

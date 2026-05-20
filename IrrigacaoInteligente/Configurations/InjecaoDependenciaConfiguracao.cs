@@ -8,6 +8,7 @@ using IrrigacaoInteligente.Infrastructure.Http;
 using IrrigacaoInteligente.Infrastructure.Mqtt;
 using IrrigacaoInteligente.State;
 using IrrigacaoInteligente.Workers;
+using IrrigacaoInteligente.Workers.Telemetria;
 using Microsoft.AspNetCore.DataProtection;
 using MQTTnet;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
@@ -61,7 +62,7 @@ public static class InjecaoDependenciaConfiguracao
         services.AddHostedService<ProntidaoWorker>();
         // services.AddHostedService<SincronizacaoWorker>();
         services.AddHostedService<MqttWorker>();
-        services.AddHostedService<TelemetriaWorker>();
+        services.AddHostedService<TekonWorker>();
 
         services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
         services

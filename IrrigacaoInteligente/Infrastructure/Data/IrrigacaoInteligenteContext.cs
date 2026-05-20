@@ -27,14 +27,10 @@ public class User : IUser
 
 public class IrrigacaoInteligenteContext : DbContext, IDataContext
 {
-    // public DbSet<Painel> Paineis { get; set; } = null!;
-    // public DbSet<Modulo> Modulos { get; set; } = null!;
-    // public DbSet<Dispositivo> Dispositivos { get; set; } = null!;
-    // public DbSet<Porta> Portas { get; set; } = null!;
-    // public DbSet<Interface> Interfaces { get; set; } = null!;
     public DbSet<Configuracao> Configuracoes { get; set; } = null!;
     public DbSet<Controlador> Controladores { get; set; } = null!;
-    public DbSet<Telemetria> Telemetrias { get; set; } = null!;
+
+    // public DbSet<Telemetria> Telemetrias { get; set; } = null!;
 
     public IUser User { get; }
 

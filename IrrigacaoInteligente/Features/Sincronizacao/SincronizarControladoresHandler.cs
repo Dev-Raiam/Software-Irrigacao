@@ -62,11 +62,11 @@ public class SincronizarControladorHandler
 
             await _context.Controladores.ExecuteDeleteAsync(cancellationToken);
 
-            foreach (var controlador in controladores)
+            foreach (var controlador in controladoresDeserializados!)
             {
                 _context.Controladores.Add(
                     new IrrigacaoInteligente.Domain.Entities.Controlador(
-                        Guid.Parse(controlador["id"].ToString()),
+                        Guid.Parse(controlador.Id.ToString()),
                         JsonSerializer.Serialize(controlador, _jsonSerializerOptions)
                     )
                 );
