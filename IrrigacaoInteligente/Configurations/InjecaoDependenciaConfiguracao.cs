@@ -62,7 +62,7 @@ public static class InjecaoDependenciaConfiguracao
         services.AddHostedService<ProntidaoWorker>();
         // services.AddHostedService<SincronizacaoWorker>();
         services.AddHostedService<MqttWorker>();
-        services.AddHostedService<TekonWorker>();
+        services.AddHostedService<TekonWorkerLab>();
 
         services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
         services

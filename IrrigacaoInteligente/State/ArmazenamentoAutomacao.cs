@@ -95,11 +95,12 @@ namespace IrrigacaoInteligente.State
     {
         public Guid Id { get; init; }
         public string Sinal { get; init; } = null!;
-        public string Faixa { get; init; } = null!;
+        public string[] Faixa { get; init; } = null!;
         public string Status { get; init; } = null!;
         public string Descricao { get; init; } = null!;
         public string? Borne { get; init; }
         public string? Endereco { get; init; }
+        public Parametros Parametros { get; init; } = new Parametros();
 
         // public Modbus? Modbus { get; init; }
         public Conexao? Conectado { get; init; }
