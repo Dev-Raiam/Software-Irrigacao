@@ -84,9 +84,15 @@ public class TekonWorkerLab : BackgroundService
             readTimeout: parametros.ReadTimeout,
             writeTimeout: parametros.WriteTimeout
         );
-
-        _modbus.OpenConnection();
-
+        try
+        {
+            _modbus.OpenConnection();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao abrir a Porta: {ex}");
+            return;
+        }
         var driver = new ModbusDriverTekon(_modbus);
 
         while (!stoppingToken.IsCancellationRequested)
