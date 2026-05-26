@@ -1,9 +1,9 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using IrrigacaoInteligente.Features.Credenciais;
 using IrrigacaoInteligente.Infrastructure.Data;
 using IrrigacaoInteligente.State;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 
 namespace IrrigacaoInteligente.Infrastructure.SeedData;
 
@@ -11,7 +11,11 @@ public static class SeedData
 {
     public static async Task Seed(IServiceProvider serviceProvider)
     {
-        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping};
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        };
 
         using var scoped = serviceProvider.CreateScope();
 
@@ -26,7 +30,7 @@ public static class SeedData
         var armazenamentoCredenciais =
             scoped.ServiceProvider.GetRequiredService<CredenciaisAplicacao>();
 
-        //await context.Database.MigrateAsync();
+        await context.Database.MigrateAsync();
 
         // var paineis = await context.Paineis.AsNoTracking().ToListAsync();
         // var modulos = await context.Modulos.AsNoTracking().ToListAsync();
