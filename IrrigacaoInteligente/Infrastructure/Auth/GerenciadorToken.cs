@@ -38,7 +38,7 @@ public sealed class GerenciadorToken
             if (token is not null)
             {
                 _armazenamentoToken.AdicionarToken(token);
-                _logger.LogInformation("Token obtido: {Token}", token.TokenAcesso);
+                //_logger.LogInformation("Token obtido: {Token}", token.TokenAcesso);
             }
         }
         return _armazenamentoToken.TokenResponse;

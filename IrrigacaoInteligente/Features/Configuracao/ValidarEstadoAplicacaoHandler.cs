@@ -16,6 +16,7 @@ public class ValidarEstadoAplicacaoHandler : CommandHandler, ICommandHandler<Val
     private readonly Aplicacao _aplicacao;
     private readonly CredenciaisAplicacao _credenciaisAplicacao;
     private readonly ArmazenamentoAutomacao _armazenamentoAutomacao;
+    private readonly MqttClienteRemoto _mqtt;
     private readonly IMediator _mediator;
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ValidarEstadoAplicacaoHandler> _logger;
@@ -25,6 +26,7 @@ public class ValidarEstadoAplicacaoHandler : CommandHandler, ICommandHandler<Val
         Aplicacao aplicacao,
         CredenciaisAplicacao credenciaisAplicacao,
         ArmazenamentoAutomacao armazenamentoAutomacao,
+        MqttClienteRemoto mqtt,
         IMediator mediator,
         IServiceProvider serviceProvider,
         ILogger<ValidarEstadoAplicacaoHandler> logger
@@ -34,6 +36,7 @@ public class ValidarEstadoAplicacaoHandler : CommandHandler, ICommandHandler<Val
         _aplicacao = aplicacao;
         _credenciaisAplicacao = credenciaisAplicacao;
         _armazenamentoAutomacao = armazenamentoAutomacao;
+        _mqtt = mqtt;
         _mediator = mediator;
         _serviceProvider = serviceProvider;
         _logger = logger;
@@ -65,11 +68,15 @@ public class ValidarEstadoAplicacaoHandler : CommandHandler, ICommandHandler<Val
             if (!_credenciaisAplicacao.Invalida && !_aplicacao.MqttLiberado)
             {
                 _logger.LogInformation("Credenciais Carregadas com Sucesso !!!");
-
                 _aplicacao.LiberarMqtt();
                 _aplicacao.MqttLiberado = true;
 
                 await Task.Delay(1000, cancellationToken);
+                await _mqtt.PublicarAsync(
+                    "prontidao",
+                    "Aplicação do RaspBarry Pronta",
+                    cancellationToken
+                );
             }
 
             if (_armazenamentoAutomacao.Invalido)

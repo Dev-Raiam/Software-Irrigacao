@@ -1,9 +1,21 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using IrrigacaoInteligente.State;
 using Toolbox.Automacao.Irrigacao.Drivers;
+using Toolbox.Automacao.Irrigacao.Marcas.Tekon;
 using Toolbox.Automacao.Irrigacao.Modbus;
 
 namespace IrrigacaoInteligente.Workers.Telemetria;
+
+public class Parametros
+{
+    public byte SlaveAddress { get; set; }
+    public int BaudRate { get; set; }
+    public System.IO.Ports.Parity Parity { get; set; }
+    public System.IO.Ports.StopBits StopBits { get; set; }
+    public int DataBits { get; set; }
+    public int ReadTimeout { get; set; }
+    public int WriteTimeout { get; set; }
+}
 
 public class TekonWorker : BackgroundService
 {
@@ -11,6 +23,9 @@ public class TekonWorker : BackgroundService
     private readonly IServiceProvider _serivceProvider;
     private readonly ArmazenamentoAutomacao _armazenamento;
     private readonly ILogger<TekonWorker> _logger;
+    private bool lerCoils = false;
+    private ushort[] buffer_holding = [];
+    private bool[] buffer_coils = [];
 
     public TekonWorker(
         Aplicacao aplicacao,
@@ -25,24 +40,60 @@ public class TekonWorker : BackgroundService
         _logger = logger;
     }
 
+    private void JsonParse(object objeto)
+    {
+        Console.WriteLine(
+            JsonSerializer.Serialize(
+                objeto,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    WriteIndented = true,
+                    IndentSize = 4,
+                }
+            )
+        );
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await _aplicacao.AguardarLiberacaoAplicacao(stoppingToken);
 
-        var _conexao_1 = new ModbusMaster(
-            port: "COM6",
-            baudRate: 19200,
-            parity: System.IO.Ports.Parity.None,
-            stopBits: System.IO.Ports.StopBits.Two,
-            dataBits: 8,
-            readTimeout: 2000,
-            writeTimeout: 2000
-        );
-        _conexao_1.OpenConnection();
-
         var controlador = _armazenamento.Controladores.First(c => c.Master == true);
+        var dispositivos = controlador.Dispositivos;
         var _modulos = controlador.Modulos.Where(m => m.Marca == "Tekon").ToList();
         var _interfaces = controlador.Conexoes.Interfaces.ToList();
+
+        var config_modbus = _modulos.FirstOrDefault(m => m.Master);
+
+        var json = JsonSerializer.Serialize(config_modbus!.Parametros.Parametro);
+        var parametros = JsonSerializer.Deserialize<Parametros>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
+        var porta = _interfaces
+            .FirstOrDefault(i => i.Id == config_modbus.Conexoes.Conectado!.Canal.Id)!
+            .Endereco;
+
+        using var _modbus = new ModbusMaster(
+            port: porta!,
+            baudRate: parametros!.BaudRate,
+            parity: parametros.Parity,
+            stopBits: parametros.StopBits,
+            dataBits: parametros.DataBits,
+            readTimeout: parametros.ReadTimeout,
+            writeTimeout: parametros.WriteTimeout
+        );
+        try
+        {
+            _modbus.OpenConnection();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Erro ao abrir a Porta: {ex}");
+            return;
+        }
+        var driver = new ModbusDriverTekon(_modbus);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -50,11 +101,6 @@ public class TekonWorker : BackgroundService
             {
                 byte slaveAddress = 0;
                 byte index = 0;
-                //ushort[]? buffer_holding_registers = null;
-                //bool[]? buffer_coils_registers = null;
-
-                //ConfiguracaoLeitura configuracao_holding_register;
-                //ConfiguracaoLeitura configuracao_coils_registers;
 
                 foreach (var modulo in _modulos)
                 {
@@ -68,423 +114,133 @@ public class TekonWorker : BackgroundService
                         if (modulo.Parametros.Parametro.TryGetValue("index", out var indice))
                             index = (byte)((JsonElement)indice).GetInt32();
                     }
-                    // Modulo Pai
-                    //if(slaveAddress > 0 && index == 0)
-                    //{
-                    //    /// Leitura de Valores e Configuracoens
-
-                    //    // Leitura de Estados das portas
-                    //    //var configuracaoLeituraCoils =
-                    //    //    GerenciadorConfiguracao.ObterConfiguracaoLeituraCoils(
-                    //    //        modulo.Marca,
-                    //    //        modulo.Modelo,
-                    //    //        null
-                    //    //    );
-                    //    // Teste
-
-                    //    configuracao_holding_register = GerenciadorConfiguracao.ObterConfiguracaoLeitura(
-                    //        modulo.Marca,
-                    //        modulo.Modelo
-                    //    );
-
-                    //    configuracao_coils_registers = GerenciadorConfiguracao.ObterConfiguracaoLeituraCoils(
-                    //        modulo.Marca,
-                    //        modulo.Modelo
-                    //    );
-
-                    //    await _conexao_1.WriteSingleCoilAsync(slaveAddress, 0, false);
-
-                    //    buffer_holding_registers = await _conexao_1.ReadHoldingRegistersAsync(
-                    //        slaveAddress,
-                    //        configuracao_holding_register.StartAddress,
-                    //        configuracao_holding_register.NumberOfRegister
-                    //    );
-
-                    //    buffer_coils_registers = await _conexao_1.ReadCoilsRegistersAsync(
-                    //        slaveAddress,
-                    //        configuracao_holding_register.StartAddress,
-                    //        configuracao_holding_register.NumberOfRegister
-                    //    );
-
-                    //    if (buffer_holding_registers != null)
-                    //    {
-                    //        var telemetria = GerenciadorConfiguracao.CriarTelemetria(
-                    //            modulo.Id,
-                    //            modulo.Modelo,
-                    //            buffer_holding_registers
-                    //        );
-
-                    //        Console.WriteLine(
-                    //            JsonSerializer.Serialize(
-                    //                telemetria,
-                    //                options: new JsonSerializerOptions
-                    //                {
-                    //                    WriteIndented = true,
-                    //                    IndentSize = 4,
-                    //                    Encoder = System
-                    //                        .Text
-                    //                        .Encodings
-                    //                        .Web
-                    //                        .JavaScriptEncoder
-                    //                        .UnsafeRelaxedJsonEscaping,
-                    //                }
-                    //            )
-                    //        );
-                    //    }
-
-                    //    //buffer_coils_registers = await _conexao_1.ReadCoilsRegistersAsync(
-                    //    //    slaveAddress,
-                    //    //    configuracaoLeituraCoils.StartAddress,
-                    //    //    configuracaoLeituraCoils.NumberOfRegister
-                    //    //);
-                    //}
 
                     if (slaveAddress > 0)
                     {
-                        /// Leitura de Valores e Configuracoens
-                        //configuracao_holding_register = GerenciadorConfiguracao.ObterConfiguracaoLeitura(
-                        //    modulo.Marca,
-                        //    modulo.Modelo,
-                        //    index
-                        //);
-
-                        //// Leitura de Estados das portas
-                        //configuracao_coils_registers =
-                        //    GerenciadorConfiguracao.ObterConfiguracaoLeituraCoils(
-                        //        modulo.Marca,
-                        //        modulo.Modelo,
-                        //        index
-                        //    );
-                        // Teste
-                        //await _conexao_1.WriteSingleCoilAsync(slaveAddress, 0, true);
-
-                        //var configuracoes_leituras =
-                        //    GerenciadorConfiguracao.ObterConfiguracaoLeitura(
-                        //        modulo.Marca,
-                        //        modulo.Modelo,
-                        //        index
-                        //    );
-                        //var map_configuracoes_leituras = configuracoes_leituras.ToDictionary(c =>
-                        //    c.Tipo
-                        //);
-                        //var driver = new ModbusDriver(configuracoes_leituras);
-
-                        var driver = new ModbusDriverTekon(_conexao_1);
-
-                        var buffer_holding = await driver.ReadHoldingRegistersAsync(
+                        buffer_holding = await driver.ReadHoldingRegistersAsync(
                             slaveAddress,
                             modulo.Modelo,
                             index
                         );
+
+                        lerCoils =
+                            modulo.Conexoes.Entradas.Any(p => p.Sinal == "Digital")
+                            || modulo.Conexoes.Saidas.Any(p => p.Sinal == "Digital");
+
+                        if (lerCoils && index != 0)
+                        {
+                            buffer_coils = await driver.ReadCoilsRegistersAsync(
+                                slaveAddress,
+                                modulo.Modelo,
+                                index
+                            );
+                        }
+
                         var telemetria = driver.DecodificarModeloHoldingRegisters();
 
-                        //var buffer_coils = await driver.ReadCoilsRegistersAsync(slaveAddress, modulo.Modelo, index);
+                        JsonParse(telemetria);
 
-                        //foreach (var configuracao_leitura in configuracoes_leituras)
-                        //{
-                        //    if (configuracao_leitura.Tipo == TipoLeitura.HoldingRegister)
-                        //    {
-                        //        buffer_holding_registers =
-                        //            await _conexao_1.ReadHoldingRegistersAsync(
-                        //                slaveAddress,
-                        //                configuracao_leitura.StartAddress,
-                        //                configuracao_leitura.NumberOfRegister
-                        //            );
-                        //    }
-                        //    else if (configuracao_leitura.Tipo == TipoLeitura.Coils)
-                        //    {
-                        //        buffer_coils_registers = await _conexao_1.ReadCoilsRegistersAsync(
-                        //            slaveAddress,
-                        //            configuracao_leitura.StartAddress,
-                        //            configuracao_leitura.NumberOfRegister
-                        //        );
-                        //    }
-                        //}
+                        if (modulo.Conexoes.Entradas.Any())
+                        {
+                            foreach (var porta_entrada in modulo.Conexoes.Entradas)
+                            {
+                                if (porta_entrada.Sinal == "Digital")
+                                {
+                                    var offset =
+                                        int.Parse(
+                                            porta_entrada
+                                                .Parametros.Parametro["startAddress"]
+                                                .ToString()!
+                                        ) - driver.ConfigReadCoils!.StartAddress;
+                                    var valor = buffer_holding[offset];
+                                    var dispositivo = dispositivos.FirstOrDefault(d =>
+                                        d.Id == porta_entrada.Conectado!.Id
+                                    );
 
-                        //buffer_holding_registers = await _conexao_1.ReadHoldingRegistersAsync(
-                        //    slaveAddress,
-                        //    configuracao_holding_register.StartAddress,
-                        //    configuracao_holding_register.NumberOfRegister
-                        //);
+                                    JsonParse(new { Dispositivo = dispositivo, Valor = valor });
+                                }
 
-                        //buffer_coils_registers = await _conexao_1.ReadCoilsRegistersAsync(
-                        //    slaveAddress,
-                        //    configuracao_coils_registers.StartAddress,
-                        //    configuracao_coils_registers.NumberOfRegister
-                        //);
+                                if (porta_entrada.Sinal == "Analógico")
+                                {
+                                    var offset =
+                                        int.Parse(
+                                            porta_entrada
+                                                .Parametros.Parametro["startAddress"]
+                                                .ToString()!
+                                        ) - driver.ConfigReadHoldingRegister!.StartAddress;
+                                    var valor = Conversor.ToFloat(
+                                        buffer_holding[offset + 1],
+                                        buffer_holding[offset]
+                                    );
 
-                        //    if (buffer_holding_registers != null)
-                        //    {
-                        //        // Telemetria do Modulo
-                        //        var telemetria = GerenciadorConfiguracao.CriarTelemetria(
-                        //            modulo.Id,
-                        //            modulo.Modelo,
-                        //            buffer_holding_registers
-                        //        );
+                                    var dispositivo = dispositivos.FirstOrDefault(d =>
+                                        d.Id == porta_entrada.Conectado!.Id
+                                    );
+                                    JsonParse(new { Dispositivo = dispositivo, Valor = valor });
+                                }
+                                if (porta_entrada.Sinal == "Temperatura")
+                                {
+                                    var offset =
+                                        int.Parse(
+                                            porta_entrada
+                                                .Parametros.Parametro["startAddress"]
+                                                .ToString()!
+                                        ) - driver.ConfigReadHoldingRegister!.StartAddress;
+                                    var valor = Conversor.ToFloat(
+                                        buffer_holding[offset + 1],
+                                        buffer_holding[offset]
+                                    );
 
-                        //        Console.WriteLine(
-                        //            JsonSerializer.Serialize(
-                        //                telemetria,
-                        //                options: new JsonSerializerOptions
-                        //                {
-                        //                    WriteIndented = true,
-                        //                    IndentSize = 4,
-                        //                    Encoder = System
-                        //                        .Text
-                        //                        .Encodings
-                        //                        .Web
-                        //                        .JavaScriptEncoder
-                        //                        .UnsafeRelaxedJsonEscaping,
-                        //                }
-                        //            )
-                        //        );
+                                    var dispositivo = dispositivos.FirstOrDefault(d =>
+                                        d.Id == porta_entrada.Conectado!.Id
+                                    );
 
-                        //foreach (var porta_saida in modulo.Conexoes.Saidas)
-                        //{
-                        //    if (porta_saida.Endereco != null && porta_saida.Conectado != null && porta_saida.Sinal == "Analogico")
-                        //    {
-                        //        var offset = int.Parse(porta_saida.Endereco) - configuracaoLeitura.StartAddress;
+                                    JsonParse(new { Dispositivo = dispositivo, Valor = valor });
+                                }
+                            }
+                        }
+                        if (modulo.Conexoes.Saidas.Any())
+                        {
+                            foreach (var porta_saida in modulo.Conexoes.Entradas)
+                            {
+                                if (porta_saida.Sinal == "Digital")
+                                {
+                                    var offset =
+                                        int.Parse(
+                                            porta_saida
+                                                .Parametros.Parametro["startAddress"]
+                                                .ToString()!
+                                        ) - driver.ConfigReadCoils!.StartAddress;
+                                    var valor = buffer_holding[offset];
 
-                        //        var valor = Conversor.ToFloat(buffer_1[offset + 1], buffer_1[offset]);
+                                    var dispositivo = dispositivos.FirstOrDefault(d =>
+                                        d.Id == porta_saida.Conectado!.Id
+                                    );
 
-                        //        var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_saida.Conectado.Id);
+                                    JsonParse(new { Dispositivo = dispositivo, Valor = valor });
+                                }
 
-                        //        Console.WriteLine($"Dispositivo {dispositivo}, Valor {valor}");
+                                if (porta_saida.Sinal == "Analógico")
+                                {
+                                    var offset =
+                                        int.Parse(
+                                            porta_saida
+                                                .Parametros.Parametro["startAddress"]
+                                                .ToString()!
+                                        ) - driver.ConfigReadHoldingRegister!.StartAddress;
+                                    var valor = Conversor.ToFloat(
+                                        buffer_holding[offset + 1],
+                                        buffer_holding[offset]
+                                    );
 
-                        //    };
-                        //}
+                                    var dispositivo = dispositivos.FirstOrDefault(d =>
+                                        d.Id == porta_saida.Conectado!.Id
+                                    );
 
-                        //        /// Telemetria das Portas
-                        //        ///
-                        //        if (buffer_coils_registers != null)
-                        //        {
-                        //            foreach (var porta_entrada in modulo.Conexoes.Entradas)
-                        //            {
-                        //                // Leitura Coils
-                        //                if (
-                        //                    porta_entrada.Endereco != null
-                        //                    && porta_entrada.Sinal == "Digital"
-                        //                )
-                        //                {
-                        //                    var offset =
-                        //                        int.Parse(porta_entrada.Endereco)
-                        //                        - map_configuracoes_leituras[
-                        //                            TipoLeitura.Coils
-                        //                        ].StartAddress;
-
-                        //                    bool valor = buffer_coils_registers[offset];
-
-                        //                    var dispositivo = controlador.Dispositivos.FirstOrDefault(
-                        //                        d => d.Id == porta_entrada.Conectado!.Id
-                        //                    );
-
-                        //                    Console.WriteLine(
-                        //                        $"Dispositivo {dispositivo}, Valor {valor}"
-                        //                    );
-                        //                }
-                        //                ;
-                        //                // Leitura Holldings
-                        //                if (
-                        //                    porta_entrada.Endereco != null
-                        //                    && porta_entrada.Sinal == "Analogica"
-                        //                )
-                        //                {
-                        //                    var offset =
-                        //                        int.Parse(porta_entrada.Endereco)
-                        //                        - map_configuracoes_leituras[
-                        //                            TipoLeitura.HoldingRegister
-                        //                        ].StartAddress;
-
-                        //                    var valor = Conversor.ToFloat(
-                        //                        buffer_holding_registers[offset + 1],
-                        //                        buffer_holding_registers[offset]
-                        //                    );
-
-                        //                    var dispositivo = controlador.Dispositivos.FirstOrDefault(
-                        //                        d => d.Id == porta_entrada.Conectado!.Id
-                        //                    );
-
-                        //                    Console.WriteLine(
-                        //                        $"Dispositivo {dispositivo.Descricao}, Valor {valor}, {porta_entrada.Faixa}"
-                        //                    );
-                        //                }
-                        //            }
-                        //            ;
-                        //            foreach (var porta_saida in modulo.Conexoes.Saidas)
-                        //            {
-                        //                // Leitura Coils
-                        //                if (
-                        //                    porta_saida.Endereco != null
-                        //                    && porta_saida.Sinal == "Digital"
-                        //                )
-                        //                {
-                        //                    var offset =
-                        //                        int.Parse(porta_saida.Endereco)
-                        //                        - map_configuracoes_leituras[
-                        //                            TipoLeitura.Coils
-                        //                        ].StartAddress;
-
-                        //                    bool valor = buffer_coils_registers[offset];
-
-                        //                    var dispositivo = controlador.Dispositivos.FirstOrDefault(
-                        //                        d => d.Id == porta_saida.Conectado!.Id
-                        //                    );
-
-                        //                    Console.WriteLine(
-                        //                        $"Dispositivo {dispositivo}, Estado {valor}"
-                        //                    );
-                        //                }
-                        //                ;
-
-                        //                //if (porta_saida.Endereco != null && porta_saida.Sinal == "Analogico")
-                        //                //{
-                        //                //    var offset = int.Parse(porta_saida.Endereco) - configuracaoLeitura.StartAddress;
-
-                        //                //    var valor = buffer_holding_registers[offset + 1];
-
-                        //                //    var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_saida.Conectado!.Id);
-
-                        //                //    Console.WriteLine($"Dispositivo {dispositivo}, Valor {valor}");
-                        //                //}
-                        //            }
-                        //        }
-                        //    }
-                        //}
-
-                        // Se nao existir Index nos parametros de modulo siguinifica que eu quero os metadados dele
-                        // Modulo Filho ou Wirelles
-                        //if (slaveAddress > 0 && index > 0)
-                        //{
-                        //    /// Leitura de Valores e Configuracoens
-                        //    configuracao_holding_register = GerenciadorConfiguracao.ObterConfiguracaoLeitura(
-                        //        modulo.Marca,
-                        //        modulo.Modelo,
-                        //        index
-                        //    );
-
-                        //    // Leitura de Estados das portas
-                        //    configuracao_coils_registers =
-                        //        GerenciadorConfiguracao.ObterConfiguracaoLeituraCoils(
-                        //            modulo.Marca,
-                        //            modulo.Modelo,
-                        //            index
-                        //        );
-                        //    // Teste
-                        //    await _conexao_1.WriteSingleCoilAsync(slaveAddress, 0, true);
-
-                        //    buffer_holding_registers = await _conexao_1.ReadHoldingRegistersAsync(
-                        //        slaveAddress,
-                        //        configuracao_holding_register.StartAddress,
-                        //        configuracao_holding_register.NumberOfRegister
-                        //    );
-
-                        //    buffer_coils_registers = await _conexao_1.ReadCoilsRegistersAsync(
-                        //        slaveAddress,
-                        //        configuracao_coils_registers.StartAddress,
-                        //        configuracao_coils_registers.NumberOfRegister
-                        //    );
-
-                        //    if (buffer_holding_registers != null)
-                        //    {
-                        //        // Telemetria do Modulo
-                        //        var telemetria = GerenciadorConfiguracao.CriarTelemetria(
-                        //            modulo.Id,
-                        //            modulo.Modelo,
-                        //            buffer_holding_registers
-                        //        );
-
-                        //        Console.WriteLine(
-                        //            JsonSerializer.Serialize(
-                        //                telemetria,
-                        //                options: new JsonSerializerOptions
-                        //                {
-                        //                    WriteIndented = true,
-                        //                    IndentSize = 4,
-                        //                    Encoder = System
-                        //                        .Text
-                        //                        .Encodings
-                        //                        .Web
-                        //                        .JavaScriptEncoder
-                        //                        .UnsafeRelaxedJsonEscaping,
-                        //                }
-                        //            )
-                        //        );
-
-                        //        //foreach (var porta_saida in modulo.Conexoes.Saidas)
-                        //        //{
-                        //        //    if(porta_saida.Endereco != null && porta_saida.Conectado != null && porta_saida.Sinal == "Analogico")
-                        //        //    {
-                        //        //        var offset = int.Parse(porta_saida.Endereco) - configuracaoLeitura.StartAddress;
-
-                        //        //        var valor = Conversor.ToFloat(buffer_1[offset + 1], buffer_1[offset]);
-
-                        //        //        var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_saida.Conectado.Id);
-
-                        //        //        Console.WriteLine($"Dispositivo {dispositivo}, Valor {valor}");
-
-                        //        //    };
-                        //        //}
-
-                        //        /// Telemetria das Portas
-                        //        ///
-                        //        if (buffer_coils_registers != null)
-                        //        {
-                        //            foreach (var porta_entrada in modulo.Conexoes.Entradas)
-                        //            {
-                        //                // Leitura Coils
-                        //                if (porta_entrada.Endereco != null && porta_entrada.Sinal == "Digital")
-                        //                {
-                        //                    var offset = int.Parse(porta_entrada.Endereco) - configuracao_coils_registers.StartAddress;
-
-                        //                    bool valor = buffer_coils_registers[offset];
-
-                        //                    var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_entrada.Conectado!.Id);
-
-                        //                    Console.WriteLine($"Dispositivo {dispositivo}, Valor {valor}");
-                        //                }
-                        //                ;
-                        //                // Leitura Holldings
-                        //                if (porta_entrada.Endereco != null && porta_entrada.Sinal == "Analogico")
-                        //                {
-                        //                    var offset = int.Parse(porta_entrada.Endereco) - configuracao_holding_register.StartAddress;
-
-                        //                    var valor = Conversor.ToFloat(buffer_holding_registers[offset + 1], buffer_holding_registers[offset + 1]);
-
-                        //                    var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_entrada.Conectado!.Id);
-
-                        //                    Console.WriteLine($"Dispositivo {dispositivo}, Valor {valor}, {porta_entrada.Faixa}");
-                        //                }
-
-                        //            };
-                        //            foreach (var porta_saida in modulo.Conexoes.Saidas)
-                        //            {
-                        //                // Leitura Coils
-                        //                if (porta_saida.Endereco != null && porta_saida.Sinal == "Digital")
-                        //                {
-                        //                    var offset = int.Parse(porta_saida.Endereco) - configuracao_coils_registers.StartAddress;
-
-                        //                    bool valor = buffer_coils_registers[offset];
-
-                        //                    var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_saida.Conectado!.Id);
-
-                        //                    Console.WriteLine($"Dispositivo {dispositivo}, Estado {valor}");
-                        //                };
-
-                        //                //if (porta_saida.Endereco != null && porta_saida.Sinal == "Analogico")
-                        //                //{
-                        //                //    var offset = int.Parse(porta_saida.Endereco) - configuracaoLeitura.StartAddress;
-
-                        //                //    var valor = buffer_holding_registers[offset + 1];
-
-                        //                //    var dispositivo = controlador.Dispositivos.FirstOrDefault(d => d.Id == porta_saida.Conectado!.Id);
-
-                        //                //    Console.WriteLine($"Dispositivo {dispositivo}, Valor {valor}");
-                        //                //}
-
-                        //            }
-                        //        }
-                        //    }
-                        //}
+                                    JsonParse(new { Dispositivo = dispositivo, Valor = valor });
+                                }
+                            }
+                        }
 
                         await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
                     }

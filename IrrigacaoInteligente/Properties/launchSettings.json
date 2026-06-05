@@ -1,11 +1,18 @@
 ﻿{
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "IrrigacaoInteligente": {
+    "Desenvolvimento": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    "Producao": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Production"
       }
     }
   }

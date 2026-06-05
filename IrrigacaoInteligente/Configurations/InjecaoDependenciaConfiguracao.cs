@@ -34,7 +34,7 @@ public static class InjecaoDependenciaConfiguracao
             .AddDataProtection()
             .SetApplicationName("IrrigacaoInteligente")
             .PersistKeysToFileSystem(
-                new DirectoryInfo(@"D:\Desenvolvimento\Backend\SoftwareIrrigacao\Key")
+                new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Keys"))
             );
 
         services.AddSingleton<ArmazenamentoToken>();
@@ -48,6 +48,7 @@ public static class InjecaoDependenciaConfiguracao
             provider,
             provider.GetRequiredService<ILogger<MqttCliente>>()
         ));
+
         services.AddSingleton<MqttClienteLocal>(provider => new MqttClienteLocal(
             new MqttClientFactory().CreateMqttClient(),
             provider,
@@ -62,7 +63,7 @@ public static class InjecaoDependenciaConfiguracao
         services.AddHostedService<ProntidaoWorker>();
         // services.AddHostedService<SincronizacaoWorker>();
         services.AddHostedService<MqttWorker>();
-        services.AddHostedService<TekonWorkerLab>();
+        services.AddHostedService<TekonWorker>();
 
         services.AddHttpClient<IAutenticacaoApi, AutenticacaoApi>();
         services
