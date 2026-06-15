@@ -1,92 +1,26 @@
-using System.Threading.RateLimiting;
-using IrrigacaoInteligente.Configurations;
-using IrrigacaoInteligente.Infrastructure.SeedData;
-using IrrigacaoInteligente.Presentation.Endpoints;
-using IrrigacaoInteligente.State;
+using IrrigacaoInteligente.Core.SeedData;
+using IrrigacaoInteligente.Setup;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 var builder = WebApplication.CreateBuilder(args);
 
-var logBasePath = builder.Configuration["Log:Path"];
+var configuration = builder.Configuration;
 
-if (builder.Environment.IsDevelopment())
-{
-    Log.Logger = new LoggerConfiguration()
-        .MinimumLevel.Information()
-        //.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override(
-            "Microsoft.EntityFrameworkCore",
-            Serilog.Events.LogEventLevel.Warning
-        )
-        .MinimumLevel.Override("System.Net.Http", Serilog.Events.LogEventLevel.Warning)
-        .WriteTo.Console()
-        .WriteTo.File(
-            $"{logBasePath}/log-.txt",
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 7
-        )
-        .CreateLogger();
-}
-else
-{
-    Log.Logger = new LoggerConfiguration()
-        .MinimumLevel.Information()
-        .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override(
-            "Microsoft.EntityFrameworkCore",
-            Serilog.Events.LogEventLevel.Warning
-        )
-        .MinimumLevel.Override("System.Net.Http", Serilog.Events.LogEventLevel.Warning)
-        .WriteTo.File(
-            $"{logBasePath}/log-.txt",
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 7
-        )
-        .CreateLogger();
-}
-
-builder
-    .Configuration.SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-    .AddUserSecrets<Program>()
-    .AddEnvironmentVariables();
-
-builder.Services.RegistrarContexto(builder.Configuration);
-builder.Services.RegistrarAuthenticacao();
-builder.Services.RegistrarServicos(builder.Configuration);
-builder.Services.AddSerilog();
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddConcurrencyLimiter(
-        "limite-tentativas",
-        options =>
-        {
-            options.PermitLimit = 5;
-            options.QueueLimit = 5;
-            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        }
-    );
-});
+builder.AddSerilogConfiguration();
+builder.Services.AddConfiguration(builder);
+builder.Services.AddRegisterServices(configuration);
+builder.Services.AddRegisterModulos(configuration);
+builder.Services.AddRegisterWorkers();
+builder.Services.AddJwtConfiguration();
 
 var app = builder.Build();
 
+app.UseConfig();
+
 await SeedData.Seed(app.Services);
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseRateLimiter();
-
-app.MapCredencial();
-app.MapAtualizarConta();
 
 try
 {

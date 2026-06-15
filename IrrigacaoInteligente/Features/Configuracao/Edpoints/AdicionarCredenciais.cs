@@ -1,0 +1,186 @@
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using IrrigacaoInteligente.Core.Cache;
+using IrrigacaoInteligente.Core.Criptografia;
+using IrrigacaoInteligente.Core.DataBase;
+using IrrigacaoInteligente.Core.Shared.Utils;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Toolbox.Automacao.Sincronizacao.Interfaces;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
+
+namespace IrrigacaoInteligente.Features.Configuracao.Edpoints;
+
+public static class AdicionarCredenciais
+{
+    public class Command : Toolbox.Core.Messages.Command
+    {
+        [Required(ErrorMessage = "ContaId é obrigatório")]
+        public Guid ContaId { get; init; }
+
+        [Required(ErrorMessage = "PainelId é obrigatório")]
+        public Guid PainelId { get; init; }
+
+        [Required(ErrorMessage = "Integracao é obrigatório")]
+        public IntegracaoConfiguracao Integracao { get; init; } = null!;
+
+        public class IntegracaoConfiguracao
+        {
+            [Required(ErrorMessage = "Chave é obrigatório")]
+            public string Chave { get; init; } = null!;
+
+            [Required(ErrorMessage = "Segredo é obrigatório")]
+            public string Segredo { get; init; } = null!;
+
+            [Required(ErrorMessage = "ContextoId é obrigatório")]
+            public Guid ContextoId { get; init; }
+        };
+    }
+
+    public class Handler : ICommandHandler<Command>
+    {
+        private readonly CredenciaisAplicacao _credenciaisAplicacao;
+        private readonly ICriptografia _criptografia;
+        private readonly IrrigacaoInteligenteContext _context;
+        private readonly IMediator _mediator;
+
+        public Handler(
+            CredenciaisAplicacao credenciaisAplicacao,
+            ICriptografia criptografia,
+            IrrigacaoInteligenteContext context,
+            IMediator mediator
+        )
+        {
+            _credenciaisAplicacao = credenciaisAplicacao;
+            _criptografia = criptografia;
+            _context = context;
+            _mediator = mediator;
+        }
+
+        private async Task<bool> ExisteCredenciais(CancellationToken cancellationToken)
+        {
+            var chaves = new[]
+            {
+                ChavesBanco.Padrao.ContaId,
+                ChavesBanco.Padrao.PainelId,
+                ChavesBanco.Integracao.Chave,
+                ChavesBanco.Integracao.Segredo,
+                ChavesBanco.Integracao.ContextoId,
+            };
+
+            var chavesConfiguracoes = await _context
+                .Configuracoes.AsNoTracking()
+                .Where(c => chaves.Contains(c.Chave))
+                .Select(c => c.Chave)
+                .ToListAsync(cancellationToken);
+
+            bool existe =
+                chavesConfiguracoes.Contains(chaves[0])
+                && chavesConfiguracoes.Contains(chaves[1])
+                && chavesConfiguracoes.Contains(chaves[2])
+                && chavesConfiguracoes.Contains(chaves[3])
+                && chavesConfiguracoes.Contains(chaves[4]);
+
+            return existe;
+        }
+
+        private void AdicionarCredenciaisAplicacao(
+            Guid contaId,
+            Guid painelId,
+            Guid contextoId,
+            string chave,
+            string segredo
+        )
+        {
+            _credenciaisAplicacao.AdicionarConta(contaId);
+            _credenciaisAplicacao.AdicionarPainel(painelId);
+            _credenciaisAplicacao.AdicionarIntegracao(chave, segredo, contextoId);
+        }
+
+        public async Task<ResponseResult> Handle(
+            Command request,
+            CancellationToken cancellationToken
+        )
+        {
+            var credenciaisExistentes = await ExisteCredenciais(cancellationToken);
+
+            //if (credenciaisExistentes)
+            //{
+            //    // Retirar feito para Teste
+            //    AdicionarCredenciaisAplicacao(
+            //        request.ContaId,
+            //        request.PainelId,
+            //        request.Integracao.ContextoId,
+            //        request.Integracao.Chave,
+            //        request.Integracao.Segredo
+            //    );
+
+            //    return ResponseResult.Result(HttpStatusCode.Conflict);
+            //}
+
+            var painel = new Core.DataBase.Entity.Configuracao(
+                ChavesBanco.Padrao.PainelId,
+                request.PainelId!.ToString()
+            );
+
+            var conta = new Core.DataBase.Entity.Configuracao(
+                ChavesBanco.Padrao.ContaId,
+                request.ContaId!.ToString()
+            );
+
+            var chaveIntegracao = new Core.DataBase.Entity.Configuracao(
+                ChavesBanco.Integracao.Chave,
+                _criptografia.Criptografar(request.Integracao.Chave!)
+            );
+
+            var segredoIntegracao = new Core.DataBase.Entity.Configuracao(
+                ChavesBanco.Integracao.Segredo,
+                _criptografia.Criptografar(request.Integracao.Segredo!)
+            );
+
+            var contextoIdIntegracao = new Core.DataBase.Entity.Configuracao(
+                ChavesBanco.Integracao.ContextoId,
+                request.Integracao.ContextoId!.ToString()
+            );
+
+            var configuracoes = new List<Core.DataBase.Entity.Configuracao>
+            {
+                painel,
+                conta,
+                chaveIntegracao,
+                segredoIntegracao,
+                contextoIdIntegracao,
+            };
+
+            await _context.Configuracoes.AddRangeAsync(configuracoes, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            AdicionarCredenciaisAplicacao(
+                request.ContaId,
+                request.PainelId,
+                request.Integracao.ContextoId,
+                request.Integracao.Chave,
+                request.Integracao.Segredo
+            );
+
+            return ResponseResult.Result(HttpStatusCode.OK);
+        }
+    }
+
+    public static void Endpoint(IEndpointRouteBuilder app)
+    {
+        app.MapPost(
+                "/configuracao/credenciais",
+                async (
+                    [FromBody] Command command,
+                    [FromServices] IMediator mediator,
+                    CancellationToken cancellationToken
+                ) => await mediator.Execute(command, cancellationToken: cancellationToken)
+            )
+            .RequireAuthorization()
+            .RequireRateLimiting("limite-tentativas");
+    }
+}

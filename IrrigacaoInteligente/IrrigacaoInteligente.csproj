@@ -34,12 +34,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="10.0.7" />
     <PackageReference Include="System.IO.Ports" Version="10.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -55,10 +55,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Infrastructure" />
+    <ProjectReference Include="..\..\Projetos\src\Toolbox.Automacao.Irrigacao\Toolbox.Automacao.Irrigacao.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Projetos\src\Toolbox.Automacao.Irrigacao\Toolbox.Automacao.Irrigacao.csproj" />
+    <Reference Include="Toolbox.Automacao.Sincronizacao">
+      <HintPath>..\..\Projetos\src\Toolbox.Automacao.Sincronizacao\bin\Debug\net10.0\Toolbox.Automacao.Sincronizacao.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

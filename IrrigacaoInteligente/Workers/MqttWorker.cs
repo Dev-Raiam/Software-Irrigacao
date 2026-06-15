@@ -1,7 +1,7 @@
-using IrrigacaoInteligente.Configurations;
-using IrrigacaoInteligente.Infrastructure.Data;
-using IrrigacaoInteligente.Infrastructure.Mqtt;
-using IrrigacaoInteligente.State;
+using IrrigacaoInteligente.Core.DataBase;
+using IrrigacaoInteligente.Core.Mqtt;
+using IrrigacaoInteligente.Core.State;
+using IrrigacaoInteligente.Setup;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -14,7 +14,7 @@ public class MqttWorker : BackgroundService
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly MqttConfiguracao _mqttConfiguracao;
-    private readonly Aplicacao _aplicacao;
+    private readonly ApplicationStateManager _applicationStateManager;
     private bool ConexaoIniciada = false;
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
@@ -25,7 +25,7 @@ public class MqttWorker : BackgroundService
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
         IOptions<MqttConfiguracao> mqttConfiguracao,
-        Aplicacao aplicacao
+        ApplicationStateManager applicationStateManager
     )
     {
         _mqttClienteRemoto = mqttClienteRemoto;
@@ -33,12 +33,12 @@ public class MqttWorker : BackgroundService
         _logger = logger;
         _serviceProvider = serviceProvider;
         _mqttConfiguracao = mqttConfiguracao.Value;
-        _aplicacao = aplicacao;
+        _applicationStateManager = applicationStateManager;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _aplicacao.AguardarLiberacaoMqtt(stoppingToken);
+        await _applicationStateManager.AguardarCredenciaisAsync();
 
         using var scope = _serviceProvider.CreateScope();
         var _context = scope.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
