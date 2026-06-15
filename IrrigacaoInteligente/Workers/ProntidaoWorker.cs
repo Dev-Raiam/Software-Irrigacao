@@ -35,63 +35,39 @@ public class ProntidaoWorker : BackgroundService
         _logger = logger;
     }
 
+    private static readonly TimeSpan IntervaloVerificacao = TimeSpan.FromSeconds(5);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await Task.Delay(5000, stoppingToken);
-
-                if (_credenciaisAplicacao.Invalida && !avisoEmitido)
-                {
-                    _logger.LogInformation("Aguardando Credenciais");
-                    avisoEmitido = true;
-                }
+                await Task.Delay(IntervaloVerificacao, stoppingToken);
 
                 if (_credenciaisAplicacao.Invalida)
                 {
+                    if (!avisoEmitido)
+                    {
+                        _logger.LogInformation("Aguardando credenciais da aplicação...");
+                        avisoEmitido = true;
+                    }
+
                     var credenciais = await ObterCredenciais(stoppingToken);
 
-                    if (credenciais != null && credenciais.Count != 0)
+                    if (credenciais is { Count: > 0 } && ContemCredenciais(credenciais))
                     {
-                        _logger.LogInformation("Obtendo Credenciais do Banco");
-                        
+                        _logger.LogInformation("Carregando credenciais do banco de dados...");
                         AdicionarCredenciaisAplicacao(credenciais);
-
-                        _logger.LogInformation("Credenciais obtidas com sucesso");
-                        
-                        _applicationStateManager.LiberarCredenciais();
-
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Credenciais não encontradas");
-                        _applicationStateManager.LiberarCredenciais();
-                        continue;
                     }
                 }
-                else 
+
+                if (!_credenciaisAplicacao.Invalida)
                 {
-                    _logger.LogInformation("Credenciais obtidas com sucesso");
+                    _logger.LogInformation("Credenciais carregadas com sucesso. Aplicação pronta.");
+                    _applicationStateManager.LiberarCredenciais();
+                    break;
                 }
-
-                //if (_armazenamentoAutomacao.Invalido)
-                //{
-                //    _logger.LogInformation("Buscando controladores do banco de dados");
-
-                //    var controladores = await ObterControladores(stoppingToken);
-
-                //    if (controladores != null && controladores.Count == 0)
-                //    {
-                //        _logger.LogInformation("Adicionando controladores a aplicação");
-                //        _armazenamentoAutomacao.Controladores.AddRange(controladores);
-                //    }
-                //    else
-                //    {
-                //        continue;
-                //    }
-                //}
             }
             catch (OperationCanceledException)
             {
@@ -100,24 +76,10 @@ public class ProntidaoWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro inesperado na preparação do serviço");
+                await Task.Delay(IntervaloVerificacao, stoppingToken);
             }
         }
     }
-
-    //private async Task<List<Controlador>?> ObterControladores(CancellationToken cancellationToken)
-    //{
-    //    var scoped = _serviceProvider.CreateScope();
-
-    //    using var context =
-    //        scoped.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
-
-    //    var controladores = await context
-    //        .ConfiguracoesControladores.AsNoTracking()
-    //        .Select(cg => cg.Configuracao)
-    //        .ToListAsync(cancellationToken);
-
-    //    return controladores;
-    //}
 
     private async Task<List<Configuracao>?> ObterCredenciais(CancellationToken cancellationToken)
     {
@@ -129,6 +91,20 @@ public class ProntidaoWorker : BackgroundService
         var credenciais = await context.Configuracoes.AsNoTracking().ToListAsync(cancellationToken);
 
         return credenciais;
+    }
+
+    private static bool ContemCredenciais(List<Configuracao> credenciais)
+    {
+        var chaves = new[]
+        {
+            ChavesBanco.Padrao.ContaId,
+            ChavesBanco.Padrao.PainelId,
+            ChavesBanco.Integracao.Chave,
+            ChavesBanco.Integracao.Segredo,
+            ChavesBanco.Integracao.ContextoId,
+        };
+
+        return chaves.All(chave => credenciais.Exists(c => c.Chave == chave));
     }
 
     private void AdicionarCredenciaisAplicacao(List<Configuracao> credenciais)

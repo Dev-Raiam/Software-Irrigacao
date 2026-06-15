@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using Toolbox.Automacao.Sincronizacao.Interfaces;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 

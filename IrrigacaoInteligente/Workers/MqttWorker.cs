@@ -2,7 +2,6 @@ using IrrigacaoInteligente.Core.DataBase;
 using IrrigacaoInteligente.Core.Mqtt;
 using IrrigacaoInteligente.Core.State;
 using IrrigacaoInteligente.Setup;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace IrrigacaoInteligente.Workers;
@@ -15,7 +14,6 @@ public class MqttWorker : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly MqttConfiguracao _mqttConfiguracao;
     private readonly ApplicationStateManager _applicationStateManager;
-    private bool ConexaoIniciada = false;
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
 
@@ -40,15 +38,19 @@ public class MqttWorker : BackgroundService
     {
         await _applicationStateManager.AguardarCredenciaisAsync();
 
-        using var scope = _serviceProvider.CreateScope();
-        var _context = scope.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
-
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                if (ConexaoIniciada)
-                    break;
+                using var scope = _serviceProvider.CreateScope();
+                var _context =
+                    scope.ServiceProvider.GetRequiredService<IrrigacaoInteligenteContext>();
+
+                if (!_mqttClienteLocal.Conectado)
+                    ConexaoLocalAtiva = false;
+
+                if (!_mqttClienteRemoto.Conectado)
+                    ConexaoRemotaAtiva = false;
 
                 if (!ConexaoLocalAtiva)
                 {
@@ -78,11 +80,6 @@ public class MqttWorker : BackgroundService
                 {
                     ConexaoRemotaAtiva = true;
 
-                    await _mqttClienteRemoto.AssinarTopicoAsync(
-                        "comando/03800edb-8dff-4e2b-9ad8-00f0af1cdebf",
-                        stoppingToken
-                    );
-
                     _mqttClienteRemoto.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteRemoto.ExecutarCallbackDesconectado(stoppingToken);
                 }
@@ -91,21 +88,11 @@ public class MqttWorker : BackgroundService
                 {
                     ConexaoLocalAtiva = true;
 
-                    await _mqttClienteLocal.AssinarTopicoAsync(
-                        "telemetria/resposta",
-                        stoppingToken
-                    );
-
                     _mqttClienteLocal.ExecutarCallbackMensageria(stoppingToken);
                     _mqttClienteLocal.ExecutarCallbackDesconectado(stoppingToken);
                 }
 
-                if (_mqttClienteRemoto.Conectado && _mqttClienteLocal.Conectado)
-                {
-                    ConexaoIniciada = true;
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
             catch (OperationCanceledException)
             {
