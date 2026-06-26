@@ -7,6 +7,9 @@ obj/
 *.db-shm
 *.db-wal
 
+# Docs Pessoal
+Docs-Dev/
+
 # Logs
 Logs/
 *.log

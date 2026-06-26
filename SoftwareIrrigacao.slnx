@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SoftwareIrrigacao/SoftwareIrrigacao.csproj" />
+  </Folder>
+</Solution>
