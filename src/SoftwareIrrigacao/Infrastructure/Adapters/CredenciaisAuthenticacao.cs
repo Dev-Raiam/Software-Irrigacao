@@ -1,9 +1,9 @@
-using Autenticacao.Dtos;
 using Microsoft.EntityFrameworkCore;
-using SoftwareIrrigacao.Autenticacao;
 using SoftwareIrrigacao.Data;
 using SoftwareIrrigacao.Shared.Constants;
 using SoftwareIrrigacao.Shared.Contracts;
+using Toolbox.Automacao.Autenticacao;
+using Toolbox.Automacao.Autenticacao.Dtos;
 
 namespace SoftwareIrrigacao.Infrastructure.Adapters
 {
@@ -43,9 +43,9 @@ namespace SoftwareIrrigacao.Infrastructure.Adapters
 
             var credencial = new Credencial
             {
-                Chave = _criptografia.Descriptografar(chave.Valor),
-                Segredo = _criptografia.Descriptografar(segredo.Valor),
-                ContextoId = Guid.Parse(contextoId.Valor),
+                Chave = _criptografia.Descriptografar(chave!.Valor),
+                Segredo = _criptografia.Descriptografar(segredo!.Valor),
+                ContextoId = Guid.Parse(contextoId!.Valor),
             };
 
             return credencial;

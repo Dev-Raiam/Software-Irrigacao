@@ -1,4 +1,4 @@
-using Toolbox.Automacao.Sincronizacao.Dtos;
+using Toolbox.Automacao.Sincronizacao.Provider;
 
 namespace SoftwareIrrigacao.Infrastructure.Cache
 {

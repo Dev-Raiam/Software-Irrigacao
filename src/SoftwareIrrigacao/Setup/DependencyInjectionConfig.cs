@@ -1,8 +1,4 @@
-using System.Reflection;
-using Microsoft.AspNetCore.DataProtection;
 using MQTTnet;
-using SoftwareIrrigacao.Autenticacao;
-using SoftwareIrrigacao.Features.Configuracao;
 using SoftwareIrrigacao.Infrastructure.Adapters;
 using SoftwareIrrigacao.Infrastructure.Cache;
 using SoftwareIrrigacao.Infrastructure.Criptografia;
@@ -10,6 +6,8 @@ using SoftwareIrrigacao.Infrastructure.Mqtt;
 using SoftwareIrrigacao.Shared.Configuration;
 using SoftwareIrrigacao.Shared.Contracts;
 using SoftwareIrrigacao.Shared.State;
+using System.Reflection;
+using Toolbox.Automacao.Autenticacao;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
 

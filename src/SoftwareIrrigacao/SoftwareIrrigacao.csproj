@@ -19,12 +19,20 @@
 
   <ItemGroup>
     <Compile Remove="Application\**" />
+    <Compile Remove="Features\Telemetria\Dispositivos\**" />
+    <Compile Remove="Features\Telemetria\Simus\**" />
     <Compile Remove="Logs\**" />
     <Content Remove="Application\**" />
+    <Content Remove="Features\Telemetria\Dispositivos\**" />
+    <Content Remove="Features\Telemetria\Simus\**" />
     <Content Remove="Logs\**" />
     <EmbeddedResource Remove="Application\**" />
+    <EmbeddedResource Remove="Features\Telemetria\Dispositivos\**" />
+    <EmbeddedResource Remove="Features\Telemetria\Simus\**" />
     <EmbeddedResource Remove="Logs\**" />
     <None Remove="Application\**" />
+    <None Remove="Features\Telemetria\Dispositivos\**" />
+    <None Remove="Features\Telemetria\Simus\**" />
     <None Remove="Logs\**" />
   </ItemGroup>
 
@@ -45,7 +53,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
     <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
@@ -56,16 +64,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Toolbox.Automacao.Irrigacao">
-      <HintPath>..\..\..\Projetos\src\Toolbox.Automacao.Irrigacao\bin\Release\net10.0\Toolbox.Automacao.Irrigacao.dll</HintPath>
-    </Reference>
-    <Reference Include="Toolbox.Automacao.Sincronizacao">
-      <HintPath>..\..\..\Projetos\src\Toolbox.Automacao.Sincronizacao\bin\Debug\net10.0\Toolbox.Automacao.Sincronizacao.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\Telemetria\Dispositivos\" />
-    <Folder Include="Features\Telemetria\Simus\" />
+    <ProjectReference Include="..\Toolbox.Automacao.Autenticacao\Toolbox.Automacao.Autenticacao.csproj" />
+    <ProjectReference Include="..\Toolbox.Automacao.Core\Toolbox.Automacao.Core.csproj" />
+    <ProjectReference Include="..\Toolbox.Automacao.Irrigacao\Toolbox.Automacao.Irrigacao.csproj" />
+    <ProjectReference Include="..\Toolbox.Automacao.Sincronizacao\Toolbox.Automacao.Sincronizacao.csproj" />
   </ItemGroup>
 </Project>

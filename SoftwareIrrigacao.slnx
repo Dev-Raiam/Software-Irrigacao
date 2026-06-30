@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/SoftwareIrrigacao/SoftwareIrrigacao.csproj" />
+    <Project Path="src/Toolbox.Automacao.Autenticacao/Toolbox.Automacao.Autenticacao.csproj" />
+    <Project Path="src/Toolbox.Automacao.Core/Toolbox.Automacao.Core.csproj" />
+    <Project Path="src/Toolbox.Automacao.Irrigacao/Toolbox.Automacao.Irrigacao.csproj" />
+    <Project Path="src/Toolbox.Automacao.Sincronizacao/Toolbox.Automacao.Sincronizacao.csproj" />
   </Folder>
 </Solution>

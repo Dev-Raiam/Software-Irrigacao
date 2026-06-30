@@ -20,7 +20,7 @@ var app = builder.Build();
 
 app.UseConfig();
 
-///await SeedData.Seed(app.Services);
+await SeedData.Seed(app.Services);
 try
 {
     await app.RunAsync();
