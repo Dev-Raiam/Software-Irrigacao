@@ -5,7 +5,7 @@ namespace SoftwareIrrigacao.Setup;
 
 public static class SerilogConfig
 {
-    public static void AddSerilogConfiguration(this WebApplicationBuilder builder)
+    public static void AddSerilogConfiguration(this IServiceCollection services, WebApplicationBuilder builder)
     {
         var logBasePath = builder.Configuration["Log:Path"];
 

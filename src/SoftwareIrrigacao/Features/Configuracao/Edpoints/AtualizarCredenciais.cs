@@ -1,12 +1,12 @@
-using System.ComponentModel.DataAnnotations;
-using System.Net;
-using SoftwareIrrigacao.Data;
-using SoftwareIrrigacao.Infrastructure.Cache;
-using SoftwareIrrigacao.Shared.Constants;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using SoftwareIrrigacao.Infra.Cache;
+using SoftwareIrrigacao.Infra.Data;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using Toolbox.Automacao.Core.Data;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
@@ -26,12 +26,12 @@ public static class AtualizarCredenciais
     public class Handler : ICommandHandler<Command>
     {
         private readonly CredenciaisAplicacao _credenciaisAplicacao;
-        private readonly SoftwareIrrigacaoContext _context;
+        private readonly IrrigacaoDbContext _context;
         private readonly IMediator _mediator;
 
         public Handler(
             CredenciaisAplicacao credenciaisAplicacao,
-            SoftwareIrrigacaoContext context,
+            IrrigacaoDbContext context,
             IMediator mediator
         )
         {
@@ -51,12 +51,12 @@ public static class AtualizarCredenciais
             CancellationToken cancellationToken = default
         )
         {
-            var conta = await _context.Configuracoes.FirstOrDefaultAsync(
+            var conta = await _context.Set<Toolbox.Automacao.Core.Models.Configuracao>().FirstOrDefaultAsync(
                 x => x.Chave == ChavesBanco.Padrao.ContaId,
                 cancellationToken
             );
 
-            var painel = await _context.Configuracoes.FirstOrDefaultAsync(
+            var painel = await _context.Set<Toolbox.Automacao.Core.Models.Configuracao>().FirstOrDefaultAsync(
                 x => x.Chave == ChavesBanco.Padrao.PainelId,
                 cancellationToken
             );

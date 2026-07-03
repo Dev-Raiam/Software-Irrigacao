@@ -1,13 +1,13 @@
-using System.ComponentModel.DataAnnotations;
-using System.Net;
-using SoftwareIrrigacao.Data;
-using SoftwareIrrigacao.Infrastructure.Cache;
-using SoftwareIrrigacao.Shared.Constants;
-using SoftwareIrrigacao.Shared.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using SoftwareIrrigacao.Infra.Cache;
+using SoftwareIrrigacao.Infra.Data;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using Toolbox.Automacao.Core.Data;
+using Toolbox.Automacao.Core.Services;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
@@ -43,13 +43,13 @@ public static class AdicionarCredenciais
     {
         private readonly CredenciaisAplicacao _credenciaisAplicacao;
         private readonly ICriptografia _criptografia;
-        private readonly SoftwareIrrigacaoContext _context;
+        private readonly IrrigacaoDbContext _context;
         private readonly IMediator _mediator;
 
         public Handler(
             CredenciaisAplicacao credenciaisAplicacao,
             ICriptografia criptografia,
-            SoftwareIrrigacaoContext context,
+            IrrigacaoDbContext context,
             IMediator mediator
         )
         {
@@ -69,9 +69,7 @@ public static class AdicionarCredenciais
                 ChavesBanco.Integracao.Segredo,
                 ChavesBanco.Integracao.ContextoId,
             };
-
-            var chavesConfiguracoes = await _context
-                .Configuracoes.AsNoTracking()
+            var chavesConfiguracoes = await _context.Set<Toolbox.Automacao.Core.Models.Configuracao>().AsNoTracking()
                 .Where(c => chaves.Contains(c.Chave))
                 .Select(c => c.Chave)
                 .ToListAsync(cancellationToken);
@@ -120,32 +118,32 @@ public static class AdicionarCredenciais
             //    return ResponseResult.Result(HttpStatusCode.Conflict);
             //}
 
-            var painel = new Domain.Entity.Configuracao(
+            var painel = new Toolbox.Automacao.Core.Models.Configuracao(
                 ChavesBanco.Padrao.PainelId,
                 request.PainelId!.ToString()
             );
 
-            var conta = new Domain.Entity.Configuracao(
+            var conta = new Toolbox.Automacao.Core.Models.Configuracao(
                 ChavesBanco.Padrao.ContaId,
                 request.ContaId!.ToString()
             );
 
-            var chaveIntegracao = new Domain.Entity.Configuracao(
+            var chaveIntegracao = new Toolbox.Automacao.Core.Models.Configuracao(
                 ChavesBanco.Integracao.Chave,
                 _criptografia.Criptografar(request.Integracao.Chave!)
             );
 
-            var segredoIntegracao = new Domain.Entity.Configuracao(
+            var segredoIntegracao = new Toolbox.Automacao.Core.Models.Configuracao(
                 ChavesBanco.Integracao.Segredo,
                 _criptografia.Criptografar(request.Integracao.Segredo!)
             );
 
-            var contextoIdIntegracao = new Domain.Entity.Configuracao(
+            var contextoIdIntegracao = new Toolbox.Automacao.Core.Models.Configuracao(
                 ChavesBanco.Integracao.ContextoId,
                 request.Integracao.ContextoId!.ToString()
             );
 
-            var configuracoes = new List<Domain.Entity.Configuracao>
+            var configuracoes = new List<Toolbox.Automacao.Core.Models.Configuracao>
             {
                 painel,
                 conta,
@@ -154,7 +152,7 @@ public static class AdicionarCredenciais
                 contextoIdIntegracao,
             };
 
-            await _context.Configuracoes.AddRangeAsync(configuracoes, cancellationToken);
+            await _context.Set<Toolbox.Automacao.Core.Models.Configuracao>().AddRangeAsync(configuracoes, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
             AdicionarCredenciaisAplicacao(
