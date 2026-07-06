@@ -1,10 +1,8 @@
 using MQTTnet;
-using SoftwareIrrigacao.Infra.Adapters;
 using SoftwareIrrigacao.Infra.Cache;
 using SoftwareIrrigacao.Infra.Mqtt;
 using SoftwareIrrigacao.Shared.State;
 using System.Reflection;
-using Toolbox.Automacao.Core.Services;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
 
@@ -12,13 +10,11 @@ namespace SoftwareIrrigacao.Setup;
 
 public static class DependencyInjectionConfig
 {
-    public static void AddRegisterServices(
-        this IServiceCollection services
-    )
+    public static void AddRegisterServices(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
 
-        services.AddScoped<ICredenciaisAutenticacao, CredenciaisAuthenticacao>();
+        //services.AddScoped<ICredenciaisAutenticacao, CredenciaisAuthenticacao>();
         services.AddSingleton<CredenciaisAplicacao>();
         services.AddSingleton<ArmazenamentoAutomacao>();
         services.AddSingleton<ApplicationStateManager>();
@@ -38,7 +34,5 @@ public static class DependencyInjectionConfig
             Assembly.GetExecutingAssembly(),
             typeof(AcionarBomba).GetTypeInfo().Assembly
         );
-
-
     }
 }

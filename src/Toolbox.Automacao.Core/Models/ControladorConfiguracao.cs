@@ -1,11 +1,12 @@
+using LiteDB;
+
 namespace Toolbox.Automacao.Core.Models;
 
 public class ControladorConfiguracao
 {
+    [BsonId]
     public Guid Id { get; private set; }
     public Controlador Controlador { get; private set; } = null!;
-
-    protected ControladorConfiguracao() { }
 
     public ControladorConfiguracao(Controlador controlador)
     {

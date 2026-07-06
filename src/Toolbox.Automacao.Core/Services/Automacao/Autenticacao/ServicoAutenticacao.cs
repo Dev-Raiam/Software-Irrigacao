@@ -6,6 +6,10 @@ using Toolbox.Automacao.Core.Setup;
 
 namespace Toolbox.Automacao.Core.Services
 {
+    public interface IServicoAutenticacao
+    {
+        Task<Result<Token>> Autenticar(Credencial credencial, CancellationToken cancellationToken);
+    }
     internal sealed class ServicoAutenticacao : BaseApi, IServicoAutenticacao
     {
         private readonly HttpClient _httpClient;
@@ -25,14 +29,12 @@ namespace Toolbox.Automacao.Core.Services
         }
 
         public async Task<Result<Token>> Autenticar(
-            string chave,
-            string segredo,
-            Guid contextoId,
+            Credencial credencial,
             CancellationToken cancellationToken
         )
         {
             HttpContent content = new StringContent(
-                JsonSerializer.Serialize(new {Chave = chave, Segredo = segredo, ContextoId = contextoId}, _jsonOptions),
+                JsonSerializer.Serialize(credencial, _jsonOptions),
                 System.Text.Encoding.UTF8,
                 "application/json"
             );
@@ -43,6 +45,11 @@ namespace Toolbox.Automacao.Core.Services
                 content,
                 cancellationToken
             );
+
+            if (!response.Sucesso || response.Dado == null)
+                return response;
+
+            response.Dado.DecrementarExpiracao();
 
             return response;
         }

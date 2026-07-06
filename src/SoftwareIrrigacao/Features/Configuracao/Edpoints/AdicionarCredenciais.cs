@@ -1,11 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SoftwareIrrigacao.Infra.Cache;
 using SoftwareIrrigacao.Infra.Data;
-using System.ComponentModel.DataAnnotations;
-using System.Net;
 using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Services;
 using Toolbox.Core.Mediator;
@@ -69,7 +69,9 @@ public static class AdicionarCredenciais
                 ChavesBanco.Integracao.Segredo,
                 ChavesBanco.Integracao.ContextoId,
             };
-            var chavesConfiguracoes = await _context.Set<Toolbox.Automacao.Core.Models.Configuracao>().AsNoTracking()
+            var chavesConfiguracoes = await _context
+                .Set<Toolbox.Automacao.Core.Models.Configuracao>()
+                .AsNoTracking()
                 .Where(c => chaves.Contains(c.Chave))
                 .Select(c => c.Chave)
                 .ToListAsync(cancellationToken);
@@ -152,7 +154,9 @@ public static class AdicionarCredenciais
                 contextoIdIntegracao,
             };
 
-            await _context.Set<Toolbox.Automacao.Core.Models.Configuracao>().AddRangeAsync(configuracoes, cancellationToken);
+            await _context
+                .Set<Toolbox.Automacao.Core.Models.Configuracao>()
+                .AddRangeAsync(configuracoes, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
             AdicionarCredenciaisAplicacao(

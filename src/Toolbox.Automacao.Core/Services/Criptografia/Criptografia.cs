@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.DataProtection;
 
 namespace Toolbox.Automacao.Core.Services;
+public interface ICriptografia
+{
+    string Criptografar(string entrada);
+    string Descriptografar(string entrada);
+}
 
 internal sealed class Criptografia : ICriptografia
 {

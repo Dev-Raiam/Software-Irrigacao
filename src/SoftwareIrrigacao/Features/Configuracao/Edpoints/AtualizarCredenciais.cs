@@ -68,8 +68,8 @@ public static class AtualizarCredenciais
                     .AddError("Conta ou Painel não Cadastrados");
             }
 
-            conta.Atualizar(request.ContaId.ToString());
-            painel.Atualizar(request.PainelId.ToString());
+            //conta.Atualizar(request.ContaId.ToString());
+            //painel.Atualizar(request.PainelId.ToString());
 
             AtualizarCredenciaisAplicacao(request.ContaId, request.PainelId);
 

@@ -16,7 +16,7 @@ builder.Services.AddJwtConfiguration();
 var scoped = builder.Services.BuildServiceProvider();
 var sincronizar = scoped.GetRequiredService<ISincronizarControladores>();
 
-await sincronizar.ExecutarAsync(Guid.Parse("c0f34ad2-6725-48fd-b68e-29f98dd9092d"), CancellationToken.None);
+await sincronizar.ExecutarAsync(Guid.Parse("fcf8723b-86ff-4f7b-a81d-2a87c8fda090"), CancellationToken.None);
 
 var app = builder.Build();
 

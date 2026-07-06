@@ -4,9 +4,12 @@ using Toolbox.Automacao.Core.Models;
 
 namespace Toolbox.Automacao.Core.Services;
 
-/// <summary>
-/// Pegar dados Da Api ou Cache ou Banco.
-/// </summary>
+public interface IProvedorDataSincronizacao
+{
+    Task<Controlador?> ObterControlador(CancellationToken cancellationToken);
+    Task<List<Modulo>> ObterModulos(CancellationToken cancellationToken);
+}
+
 internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
 {
     private readonly SincronizacaoDbContext _context;
@@ -52,7 +55,8 @@ internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
 
     private async Task<Controlador> ObterControladorMaster(CancellationToken cancellationToken)
     {
-        var controladores = await _context.Set<ControladorConfiguracao>()
+        var controladores = await _context
+            .Set<ControladorConfiguracao>()
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 

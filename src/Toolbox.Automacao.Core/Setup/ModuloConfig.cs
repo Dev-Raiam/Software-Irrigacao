@@ -15,7 +15,8 @@ namespace Toolbox.Automacao.Core.Setup
         public static void AddModuloCore(
             this IServiceCollection services,
             IConfiguration configuration,
-            string connectionString) 
+            string connectionString
+        )
         {
             services.AddSingleton<ApiConfiguracao>();
             services.AddSingleton<MqttConfiguracao>();
@@ -23,30 +24,35 @@ namespace Toolbox.Automacao.Core.Setup
             services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguracao"));
             services.Configure<MqttConfiguracao>(configuration.GetSection("MqttConfiguracao"));
 
-
-            var keysPath = configuration["DataProtection:KeysPath"] ?? Path.Combine(AppContext.BaseDirectory, "Keys");
+            var keysPath =
+                configuration["DataProtection:KeysPath"]
+                ?? Path.Combine(AppContext.BaseDirectory, "Keys");
 
             services
                 .AddDataProtection()
                 .SetApplicationName("Automacao")
                 .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
-            services.AddHttpClient("Toolbox", (provider,http )=> 
-            {
-                var apiConfiguracao = provider.GetRequiredService<IOptions<ApiConfiguracao>>().Value;
+            services
+                .AddHttpClient(
+                    "Toolbox",
+                    (provider, http) =>
+                    {
+                        var apiConfiguracao = provider
+                            .GetRequiredService<IOptions<ApiConfiguracao>>()
+                            .Value;
 
-                var baseUrl = apiConfiguracao?.BaseUrl ?? "https://localhost";
-                var timeout = apiConfiguracao?.TimeoutSeconds ?? 30;
+                        var baseUrl = apiConfiguracao?.BaseUrl ?? "https://localhost";
+                        var timeout = apiConfiguracao?.TimeoutSeconds ?? 30;
 
-                http.BaseAddress = new Uri(baseUrl);
-                http.Timeout = TimeSpan.FromSeconds(timeout);
-
-            }).AddHttpMessageHandler<AutenticacaoHandler>();
+                        http.BaseAddress = new Uri(baseUrl);
+                        http.Timeout = TimeSpan.FromSeconds(timeout);
+                    }
+                )
+                .AddHttpMessageHandler<AutenticacaoHandler>();
 
             services.AddDbContext<SincronizacaoDbContext>(options =>
-                options.UseSqlite(
-                    connectionString
-                )
+                options.UseSqlite(connectionString)
             );
 
             services.RegisterServices();

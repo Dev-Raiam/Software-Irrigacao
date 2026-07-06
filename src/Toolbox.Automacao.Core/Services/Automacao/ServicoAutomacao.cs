@@ -5,6 +5,13 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Toolbox.Automacao.Core.Services;
 
+public interface IServicoAutomacao
+{
+    Task<Result<List<Controlador>>> ObterControladoresPorPainelAsync(
+        Guid painelId,
+        CancellationToken cancellationToken
+    );
+}
 internal sealed class ServicoAutomacao : BaseApi, IServicoAutomacao
 {
     private readonly HttpClient _httpClient;

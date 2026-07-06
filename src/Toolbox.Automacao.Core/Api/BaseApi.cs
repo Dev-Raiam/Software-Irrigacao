@@ -34,19 +34,19 @@ public class BaseApi
         }
         catch (TaskCanceledException ex)
         {
-            return Result<T>.Fail("Timeout", ex);
+            return Result<T>.Fail($"Timeout {ex.Message}");
         }
         catch (HttpRequestException ex)
         {
-            return Result<T>.Fail("Erro de conexão", ex);
+            return Result<T>.Fail($"Erro de conexão {ex.Message}");
         }
         catch (System.Text.Json.JsonException ex)
         {
-            return Result<T>.Fail("Erro ao converter JSON", ex);
+            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
         }
         catch (Exception ex)
         {
-            return Result<T>.Fail($"Erro inesperado", ex);
+            return Result<T>.Fail($"Erro inesperado {ex.Message}");
         }
     }
 
@@ -81,19 +81,19 @@ public class BaseApi
         }
         catch (TaskCanceledException ex)
         {
-            return Result<T>.Fail("Timeout", ex);
+            return Result<T>.Fail($"Timeout {ex.Message}");
         }
         catch (HttpRequestException ex)
         {
-            return Result<T>.Fail("Erro de conexão", ex);
+            return Result<T>.Fail($"Erro de conexão {ex.Message}");
         }
         catch (System.Text.Json.JsonException ex)
         {
-            return Result<T>.Fail("Erro ao converter JSON", ex);
+            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
         }
         catch (Exception ex)
         {
-            return Result<T>.Fail($"Erro inesperado", ex);
+            return Result<T>.Fail($"Erro inesperado {ex.Message}");
         }
     }
 }
