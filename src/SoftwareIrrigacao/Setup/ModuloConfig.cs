@@ -26,6 +26,12 @@ public static class ModuloConfig
             .AddUserSecrets<Program>()
             .AddEnvironmentVariables();
 
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.DefaultIgnoreCondition =
+                System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        });
+
         //services.AddHostedService<ProntidaoWorker>();
         services.AddHostedService<MqttWorker>();
 
@@ -63,7 +69,7 @@ public static class ModuloConfig
         app.UseRateLimiter();
 
         AdicionarCredenciais.Endpoint(app);
-        AtualizarCredenciais.Endpoint(app);
+        //AtualizarCredenciais.Endpoint(app);
         Autenticar.Endpoint(app);
     }
 }

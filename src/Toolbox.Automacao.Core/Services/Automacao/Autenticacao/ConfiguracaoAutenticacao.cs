@@ -14,17 +14,17 @@ namespace Toolbox.Automacao.Core.Services.Automacao.Autenticacao
     {
         private readonly ICriptografia _criptografia;
         private readonly ILiteDatabase _dataBase;
-        private readonly ILogger<ConfiguracaoAutenticacao> _logger;
+        //private readonly ILogger<ConfiguracaoAutenticacao> _logger;
 
         public ConfiguracaoAutenticacao(
             ICriptografia criptografia,
-            ILiteDatabase database,
-            ILogger<ConfiguracaoAutenticacao> logger
+            ILiteDatabase database
+            //ILogger<ConfiguracaoAutenticacao> logger
         )
         {
             _criptografia = criptografia;
             _dataBase = database;
-            _logger = logger;
+            //_logger = logger;
         }
 
         public void AdicionarCredenciais(Credencial credencial)
@@ -41,25 +41,11 @@ namespace Toolbox.Automacao.Core.Services.Automacao.Autenticacao
                 new(ChavesBanco.Integracao.ContextoId, credencial.contextoId.ToString()),
             ];
 
-            try
+            foreach (var configuracao in configuracoes)
             {
-                foreach (var configuracao in configuracoes)
-                {
-                    _dataBase
-                        .GetCollection<Configuracao>(TabelaNome.Configuracoes)
-                        .Upsert(configuracao);
-                }
-            }
-            catch (IOException ex)
-            {
-                _logger.LogError(
-                    "O processo não pode acessar o arquivo da banco de dados. {ex}",
-                    ex.Message
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Erro desconhecido. {ex}", ex.Message);
+                _dataBase
+                    .GetCollection<Configuracao>(TabelaNome.Configuracoes)
+                    .Upsert(configuracao);
             }
         }
 

@@ -40,9 +40,7 @@ public class AutenticacaoHandler : DelegatingHandler
 
         if (chaveConfig == null || segredoConfig == null || contextoIdConfig == null)
         {
-            throw new InvalidOperationException(
-                "Credenciais não encontradas no banco."
-            );
+            throw new InvalidOperationException("Credenciais não encontradas no banco.");
         }
 
         var chave = _criptografia.Descriptografar(chaveConfig.Valor);
@@ -73,7 +71,8 @@ public class AutenticacaoHandler : DelegatingHandler
                 result.Dado.TokenAcesso!,
                 result.Dado.TokenAtualizacao!,
                 result.Dado.Emitido,
-                result.Dado.Expira);
+                result.Dado.Expira
+            );
         }
 
         if (!string.IsNullOrEmpty(_token.TokenAcesso))
