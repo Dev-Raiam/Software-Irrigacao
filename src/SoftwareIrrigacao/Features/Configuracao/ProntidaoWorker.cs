@@ -77,18 +77,25 @@ public class ProntidaoWorker : BackgroundService
         }
     }
 
-    private async Task<List<Toolbox.Automacao.Core.Models.Configuracao>?> ObterCredenciais(CancellationToken cancellationToken)
+    private async Task<List<Toolbox.Automacao.Core.Models.Configuracao>?> ObterCredenciais(
+        CancellationToken cancellationToken
+    )
     {
         var scoped = _serviceProvider.CreateScope();
 
         using var context = scoped.ServiceProvider.GetRequiredService<IrrigacaoDbContext>();
 
-        var credenciais = await context.Set<Toolbox.Automacao.Core.Models.Configuracao>().AsNoTracking().ToListAsync(cancellationToken);
+        var credenciais = await context
+            .Set<Toolbox.Automacao.Core.Models.Configuracao>()
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
         return credenciais;
     }
 
-    private static bool ContemCredenciais(List<Toolbox.Automacao.Core.Models.Configuracao> credenciais)
+    private static bool ContemCredenciais(
+        List<Toolbox.Automacao.Core.Models.Configuracao> credenciais
+    )
     {
         var chaves = new[]
         {
@@ -102,7 +109,9 @@ public class ProntidaoWorker : BackgroundService
         return chaves.All(chave => credenciais.Exists(c => c.Chave == chave));
     }
 
-    private void AdicionarCredenciaisAplicacao(List<Toolbox.Automacao.Core.Models.Configuracao> credenciais)
+    private void AdicionarCredenciaisAplicacao(
+        List<Toolbox.Automacao.Core.Models.Configuracao> credenciais
+    )
     {
         var contaId = Guid.Parse(
             credenciais.Find(c => c.Chave == ChavesBanco.Padrao.ContaId)!.Valor

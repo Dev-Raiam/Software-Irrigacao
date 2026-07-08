@@ -24,7 +24,6 @@ public class Token
         TokenAtualizacao = tokenAtualizacao;
         Emitido = emitido;
         Expira = expira;
-        // Validações
     }
 
     public void Atualizar(
@@ -40,7 +39,7 @@ public class Token
         Expira = expira;
     }
 
-    public Token DecrementarExpiracao()
+    public Token DecrementarSegundosExpiracao()
     {
         Expira = Expira.AddSeconds(-15);
         return this;

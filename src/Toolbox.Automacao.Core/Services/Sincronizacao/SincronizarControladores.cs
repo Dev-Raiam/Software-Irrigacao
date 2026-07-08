@@ -40,7 +40,7 @@ internal sealed class SincronizarControladores : ISincronizarControladores
             foreach (var controlador in result.Dado)
             {
                 _database
-                    .GetCollection<ControladorConfiguracao>(TabelaNome.Controladores)
+                    .GetCollection<ControladorConfiguracao>(Tabela.Controladores)
                     .Upsert(new ControladorConfiguracao(controlador));
             }
 

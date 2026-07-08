@@ -1,8 +1,7 @@
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Toolbox.Automacao.Core.Api;
 using Toolbox.Automacao.Core.Models;
-using Toolbox.Automacao.Core.Setup;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Toolbox.Automacao.Core.Services
 {
@@ -13,19 +12,9 @@ namespace Toolbox.Automacao.Core.Services
     internal sealed class ServicoAutenticacao : BaseApi, IServicoAutenticacao
     {
         private readonly HttpClient _httpClient;
-        private readonly ApiConfiguracao _apiConfiguration;
-        private readonly JsonSerializerOptions _jsonOptions = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        };
-
-        public ServicoAutenticacao(HttpClient httpClient, IOptions<ApiConfiguracao> apiConfiguration)
+        public ServicoAutenticacao(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _apiConfiguration = apiConfiguration.Value;
-
-            _httpClient.BaseAddress = new Uri(_apiConfiguration.BaseUrl);
-            _httpClient.Timeout = TimeSpan.FromSeconds(_apiConfiguration.TimeoutSeconds);
         }
 
         public async Task<Result<Token>> Autenticar(
@@ -34,14 +23,14 @@ namespace Toolbox.Automacao.Core.Services
         )
         {
             HttpContent content = new StringContent(
-                JsonSerializer.Serialize(credencial, _jsonOptions),
+                JsonSerializer.Serialize(credencial),
                 System.Text.Encoding.UTF8,
-                "application/json"
+                 Application.Json
             );
 
             var response = await PostAsync<Token>(
                 _httpClient,
-                "autenticacao/v1/autenticar-cliente",
+                "/autenticacao/v1/autenticar-cliente",
                 content,
                 cancellationToken
             );
@@ -49,7 +38,7 @@ namespace Toolbox.Automacao.Core.Services
             if (!response.Sucesso || response.Dado == null)
                 return response;
 
-            response.Dado.DecrementarExpiracao();
+            response.Dado.DecrementarSegundosExpiracao();
 
             return response;
         }

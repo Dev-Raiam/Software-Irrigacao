@@ -14,42 +14,17 @@ namespace Toolbox.Automacao.Core.Services.Automacao.Autenticacao
     {
         private readonly ICriptografia _criptografia;
         private readonly ILiteDatabase _dataBase;
-        //private readonly ILogger<ConfiguracaoAutenticacao> _logger;
 
         public ConfiguracaoAutenticacao(
             ICriptografia criptografia,
             ILiteDatabase database
-            //ILogger<ConfiguracaoAutenticacao> logger
         )
         {
             _criptografia = criptografia;
             _dataBase = database;
-            //_logger = logger;
         }
 
         public void AdicionarCredenciais(Credencial credencial)
-        {
-            ValidarCredenciais(credencial);
-
-            var chave = _criptografia.Criptografar(credencial.chave);
-            var segredo = _criptografia.Criptografar(credencial.segredo);
-
-            Configuracao[] configuracoes =
-            [
-                new(ChavesBanco.Integracao.Chave, chave),
-                new(ChavesBanco.Integracao.Segredo, segredo),
-                new(ChavesBanco.Integracao.ContextoId, credencial.contextoId.ToString()),
-            ];
-
-            foreach (var configuracao in configuracoes)
-            {
-                _dataBase
-                    .GetCollection<Configuracao>(TabelaNome.Configuracoes)
-                    .Upsert(configuracao);
-            }
-        }
-
-        private void ValidarCredenciais(Credencial credencial)
         {
             if (string.IsNullOrEmpty(credencial.chave))
                 throw new ArgumentNullException(
@@ -66,6 +41,23 @@ namespace Toolbox.Automacao.Core.Services.Automacao.Autenticacao
                     "O contextoId não pode ser vazio (Guid.Empty).",
                     nameof(credencial.contextoId)
                 );
+
+            var chaveCriptografada = _criptografia.Criptografar(credencial.chave);
+            var segredoCriptografado = _criptografia.Criptografar(credencial.segredo);
+
+            Configuracao[] configuracoes =
+            [
+                new(ChavesBanco.Integracao.Chave, chaveCriptografada),
+                new(ChavesBanco.Integracao.Segredo, segredoCriptografado),
+                new(ChavesBanco.Integracao.ContextoId, credencial.contextoId.ToString()),
+            ];
+
+            foreach (var configuracao in configuracoes)
+            {
+                _dataBase
+                    .GetCollection<Configuracao>(Tabela.Configuracoes)
+                    .Upsert(configuracao);
+            }
         }
     }
 }

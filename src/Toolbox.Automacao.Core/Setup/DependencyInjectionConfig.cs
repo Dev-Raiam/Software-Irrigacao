@@ -25,7 +25,6 @@ namespace Toolbox.Automacao.Core.Setup
             services.AddSingleton<ICriptografia, Criptografia>();
             services.AddSingleton<Token>();
             services.AddTransient<AutenticacaoHandler>();
-            services.AddHttpClient<IServicoAutenticacao, ServicoAutenticacao>();
         }
     }
 }

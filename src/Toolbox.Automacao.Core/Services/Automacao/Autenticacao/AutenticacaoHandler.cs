@@ -1,7 +1,6 @@
-using System.Net.Http.Headers;
 using LiteDB;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Models;
 
@@ -9,21 +8,21 @@ namespace Toolbox.Automacao.Core.Services;
 
 public class AutenticacaoHandler : DelegatingHandler
 {
-    private readonly IServicoAutenticacao _servicoAutenticacao;
+    private readonly IServicoAutenticacao _autenticacao;
     private readonly ILiteDatabase _database;
     private readonly ICriptografia _criptografia;
     private readonly ILogger<AutenticacaoHandler> _logger;
     private readonly Token _token;
 
     public AutenticacaoHandler(
-        IServicoAutenticacao servicoAutenticacao,
+        IServicoAutenticacao autenticacao,
         ILiteDatabase database,
         ICriptografia criptografia,
         ILogger<AutenticacaoHandler> logger,
         Token token
     )
     {
-        _servicoAutenticacao = servicoAutenticacao;
+        _autenticacao = autenticacao;
         _database = database;
         _criptografia = criptografia;
         _logger = logger;
@@ -32,7 +31,7 @@ public class AutenticacaoHandler : DelegatingHandler
 
     private Credencial ObterCredencial()
     {
-        var colecao = _database.GetCollection<Configuracao>(TabelaNome.Configuracoes);
+        var colecao = _database.GetCollection<Configuracao>(Tabela.Configuracoes);
 
         var chaveConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Chave);
         var segredoConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Segredo);
@@ -59,19 +58,19 @@ public class AutenticacaoHandler : DelegatingHandler
         {
             var credencial = ObterCredencial();
 
-            var result = await _servicoAutenticacao.Autenticar(credencial, cancellationToken);
+            var response = await _autenticacao.Autenticar(credencial, cancellationToken);
 
-            if (!result.Sucesso || result.Dado == null)
+            if (!response.Sucesso || response.Dado == null)
             {
-                _logger.LogError("Falha ao autenticar: {Error}", result.Error);
+                _logger.LogError("Falha ao autenticar: {Error}", response.Error);
                 return await base.SendAsync(request, cancellationToken);
             }
 
             _token.Atualizar(
-                result.Dado.TokenAcesso!,
-                result.Dado.TokenAtualizacao!,
-                result.Dado.Emitido,
-                result.Dado.Expira
+                response.Dado.TokenAcesso!,
+                response.Dado.TokenAtualizacao!,
+                response.Dado.Emitido,
+                response.Dado.Expira
             );
         }
 
