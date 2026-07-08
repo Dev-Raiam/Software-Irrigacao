@@ -1,6 +1,6 @@
+using System.Net.Http.Headers;
 using LiteDB;
 using Microsoft.Extensions.Logging;
-using System.Net.Http.Headers;
 using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Models;
 
@@ -62,7 +62,7 @@ public class AutenticacaoHandler : DelegatingHandler
 
             if (!response.Sucesso || response.Dado == null)
             {
-                _logger.LogError("Falha ao autenticar: {Error}", response.Error);
+                _logger.LogError("Falha ao autenticar token de acesso: {Error}", response.Error);
                 return await base.SendAsync(request, cancellationToken);
             }
 

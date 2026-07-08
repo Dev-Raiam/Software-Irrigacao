@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SoftwareIrrigacao.Features.Configuracao.Edpoints;
 using SoftwareIrrigacao.Infra.Data;
+using SoftwareIrrigacao.Infra.Handlers.Exceptions;
 using SoftwareIrrigacao.Infra.Mqtt;
 using System.Threading.RateLimiting;
 using Toolbox.Automacao.Core.Data;
@@ -26,8 +27,12 @@ public static class ModuloConfig
 
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
-            options.SerializerOptions.DefaultIgnoreCondition =
-                System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+            options.SerializerOptions.DefaultIgnoreCondition = System
+                .Text
+                .Json
+                .Serialization
+                .JsonIgnoreCondition
+                .WhenWritingNull;
         });
 
         //services.AddHostedService<ProntidaoWorker>();
@@ -42,7 +47,7 @@ public static class ModuloConfig
         services.AddDbContext<IrrigacaoDbContext>(options => options.UseSqlite(connectionString));
 
         services.AddScoped<AutomacaoDbContext, IrrigacaoDbContext>();
-        services.AddModuloCore(builder.Configuration,connectionString);
+        services.AddModuloCore(builder.Configuration, connectionString);
 
         services.AddRateLimiter(options =>
         {
@@ -56,10 +61,14 @@ public static class ModuloConfig
                 }
             );
         });
+
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
     }
 
     public static void UseConfig(this WebApplication app)
     {
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
 

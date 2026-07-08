@@ -15,10 +15,7 @@ namespace Toolbox.Automacao.Core.Services.Automacao.Autenticacao
         private readonly ICriptografia _criptografia;
         private readonly ILiteDatabase _dataBase;
 
-        public ConfiguracaoAutenticacao(
-            ICriptografia criptografia,
-            ILiteDatabase database
-        )
+        public ConfiguracaoAutenticacao(ICriptografia criptografia, ILiteDatabase database)
         {
             _criptografia = criptografia;
             _dataBase = database;
@@ -54,9 +51,7 @@ namespace Toolbox.Automacao.Core.Services.Automacao.Autenticacao
 
             foreach (var configuracao in configuracoes)
             {
-                _dataBase
-                    .GetCollection<Configuracao>(Tabela.Configuracoes)
-                    .Upsert(configuracao);
+                _dataBase.GetCollection<Configuracao>(Tabela.Configuracoes).Upsert(configuracao);
             }
         }
     }

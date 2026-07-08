@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Toolbox.Automacao.Core.Api;
 using Toolbox.Automacao.Core.Models;
 using static System.Net.Mime.MediaTypeNames;
@@ -9,10 +10,13 @@ namespace Toolbox.Automacao.Core.Services
     {
         Task<Result<Token>> Autenticar(Credencial credencial, CancellationToken cancellationToken);
     }
+
     internal sealed class ServicoAutenticacao : BaseApi, IServicoAutenticacao
     {
         private readonly HttpClient _httpClient;
-        public ServicoAutenticacao(HttpClient httpClient)
+
+        public ServicoAutenticacao(HttpClient httpClient, ILogger<BaseApi> logger)
+            : base(logger)
         {
             _httpClient = httpClient;
         }
@@ -25,7 +29,7 @@ namespace Toolbox.Automacao.Core.Services
             HttpContent content = new StringContent(
                 JsonSerializer.Serialize(credencial),
                 System.Text.Encoding.UTF8,
-                 Application.Json
+                Application.Json
             );
 
             var response = await PostAsync<Token>(

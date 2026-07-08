@@ -9,6 +9,7 @@ public interface ISincronizarControladores
 {
     Task ExecutarAsync(Guid PainelId, CancellationToken cancellationToken);
 }
+
 internal sealed class SincronizarControladores : ISincronizarControladores
 {
     private readonly IServicoAutomacao _servicoAutomacao;
@@ -38,17 +39,23 @@ internal sealed class SincronizarControladores : ISincronizarControladores
         if (result.Sucesso && result.Dado != null)
         {
             foreach (var controlador in result.Dado)
-            {
                 _database
                     .GetCollection<ControladorConfiguracao>(Tabela.Controladores)
                     .Upsert(new ControladorConfiguracao(controlador));
-            }
 
-            _logger.LogInformation("Dados Sincronizados com sucesso");
+            _logger.LogInformation(
+                "Sincronização concluída: {Quantidade} controladores do painel {PainelId}",
+                result.Dado.Count,
+                painelId
+            );
         }
         else
         {
-            _logger.LogError("Falha ao obter controladores: {Error} ", result.Error);
+            _logger.LogError(
+                "Falha ao obter controladores do painel {PainelId}: {Error}",
+                painelId,
+                result.Error
+            );
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Microsoft.Extensions.Logging;
 using Toolbox.Automacao.Core.Api;
 using Toolbox.Automacao.Core.Models;
 using Toolbox.Automacao.Core.Setup;
@@ -12,11 +13,13 @@ public interface IServicoAutomacao
         CancellationToken cancellationToken
     );
 }
+
 internal sealed class ServicoAutomacao : BaseApi, IServicoAutomacao
 {
     private readonly HttpClient _httpClient;
 
-    public ServicoAutomacao(IHttpClientFactory httpClientFactory)
+    public ServicoAutomacao(IHttpClientFactory httpClientFactory, ILogger<BaseApi> logger)
+        : base(logger)
     {
         _httpClient = httpClientFactory.CreateClient(HttpClientNames.Automacao);
 

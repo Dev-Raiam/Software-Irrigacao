@@ -29,16 +29,10 @@ public static class Autenticar
     {
         private readonly IMediator _mediator;
         private readonly IConfiguracaoAutenticacao _configuracaoAutenticacao;
-        private readonly ILogger<Handler> _logger;
 
-        public Handler(
-            IMediator mediator,
-            ILogger<Handler> logger,
-            IConfiguracaoAutenticacao configuracaoAutenticacao
-        )
+        public Handler(IMediator mediator, IConfiguracaoAutenticacao configuracaoAutenticacao)
         {
             _mediator = mediator;
-            _logger = logger;
             _configuracaoAutenticacao = configuracaoAutenticacao;
         }
 
@@ -47,31 +41,9 @@ public static class Autenticar
             CancellationToken cancellationToken
         )
         {
-            try
-            {
-                _configuracaoAutenticacao.AdicionarCredenciais(
-                    new Credencial(request.Chave, request.Segredo, request.ContextoId)
-                );
-            }
-            catch (IOException ex)
-            {
-                _logger.LogError(
-                    "O processo não pode acessar o arquivo do banco de dados. {ex}",
-                    ex.Message
-                );
-
-                return ResponseResult
-                    .Result(HttpStatusCode.NotFound)
-                    .AddError("erro ao salvar dados");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Erro desconhecido. {ex}", ex.Message);
-
-                return ResponseResult
-                    .Result(HttpStatusCode.InternalServerError)
-                    .AddError("erro desconhecido");
-            }
+            _configuracaoAutenticacao.AdicionarCredenciais(
+                new Credencial(request.Chave, request.Segredo, request.ContextoId)
+            );
 
             return ResponseResult.Result(HttpStatusCode.OK);
         }

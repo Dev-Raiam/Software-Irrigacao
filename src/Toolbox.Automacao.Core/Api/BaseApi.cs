@@ -1,9 +1,17 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Toolbox.Automacao.Core.Api;
 
 public class BaseApi
 {
+    private readonly ILogger<BaseApi> _logger;
+
+    protected BaseApi(ILogger<BaseApi> logger)
+    {
+        _logger = logger;
+    }
+
     protected async Task<Result<T>> GetAsync<T>(
         HttpClient http,
         string url,
@@ -34,23 +42,27 @@ public class BaseApi
         }
         catch (TaskCanceledException ex)
         {
+            _logger.LogWarning(ex, "Timeout ao chamar {Url}", url);
             return Result<T>.Fail($"Timeout {ex.Message}");
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", url);
             return Result<T>.Fail($"Erro de conexão {ex.Message}");
         }
         catch (System.Text.Json.JsonException ex)
         {
+            _logger.LogError(ex, "Erro ao converter JSON de {Url}", url);
             return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Erro inesperado ao chamar {Url}", url);
             return Result<T>.Fail($"Erro inesperado {ex.Message}");
         }
     }
 
-    protected static async Task<Result<T>> PostAsync<T>(
+    protected async Task<Result<T>> PostAsync<T>(
         HttpClient http,
         string url,
         HttpContent content,
@@ -81,18 +93,22 @@ public class BaseApi
         }
         catch (TaskCanceledException ex)
         {
+            _logger.LogWarning(ex, "Timeout ao chamar {Url}", url);
             return Result<T>.Fail($"Timeout {ex.Message}");
         }
         catch (HttpRequestException ex)
         {
+            _logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", url);
             return Result<T>.Fail($"Erro de conexão {ex.Message}");
         }
         catch (System.Text.Json.JsonException ex)
         {
+            _logger.LogError(ex, "Erro ao converter JSON de {Url}", url);
             return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Erro inesperado ao chamar {Url}", url);
             return Result<T>.Fail($"Erro inesperado {ex.Message}");
         }
     }
