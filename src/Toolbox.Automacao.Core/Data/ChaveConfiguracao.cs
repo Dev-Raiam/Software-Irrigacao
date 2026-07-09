@@ -1,6 +1,6 @@
 namespace Toolbox.Automacao.Core.Data;
 
-public static class ChavesBanco
+public static class ChaveConfiguracao
 {
     public static class Integracao
     {

@@ -11,64 +11,18 @@ public static class SerilogConfig
         WebApplicationBuilder builder
     )
     {
-        var readerOptions = new ConfigurationReaderOptions(
-            typeof(Serilog.ConsoleLoggerConfigurationExtensions).Assembly,
-            typeof(Serilog.FileLoggerConfigurationExtensions).Assembly
-        );
+        var logPath = Environment.GetEnvironmentVariable("LOG_PATH") ?? "logs";
 
         builder.Host.UseSerilog(
             (context, config) =>
             {
-                config.ReadFrom.Configuration(context.Configuration, readerOptions);
+                config.ReadFrom.Configuration(context.Configuration);
+
+                if (!builder.Environment.IsDevelopment())
+                {
+                    config.WriteTo.File($"{logPath}/log-.txt");
+                }
             }
         );
-
-        //builder.Services.AddSerilog();
-
-        //var logBasePath = builder.Configuration["Log:Path"];
-
-        //if (builder.Environment.IsDevelopment())
-        //{
-        //    Log.Logger = new LoggerConfiguration()
-        //        .MinimumLevel.Information()
-        //        //.MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        //        .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
-        //        //.MinimumLevel.Override("Microsoft.Hosting.Lifetime", Serilog.Events.LogEventLevel.Warning)
-        //        .MinimumLevel.Override(
-        //            "Microsoft.EntityFrameworkCore",
-        //            Serilog.Events.LogEventLevel.Warning
-        //        )
-        //        .MinimumLevel.Override("System.Net.Http", Serilog.Events.LogEventLevel.Warning)
-        //        .WriteTo.Console()
-        //        .WriteTo.File(
-        //            $"{logBasePath}/log-.txt",
-        //            rollingInterval: RollingInterval.Day,
-        //            retainedFileCountLimit: 7
-        //        )
-        //        .CreateLogger();
-        //}
-        //else
-        //{
-        //    Log.Logger = new LoggerConfiguration()
-        //        .MinimumLevel.Information()
-        //        .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
-        //        .MinimumLevel.Override(
-        //            "Microsoft.Hosting.Lifetime",
-        //            Serilog.Events.LogEventLevel.Warning
-        //        )
-        //        .MinimumLevel.Override(
-        //            "Microsoft.EntityFrameworkCore",
-        //            Serilog.Events.LogEventLevel.Warning
-        //        )
-        //        .MinimumLevel.Override("System.Net.Http", Serilog.Events.LogEventLevel.Warning)
-        //        .WriteTo.File(
-        //            $"{logBasePath}/log-.txt",
-        //            rollingInterval: RollingInterval.Day,
-        //            retainedFileCountLimit: 7
-        //        )
-        //        .CreateLogger();
-        //}
-
-        //builder.Services.AddSerilog();
     }
 }

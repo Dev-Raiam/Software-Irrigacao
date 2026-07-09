@@ -8,7 +8,7 @@ namespace Toolbox.Automacao.Core.Services
 {
     public interface IServicoAutenticacao
     {
-        Task<Result<Token>> Autenticar(Credencial credencial, CancellationToken cancellationToken);
+        Task<Result<Token>> Autenticar(Integracao integracao, CancellationToken cancellationToken);
     }
 
     internal sealed class ServicoAutenticacao : BaseApi, IServicoAutenticacao
@@ -22,12 +22,12 @@ namespace Toolbox.Automacao.Core.Services
         }
 
         public async Task<Result<Token>> Autenticar(
-            Credencial credencial,
+            Integracao integracao,
             CancellationToken cancellationToken
         )
         {
             HttpContent content = new StringContent(
-                JsonSerializer.Serialize(credencial),
+                JsonSerializer.Serialize(integracao),
                 System.Text.Encoding.UTF8,
                 Application.Json
             );

@@ -99,11 +99,11 @@ public class ProntidaoWorker : BackgroundService
     {
         var chaves = new[]
         {
-            ChavesBanco.Padrao.ContaId,
-            ChavesBanco.Padrao.PainelId,
-            ChavesBanco.Integracao.Chave,
-            ChavesBanco.Integracao.Segredo,
-            ChavesBanco.Integracao.ContextoId,
+            ChaveConfiguracao.Padrao.ContaId,
+            ChaveConfiguracao.Padrao.PainelId,
+            ChaveConfiguracao.Integracao.Chave,
+            ChaveConfiguracao.Integracao.Segredo,
+            ChaveConfiguracao.Integracao.ContextoId,
         };
 
         return chaves.All(chave => credenciais.Exists(c => c.Chave == chave));
@@ -114,17 +114,17 @@ public class ProntidaoWorker : BackgroundService
     )
     {
         var contaId = Guid.Parse(
-            credenciais.Find(c => c.Chave == ChavesBanco.Padrao.ContaId)!.Valor
+            credenciais.Find(c => c.Chave == ChaveConfiguracao.Padrao.ContaId)!.Valor
         );
         var painelId = Guid.Parse(
-            credenciais.Find(c => c.Chave == ChavesBanco.Padrao.PainelId)!.Valor
+            credenciais.Find(c => c.Chave == ChaveConfiguracao.Padrao.PainelId)!.Valor
         );
-        var integracaoChave = credenciais.Find(c => c.Chave == ChavesBanco.Integracao.Chave)!.Valor;
+        var integracaoChave = credenciais.Find(c => c.Chave == ChaveConfiguracao.Integracao.Chave)!.Valor;
         var integracaoSegredo = credenciais
-            .Find(c => c.Chave == ChavesBanco.Integracao.Segredo)!
+            .Find(c => c.Chave == ChaveConfiguracao.Integracao.Segredo)!
             .Valor;
         var integracaoContextoId = Guid.Parse(
-            credenciais.Find(c => c.Chave == ChavesBanco.Integracao.ContextoId)!.Valor
+            credenciais.Find(c => c.Chave == ChaveConfiguracao.Integracao.ContextoId)!.Valor
         );
 
         _credenciaisAplicacao.AdicionarConta(contaId);

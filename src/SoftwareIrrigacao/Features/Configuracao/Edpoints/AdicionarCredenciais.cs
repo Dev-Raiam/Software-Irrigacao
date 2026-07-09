@@ -63,11 +63,11 @@ public static class AdicionarCredenciais
         {
             var chaves = new[]
             {
-                ChavesBanco.Padrao.ContaId,
-                ChavesBanco.Padrao.PainelId,
-                ChavesBanco.Integracao.Chave,
-                ChavesBanco.Integracao.Segredo,
-                ChavesBanco.Integracao.ContextoId,
+                ChaveConfiguracao.Padrao.ContaId,
+                ChaveConfiguracao.Padrao.PainelId,
+                ChaveConfiguracao.Integracao.Chave,
+                ChaveConfiguracao.Integracao.Segredo,
+                ChaveConfiguracao.Integracao.ContextoId,
             };
             var chavesConfiguracoes = await _context
                 .Set<Toolbox.Automacao.Core.Models.Configuracao>()
@@ -121,27 +121,27 @@ public static class AdicionarCredenciais
             //}
 
             var painel = new Toolbox.Automacao.Core.Models.Configuracao(
-                ChavesBanco.Padrao.PainelId,
+                ChaveConfiguracao.Padrao.PainelId,
                 request.PainelId!.ToString()
             );
 
             var conta = new Toolbox.Automacao.Core.Models.Configuracao(
-                ChavesBanco.Padrao.ContaId,
+                ChaveConfiguracao.Padrao.ContaId,
                 request.ContaId!.ToString()
             );
 
             var chaveIntegracao = new Toolbox.Automacao.Core.Models.Configuracao(
-                ChavesBanco.Integracao.Chave,
+                ChaveConfiguracao.Integracao.Chave,
                 _criptografia.Criptografar(request.Integracao.Chave!)
             );
 
             var segredoIntegracao = new Toolbox.Automacao.Core.Models.Configuracao(
-                ChavesBanco.Integracao.Segredo,
+                ChaveConfiguracao.Integracao.Segredo,
                 _criptografia.Criptografar(request.Integracao.Segredo!)
             );
 
             var contextoIdIntegracao = new Toolbox.Automacao.Core.Models.Configuracao(
-                ChavesBanco.Integracao.ContextoId,
+                ChaveConfiguracao.Integracao.ContextoId,
                 request.Integracao.ContextoId!.ToString()
             );
 

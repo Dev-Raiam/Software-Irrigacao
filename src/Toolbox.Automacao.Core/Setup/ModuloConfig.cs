@@ -31,35 +31,46 @@ namespace Toolbox.Automacao.Core.Setup
                 .SetApplicationName("Automacao")
                 .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
-            services.AddHttpClient<IServicoAutenticacao,ServicoAutenticacao>(
-                (provider, http) => 
-                {
-                    var configuracao = provider.GetRequiredService<IOptions<ApiConfiguracao>>().Value;
-
-                    if (string.IsNullOrWhiteSpace(configuracao?.BaseUrl))
+            services
+                .AddHttpClient<IServicoAutenticacao, ServicoAutenticacao>(
+                    (provider, http) =>
                     {
-                        throw new InvalidOperationException(
-                            "A configuração 'ApiConfiguracao:BaseUrl' não foi encontrada ou está vazia no appsettings.json!");
-                    }
-                    
-                    http.BaseAddress = new Uri(configuracao.BaseUrl);
+                        var configuracao = provider
+                            .GetRequiredService<IOptions<ApiConfiguracao>>()
+                            .Value;
 
-                }).AddStandardResilienceHandler();
+                        if (string.IsNullOrWhiteSpace(configuracao?.BaseUrl))
+                        {
+                            throw new InvalidOperationException(
+                                "A configuração 'ApiConfiguracao:BaseUrl' não foi encontrada ou está vazia no appsettings.json!"
+                            );
+                        }
+
+                        http.BaseAddress = new Uri(configuracao.BaseUrl);
+                    }
+                )
+                .AddStandardResilienceHandler();
 
             services
-                .AddHttpClient(HttpClientNames.Automacao, 
-                (provider, http) => 
-                {
-                    var configuracao = provider.GetRequiredService<IOptions<ApiConfiguracao>>().Value;
-
-                    if (string.IsNullOrWhiteSpace(configuracao?.BaseUrl))
+                .AddHttpClient(
+                    HttpClientNames.Automacao,
+                    (provider, http) =>
                     {
-                        throw new InvalidOperationException(
-                            "A configuração 'ApiConfiguracao:BaseUrl' não foi encontrada ou está vazia no appsettings.json!");
-                    }
+                        var configuracao = provider
+                            .GetRequiredService<IOptions<ApiConfiguracao>>()
+                            .Value;
 
-                    http.BaseAddress = new Uri(configuracao.BaseUrl); ;
-                })
+                        if (string.IsNullOrWhiteSpace(configuracao?.BaseUrl))
+                        {
+                            throw new InvalidOperationException(
+                                "A configuração 'ApiConfiguracao:BaseUrl' não foi encontrada ou está vazia no appsettings.json!"
+                            );
+                        }
+
+                        http.BaseAddress = new Uri(configuracao.BaseUrl);
+                        ;
+                    }
+                )
                 .AddHttpMessageHandler<AutenticacaoHandler>()
                 .AddStandardResilienceHandler();
 

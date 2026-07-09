@@ -1,53 +1,64 @@
-using System.Net.Http.Headers;
-using LiteDB;
 using Microsoft.Extensions.Logging;
-using Toolbox.Automacao.Core.Data;
+using System.Net.Http.Headers;
 using Toolbox.Automacao.Core.Models;
 
 namespace Toolbox.Automacao.Core.Services;
 
+//public interface IAutenticacaoHandler
+//{
+//    bool CredenciaisConfiguradas();
+//}
+
 public class AutenticacaoHandler : DelegatingHandler
 {
     private readonly IServicoAutenticacao _autenticacao;
-    private readonly ILiteDatabase _database;
-    private readonly ICriptografia _criptografia;
+    private readonly IGerenciadorConfiguracao _gerenciadorConfiguracao;
     private readonly ILogger<AutenticacaoHandler> _logger;
     private readonly Token _token;
 
     public AutenticacaoHandler(
         IServicoAutenticacao autenticacao,
-        ILiteDatabase database,
-        ICriptografia criptografia,
+        IGerenciadorConfiguracao gerenciadorConfiguracao,
         ILogger<AutenticacaoHandler> logger,
         Token token
     )
     {
         _autenticacao = autenticacao;
-        _database = database;
-        _criptografia = criptografia;
+        _gerenciadorConfiguracao = gerenciadorConfiguracao;
         _logger = logger;
         _token = token;
     }
 
-    private Credencial ObterCredencial()
-    {
-        var colecao = _database.GetCollection<Configuracao>(Tabela.Configuracoes);
+    //public bool CredenciaisConfiguradas()
+    //{
+    //    var colecao = _database.GetCollection<Configuracao>(Tabela.Configuracoes);
 
-        var chaveConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Chave);
-        var segredoConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Segredo);
-        var contextoIdConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.ContextoId);
+    //    var chaveConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Chave);
+    //    var segredoConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Segredo);
+    //    var contextoIdConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.ContextoId);
 
-        if (chaveConfig == null || segredoConfig == null || contextoIdConfig == null)
-        {
-            throw new InvalidOperationException("Credenciais não encontradas no banco.");
-        }
+    //    return chaveConfig != null && segredoConfig != null && contextoIdConfig != null;
+    //}
 
-        var chave = _criptografia.Descriptografar(chaveConfig.Valor);
-        var segredo = _criptografia.Descriptografar(segredoConfig.Valor);
-        var contextoId = Guid.Parse(contextoIdConfig.Valor);
+    //private Credencial? ObterCredencial()
+    //{
+    //    var colecao = _database.GetCollection<Configuracao>(Tabela.Configuracoes);
 
-        return new Credencial(chave, segredo, contextoId);
-    }
+    //    var chaveConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Chave);
+    //    var segredoConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.Segredo);
+    //    var contextoIdConfig = colecao.FindOne(c => c.Chave == ChavesBanco.Integracao.ContextoId);
+
+    //    if (chaveConfig == null || segredoConfig == null || contextoIdConfig == null)
+    //    {
+    //        return null;
+    //    }
+
+    //    var chave = _criptografia.Descriptografar(chaveConfig.Valor);
+    //    var segredo = _criptografia.Descriptografar(segredoConfig.Valor);
+    //    var contextoId = Guid.Parse(contextoIdConfig.Valor);
+
+    //    return new Credencial(chave, segredo, contextoId);
+    //}
 
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
@@ -56,9 +67,15 @@ public class AutenticacaoHandler : DelegatingHandler
     {
         if (_token.Expirado)
         {
-            var credencial = ObterCredencial();
+            var integracaoCredencial = _gerenciadorConfiguracao.ObterCredenciaisIntegracao();
 
-            var response = await _autenticacao.Autenticar(credencial, cancellationToken);
+            if (integracaoCredencial == null)
+            {
+                _logger.LogError("Credenciais de Integracao não encontradas no banco.");
+                return await base.SendAsync(request, cancellationToken);
+            }
+
+            var response = await _autenticacao.Autenticar(integracaoCredencial, cancellationToken);
 
             if (!response.Sucesso || response.Dado == null)
             {

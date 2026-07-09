@@ -1,11 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Toolbox.Automacao.Core.Models;
-using Toolbox.Automacao.Core.Services.Automacao.Autenticacao;
+using Toolbox.Automacao.Core.Services;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
@@ -13,7 +13,7 @@ namespace SoftwareIrrigacao.Features.Configuracao.Edpoints;
 
 public static class Autenticar
 {
-    public class Integracao : Toolbox.Core.Messages.Command
+    public class Credencial : Toolbox.Core.Messages.Command
     {
         [Required(ErrorMessage = "Chave é obrigatório")]
         public string Chave { get; init; } = null!;
@@ -23,26 +23,33 @@ public static class Autenticar
 
         [Required(ErrorMessage = "ContextoId é obrigatório")]
         public Guid ContextoId { get; init; }
+
+        [Required(ErrorMessage = "PainelId é obrigatório")]
+        public Guid PainelId { get; init; }
     }
 
-    public class Handler : ICommandHandler<Integracao>
+    public class Handler : ICommandHandler<Credencial>
     {
         private readonly IMediator _mediator;
-        private readonly IConfiguracaoAutenticacao _configuracaoAutenticacao;
+        private readonly IGerenciadorConfiguracao _gerenciadorConfiguracao;
 
-        public Handler(IMediator mediator, IConfiguracaoAutenticacao configuracaoAutenticacao)
+        public Handler(IMediator mediator, IGerenciadorConfiguracao gerenciadorConfiguracao)
         {
             _mediator = mediator;
-            _configuracaoAutenticacao = configuracaoAutenticacao;
+            _gerenciadorConfiguracao = gerenciadorConfiguracao;
         }
 
         public async Task<ResponseResult> Handle(
-            Integracao request,
+            Credencial request,
             CancellationToken cancellationToken
         )
         {
-            _configuracaoAutenticacao.AdicionarCredenciais(
-                new Credencial(request.Chave, request.Segredo, request.ContextoId)
+            _gerenciadorConfiguracao.AdicionarCredenciais(
+                new Toolbox.Automacao.Core.Services.Credencial(
+                    request.Chave, 
+                    request.Segredo,
+                    request.ContextoId,
+                    request.PainelId)
             );
 
             return ResponseResult.Result(HttpStatusCode.OK);
@@ -54,7 +61,7 @@ public static class Autenticar
         app.MapPost(
                 "/software-irrigacao/autenticar",
                 async (
-                    [FromBody] Integracao command,
+                    [FromBody] Credencial command,
                     [FromServices] IMediator mediator,
                     CancellationToken cancellationToken
                 ) =>
