@@ -105,7 +105,8 @@ internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
         var colecao = _database.GetCollection<Configuracao>(Tabela.Configuracoes);
 
         var configuracao = colecao.FindOne(x => x.Chave == ChaveConfiguracao.Padrao.PainelId);
-        var painelId = Guid.Parse(configuracao.Valor);
+
+        var painelId = configuracao != null ? Guid.Parse(configuracao.Valor): Guid.Empty;
 
         return painelId;
     }

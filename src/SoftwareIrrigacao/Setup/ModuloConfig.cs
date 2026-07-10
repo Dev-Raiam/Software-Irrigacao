@@ -68,8 +68,6 @@ public static class ModuloConfig
 
         app.UseRateLimiter();
 
-        //AdicionarCredenciais.Endpoint(app);
-        //AtualizarCredenciais.Endpoint(app);
-        Autenticar.Endpoint(app);
+        Credenciais.Endpoint(app);
     }
 }

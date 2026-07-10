@@ -14,7 +14,6 @@ public static class DependencyInjectionConfig
     {
         services.AddHttpContextAccessor();
 
-        //services.AddScoped<ICredenciaisAutenticacao, CredenciaisAuthenticacao>();
         services.AddSingleton<CredenciaisAplicacao>();
         services.AddSingleton<ArmazenamentoAutomacao>();
         services.AddSingleton<ApplicationStateManager>();

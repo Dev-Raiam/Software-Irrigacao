@@ -10,7 +10,7 @@ using Toolbox.Core.Messages;
 
 namespace SoftwareIrrigacao.Features.Configuracao.Edpoints;
 
-public static class Autenticar
+public static class Credenciais
 {
     public class Credencial : Toolbox.Core.Messages.Command
     {
@@ -30,12 +30,14 @@ public static class Autenticar
     public class Handler : ICommandHandler<Credencial>
     {
         private readonly IMediator _mediator;
+        private readonly ISincronizarControladores _sincronizar;
         private readonly IGerenciadorConfiguracao _gerenciadorConfiguracao;
 
-        public Handler(IMediator mediator, IGerenciadorConfiguracao gerenciadorConfiguracao)
+        public Handler(IMediator mediator, IGerenciadorConfiguracao gerenciadorConfiguracao, ISincronizarControladores sincronizar  )
         {
             _mediator = mediator;
             _gerenciadorConfiguracao = gerenciadorConfiguracao;
+            _sincronizar = sincronizar;
         }
 
         public async Task<ResponseResult> Handle(
@@ -51,6 +53,8 @@ public static class Autenticar
                     request.PainelId)
             );
 
+            await _sincronizar.ExecutarAsync(request.PainelId,cancellationToken);
+
             return ResponseResult.Result(HttpStatusCode.OK);
         }
     }
@@ -58,7 +62,7 @@ public static class Autenticar
     public static void Endpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-                "/software-irrigacao/autenticar",
+                "/software-irrigacao/credenciais",
                 async (
                     [FromBody] Credencial command,
                     [FromServices] IMediator mediator,
