@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using Toolbox.Automacao.Core.Models;
 using Toolbox.Automacao.Core.Services;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;

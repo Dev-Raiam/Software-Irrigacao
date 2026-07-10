@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LiteDB;
 using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Models;
 
@@ -6,30 +6,33 @@ namespace Toolbox.Automacao.Core.Services;
 
 public interface IProvedorDataSincronizacao
 {
-    Task<Controlador?> ObterControlador(CancellationToken cancellationToken);
-    Task<List<Modulo>> ObterModulos(CancellationToken cancellationToken);
+    Controlador? ObterControlador(CancellationToken cancellationToken);
+    List<Modulo> ObterModulos(CancellationToken cancellationToken);
 }
 
 internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
 {
-    private readonly SincronizacaoDbContext _context;
+    private readonly ILiteDatabase _database;
 
-    public ProvedorDataSincronizacao(SincronizacaoDbContext context)
+    public ProvedorDataSincronizacao(ILiteDatabase database)
     {
-        _context = context;
+        _database = database;
     }
 
-    public async Task<Controlador?> ObterControlador(CancellationToken cancellationToken)
+    public Controlador? ObterControlador(CancellationToken cancellationToken)
     {
-        var controlador = await ObterControladorMaster(cancellationToken);
+        var controlador = ObterControladorMaster(cancellationToken);
         return controlador;
     }
 
-    public async Task<List<Dispositivo>> ObterDispositivos(CancellationToken cancellationToken)
+    public List<Dispositivo> ObterDispositivos(CancellationToken cancellationToken)
     {
-        var controlador = await ObterControladorMaster(cancellationToken);
+        var controlador = ObterControladorMaster(cancellationToken);
 
         List<Dispositivo> dispositivos = new List<Dispositivo>();
+
+        if (controlador == null)
+            return dispositivos;
 
         foreach (var dispositivo in controlador.Dispositivos)
         {
@@ -39,11 +42,14 @@ internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
         return dispositivos;
     }
 
-    public async Task<List<Modulo>> ObterModulos(CancellationToken cancellationToken)
+    public List<Modulo> ObterModulos(CancellationToken cancellationToken)
     {
-        var controlador = await ObterControladorMaster(cancellationToken);
+        var controlador = ObterControladorMaster(cancellationToken);
 
         List<Modulo> modulos = new List<Modulo>();
+
+        if (controlador == null)
+            return modulos;
 
         foreach (var modulo in controlador.Modulos)
         {
@@ -53,21 +59,14 @@ internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
         return modulos;
     }
 
-    private async Task<Controlador> ObterControladorMaster(CancellationToken cancellationToken)
+    private Controlador? ObterControladorMaster(CancellationToken cancellationToken)
     {
-        var controladores = await _context
-            .Set<ControladorConfiguracao>()
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var colecao = _database.GetCollection<ControladorConfiguracao>(Tabela.Controladores);
 
-        if (controladores.Count == 0)
-            return new();
+        var configuracao = colecao.FindOne(c => c.Controlador.Master);
 
-        var configuracao = controladores.FirstOrDefault(c => c.Controlador.Master == true);
+        var controlador = configuracao == null ? null : configuracao.Controlador; 
 
-        if (configuracao == null)
-            return new();
-
-        return configuracao.Controlador;
+        return controlador;
     }
 }

@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Services;
 
 namespace Toolbox.Automacao.Core.Setup
@@ -73,10 +71,6 @@ namespace Toolbox.Automacao.Core.Setup
                 )
                 .AddHttpMessageHandler<AutenticacaoHandler>()
                 .AddStandardResilienceHandler();
-
-            services.AddDbContext<SincronizacaoDbContext>(options =>
-                options.UseSqlite(connectionString)
-            );
 
             services.RegisterServices();
         }

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using SoftwareIrrigacao.Infra.Data;
+using Toolbox.Automacao.Core.Services;
 using Toolbox.Automacao.Core.Setup;
 
 namespace SoftwareIrrigacao.Infra.Mqtt;
@@ -36,8 +36,6 @@ public class MqttWorker : BackgroundService
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var _context = scope.ServiceProvider.GetRequiredService<IrrigacaoDbContext>();
 
                 if (!_mqttClienteLocal.Conectado)
                     ConexaoLocalAtiva = false;

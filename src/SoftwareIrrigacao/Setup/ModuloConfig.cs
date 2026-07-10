@@ -1,12 +1,9 @@
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 using SoftwareIrrigacao.Features.Configuracao.Edpoints;
-using SoftwareIrrigacao.Infra.Data;
 using SoftwareIrrigacao.Infra.Handlers.Exceptions;
 using SoftwareIrrigacao.Infra.Mqtt;
-using Toolbox.Automacao.Core.Data;
+using System.Threading.RateLimiting;
 using Toolbox.Automacao.Core.Setup;
 
 namespace SoftwareIrrigacao.Setup;
@@ -44,9 +41,6 @@ public static class ModuloConfig
             ? $"Data Source={pathDbConfig}"
             : "Data Source=Irrigacao.db";
 
-        services.AddDbContext<IrrigacaoDbContext>(options => options.UseSqlite(connectionString));
-
-        services.AddScoped<AutomacaoDbContext, IrrigacaoDbContext>();
         services.AddModuloCore(builder.Configuration, connectionString);
 
         services.AddRateLimiter(options =>
@@ -74,7 +68,7 @@ public static class ModuloConfig
 
         app.UseRateLimiter();
 
-        AdicionarCredenciais.Endpoint(app);
+        //AdicionarCredenciais.Endpoint(app);
         //AtualizarCredenciais.Endpoint(app);
         Autenticar.Endpoint(app);
     }

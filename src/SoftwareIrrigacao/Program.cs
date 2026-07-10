@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Serilog;
-using SoftwareIrrigacao.Infra.Data;
 using SoftwareIrrigacao.Setup;
 using Toolbox.Automacao.Core.Services;
 
@@ -21,15 +20,16 @@ try
     var app = builder.Build();
     app.UseConfig();
 
-    await SeedData.Seed(app.Services);
-
     using (var scope = app.Services.CreateScope())
     {
         var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
-        await sincronizar.ExecutarAsync(
-            Guid.Parse("fcf8723b-86ff-4f7b-a81d-2a87c8fda090"),
-            CancellationToken.None
-        );
+        var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
+        var painelId = configuracao.ObterCredencialPainel();
+
+        if(painelId !=  Guid.Empty)
+            await sincronizar.ExecutarAsync(
+            painelId,
+            CancellationToken.None);
     }
 
     await app.RunAsync();
