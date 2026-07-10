@@ -1,14 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using System.ComponentModel.DataAnnotations;
-using System.Net;
 using Toolbox.Automacao.Core.Services;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
-namespace SoftwareIrrigacao.Features.Configuracao.Edpoints;
+namespace SoftwareIrrigacao.Presentation.Edpoints;
 
 public static class Credenciais
 {
@@ -33,7 +33,11 @@ public static class Credenciais
         private readonly ISincronizarControladores _sincronizar;
         private readonly IGerenciadorConfiguracao _gerenciadorConfiguracao;
 
-        public Handler(IMediator mediator, IGerenciadorConfiguracao gerenciadorConfiguracao, ISincronizarControladores sincronizar  )
+        public Handler(
+            IMediator mediator,
+            IGerenciadorConfiguracao gerenciadorConfiguracao,
+            ISincronizarControladores sincronizar
+        )
         {
             _mediator = mediator;
             _gerenciadorConfiguracao = gerenciadorConfiguracao;
@@ -47,13 +51,14 @@ public static class Credenciais
         {
             _gerenciadorConfiguracao.AdicionarCredenciais(
                 new Toolbox.Automacao.Core.Services.Credencial(
-                    request.Chave, 
+                    request.Chave,
                     request.Segredo,
                     request.ContextoId,
-                    request.PainelId)
+                    request.PainelId
+                )
             );
 
-            await _sincronizar.ExecutarAsync(request.PainelId,cancellationToken);
+            await _sincronizar.ExecutarAsync(request.PainelId, cancellationToken);
 
             return ResponseResult.Result(HttpStatusCode.OK);
         }

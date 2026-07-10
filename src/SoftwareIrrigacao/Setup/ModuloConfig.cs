@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
-using SoftwareIrrigacao.Features.Configuracao.Edpoints;
 using SoftwareIrrigacao.Infra.Handlers.Exceptions;
-using SoftwareIrrigacao.Infra.Mqtt;
+using SoftwareIrrigacao.Presentation.Edpoints;
+using SoftwareIrrigacao.Workes;
 using System.Threading.RateLimiting;
 using Toolbox.Automacao.Core.Setup;
 

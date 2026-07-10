@@ -1,8 +1,9 @@
 using Microsoft.Extensions.Options;
+using SoftwareIrrigacao.Infra.Mqtt;
 using Toolbox.Automacao.Core.Services;
 using Toolbox.Automacao.Core.Setup;
 
-namespace SoftwareIrrigacao.Infra.Mqtt;
+namespace SoftwareIrrigacao.Workes;
 
 public class MqttWorker : BackgroundService
 {

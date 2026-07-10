@@ -26,10 +26,8 @@ try
         var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
         var painelId = configuracao.ObterCredencialPainel();
 
-        if(painelId !=  Guid.Empty)
-            await sincronizar.ExecutarAsync(
-            painelId,
-            CancellationToken.None);
+        if (painelId != Guid.Empty)
+            await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
     }
 
     await app.RunAsync();
