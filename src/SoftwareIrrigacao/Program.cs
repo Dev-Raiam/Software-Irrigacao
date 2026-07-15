@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
 using Toolbox.Automacao.Core.Services;
+using Toolbox.Modulo.Tekon;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
@@ -22,13 +23,20 @@ try
 
     using (var scope = app.Services.CreateScope())
     {
+        var teste = scope.ServiceProvider.GetRequiredService<TesteWGW420>();
+
+        await teste.Ler();
+
         var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
+        
         var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
+        
         var painelId = configuracao.ObterCredencialPainel();
 
         if (painelId != Guid.Empty)
             await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
     }
+
 
     await app.RunAsync();
 }

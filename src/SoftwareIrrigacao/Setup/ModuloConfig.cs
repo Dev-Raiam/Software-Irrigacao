@@ -5,6 +5,7 @@ using SoftwareIrrigacao.Presentation.Edpoints;
 using SoftwareIrrigacao.Workes;
 using System.Threading.RateLimiting;
 using Toolbox.Automacao.Core.Setup;
+using Toolbox.Modulo.Tekon.Setup;
 
 namespace SoftwareIrrigacao.Setup;
 
@@ -32,7 +33,6 @@ public static class ModuloConfig
                 .WhenWritingNull;
         });
 
-        //services.AddHostedService<ProntidaoWorker>();
         services.AddHostedService<MqttWorker>();
 
         var pathDbConfig = builder.Configuration.GetSection("PathDatabase:Path").Value;
@@ -42,6 +42,7 @@ public static class ModuloConfig
             : "Data Source=Irrigacao.db";
 
         services.AddModuloCore(builder.Configuration, connectionString);
+        services.AddModuloTekon();
 
         services.AddRateLimiter(options =>
         {

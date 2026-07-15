@@ -1,11 +1,8 @@
+//using Microsoft.Extensions.Configuration;
+//using Microsoft.Extensions.Logging;
 //using System.Text.Json;
-//using SoftwareIrrigacao.Infrastructure.Cache;
-//using SoftwareIrrigacao.Shared.State;
-//using Toolbox.Automacao.Irrigacao.Drivers;
-//using Toolbox.Automacao.Irrigacao.Marcas.Tekon;
-//using Toolbox.Automacao.Irrigacao.Modbus;
 
-//namespace SoftwareIrrigacao.Workers.Telemetria;
+//namespace Toolbox.Modulo.Tekon;
 
 //public class Parametros
 //{
@@ -20,7 +17,6 @@
 
 //public class TekonWorker : BackgroundService
 //{
-//    private readonly ApplicationStateManager _applicationStateManager;
 //    private readonly IServiceProvider _serivceProvider;
 //    private readonly IConfiguration _configuration;
 //    private readonly ArmazenamentoAutomacao _armazenamento;
@@ -32,14 +28,12 @@
 //    private string path_log;
 
 //    public TekonWorker(
-//        ApplicationStateManager applicationStateManager,
 //        IServiceProvider serivceProvider,
 //        IConfiguration configuration,
 //        ArmazenamentoAutomacao armazenamento,
 //        ILogger<TekonWorker> logger
 //    )
 //    {
-//        _applicationStateManager = applicationStateManager;
 //        _serivceProvider = serivceProvider;
 //        _configuration = configuration;
 //        _armazenamento = armazenamento;
@@ -64,7 +58,6 @@
 
 //    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 //    {
-//        await _applicationStateManager.AguardarSincronizacaoAsync();
 
 //        var controlador = _armazenamento.Controlador;
 //        var dispositivos = _armazenamento.Dispositivos;
@@ -80,7 +73,7 @@
 //            .Endereco;
 
 //        ModbusMaster? _modbus = null;
-//        ModbusDriverTekon? driver = null;
+//        DriverTekon? driver = null;
 //        bool conexaoModbusAtiva = false;
 
 //        while (!stoppingToken.IsCancellationRequested)

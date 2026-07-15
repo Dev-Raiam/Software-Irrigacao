@@ -3,5 +3,6 @@
     <Project Path="src/SoftwareIrrigacao/SoftwareIrrigacao.csproj" />
     <Project Path="src/Toolbox.Automacao.Core/Toolbox.Automacao.Core.csproj" />
     <Project Path="src/Toolbox.Automacao.Irrigacao/Toolbox.Automacao.Irrigacao.csproj" />
+    <Project Path="src/Toolbox.Modulo.Tekon/Toolbox.Modulo.Tekon.csproj" />
   </Folder>
 </Solution>
