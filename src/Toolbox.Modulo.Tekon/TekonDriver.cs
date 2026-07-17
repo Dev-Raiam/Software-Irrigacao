@@ -1,4 +1,5 @@
-﻿using Toolbox.Automacao.Core.Services.Modbus;
+﻿using System.Text.RegularExpressions;
+using Toolbox.Automacao.Core.Services.Modbus;
 using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
@@ -19,17 +20,6 @@ namespace Toolbox.Modulo.Tekon
         private void EnsureConnection()
         {
             _modbus.Conectar();
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _modbus.Desconectar();
-
-            _disposed = true;
-            GC.SuppressFinalize(this);
         }
 
         public async Task<ITekonDispositivoDado> LerDispositivo(string modelo, byte slaveAddress)
@@ -116,19 +106,82 @@ namespace Toolbox.Modulo.Tekon
             return dispositivo.Parse(contexto);
         }
 
-        public Task<double> LerPortaAnalogica(
+        public async Task<double> LerPortaAnalogica(
             string modelo,
             byte slaveAddress,
             byte index,
             string port
         )
         {
-            throw new NotImplementedException();
+            EnsureConnection();
+
+            var dispositivo = _factory.CriarModelo(modelo);
+
+            var configuracao = dispositivo.ObterConfiguracaoLeituraAnalogica(port, index);
+
+            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                slaveAddress,
+                configuracao.StartAddress,
+                configuracao.NumberOfPoints
+            );
+
+            return Conversor.ToFloat(bufferHolding[1], bufferHolding[0]);
         }
 
-        public Task<double> LerPortaAnalogica(string modelo, byte slaveAddress, string port)
+        public async Task<double> LerPortaAnalogica(string modelo, byte slaveAddress, string port)
         {
-            throw new NotImplementedException();
+            EnsureConnection();
+
+            var dispositivo = _factory.CriarModelo(modelo);
+
+            var configuracao = dispositivo.ObterConfiguracaoLeituraAnalogica(port);
+
+            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                slaveAddress,
+                configuracao.StartAddress,
+                configuracao.NumberOfPoints
+            );
+
+            return Conversor.ToFloat(bufferHolding[1], bufferHolding[0]);
+        }
+
+        public async Task<double> LerPortaTemperatura(
+            string modelo,
+            byte slaveAddress,
+            byte index,
+            string port
+        )
+        {
+            EnsureConnection();
+
+            var dispositivo = _factory.CriarModelo(modelo);
+
+            var configuracao = dispositivo.ObterConfiguracaoLeituraTemperatura(port, index);
+
+            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                slaveAddress,
+                configuracao.StartAddress,
+                configuracao.NumberOfPoints
+            );
+
+            return Math.Round(Conversor.ToFloat(bufferHolding[1], bufferHolding[0]),2);
+        }
+
+        public async Task<double> LerPortaTemperatura(string modelo, byte slaveAddress, string port)
+        {
+            EnsureConnection();
+
+            var dispositivo = _factory.CriarModelo(modelo);
+
+            var configuracao = dispositivo.ObterConfiguracaoLeituraTemperatura(port);
+
+            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                slaveAddress,
+                configuracao.StartAddress,
+                configuracao.NumberOfPoints
+            );
+
+            return Math.Round(Conversor.ToFloat(bufferHolding[1], bufferHolding[0]),2);
         }
 
         public async Task<bool> LerPortaDigital(string modelo, byte slaveAddress, string port)
@@ -186,9 +239,15 @@ namespace Toolbox.Modulo.Tekon
             throw new NotImplementedException();
         }
 
-        public Task EscreverPortaDigital(string modelo, byte slaveAddress, string port, bool value)
+        public async Task EscreverPortaDigital(string modelo, byte slaveAddress, string port, bool value)
         {
-            throw new NotImplementedException();
+            EnsureConnection();
+
+            var dispositivo = _factory.CriarModelo(modelo);
+
+            var configuracao = dispositivo.ObterConfiguracaoEscritaDigital(port);
+
+            await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
         }
 
         public async Task EscreverPortaDigital(
@@ -206,6 +265,16 @@ namespace Toolbox.Modulo.Tekon
             var configuracao = dispositivo.ObterConfiguracaoEscritaDigital(port, index);
 
             await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+        }
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _modbus.Desconectar();
+
+            _disposed = true;
+            GC.SuppressFinalize(this);
         }
     }
 }

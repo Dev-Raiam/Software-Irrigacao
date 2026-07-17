@@ -8,25 +8,30 @@
         public ushort StartAddress { get; init; }
         public ushort NumberOfPoints { get; init; }
     }
+
     public class ConfiguracaoLeituraDispositivo
     {
         public ConfiguracaoHoldingRegisters? HoldingRegisters { get; set; }
         public ConfiguracaoCoilRegisters? CoilRegisters { get; set; }
-        public class ConfiguracaoHoldingRegisters 
+
+        public class ConfiguracaoHoldingRegisters
         {
             public ushort StartAddress { get; init; }
             public ushort NumberOfPoints { get; init; }
         }
+
         public class ConfiguracaoCoilRegisters
         {
             public ushort StartAddress { get; init; }
             public ushort NumberOfPoints { get; init; }
         }
     }
+
     public class ConfiguracaoEscritaDigital
     {
         public ushort CoilAddress { get; init; }
     }
+
     public class ConfiguracaoEscritaAnalogica
     {
         public ushort RegisterAddress { get; init; }

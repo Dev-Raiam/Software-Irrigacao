@@ -6,35 +6,39 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 {
     internal class WGW420Perfil : ITekonDispositivoPerfil
     {
-        public string Modelo => TekonConstants.Modelos.WGW420;
+        public string Modelo => Modelos.WGW420;
         private const string ExceptionMensager =
             $"O modelo Escolhido não pode ser lido por esse metodo.";
 
-        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index)
-        {
-            throw new NotImplementedException();
-        }
+        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
+            => throw new NotImplementedException(ExceptionMensager);
 
         ConfiguracaoLeituraDispositivo ITekonDispositivoPerfil.ObterConfiguracaoLeituraDispositivo()
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException(ExceptionMensager);
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port)
+            => throw new NotImplementedException(ExceptionMensager);
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
             string port,
-            ushort index
+            byte index
         ) => throw new NotImplementedException(ExceptionMensager);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index) =>
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index) =>
             throw new NotImplementedException(ExceptionMensager);
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
             throw new NotImplementedException(ExceptionMensager);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index) =>
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index) =>
             throw new NotImplementedException(ExceptionMensager);
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index) =>
             throw new NotImplementedException(ExceptionMensager);
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDispositivo(int index) =>

@@ -35,70 +35,70 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
             yield return new Metrica
             {
                 Porta = "B8/B7",
-                Tipo = TekonConstants.Metricas.Tipos.TemperaturaExterna,
+                Tipo = Metricas.Tipos.TemperaturaExterna,
                 Valor = TemperaturaExterna,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Celsius,
+                Unidade = Metricas.UnidadeMedidas.Celsius,
             };
             yield return new Metrica
             {
-                Tipo = TekonConstants.Metricas.Tipos.TensaoAlimentacao,
+                Tipo = Metricas.Tipos.TensaoAlimentacao,
                 Valor = TensaoAlimentacao,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Volts,
+                Unidade = Metricas.UnidadeMedidas.Volts,
             };
             yield return new Metrica
             {
-                Tipo = TekonConstants.Metricas.Tipos.RSSI,
+                Tipo = Metricas.Tipos.RSSI,
                 Valor = RSSI,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Decibeis,
+                Unidade = Metricas.UnidadeMedidas.Decibeis,
             };
             yield return new Metrica
             {
                 Porta = "Q1",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoSaidaRemotaDigital,
+                Tipo = Metricas.Tipos.EstadoSaidaRemotaDigital,
                 Valor = EstadoSaidaRemotaDigital,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
             yield return new Metrica
             {
                 Porta = "Q2",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoSaidaEnergiaExterna,
+                Tipo = Metricas.Tipos.EstadoSaidaEnergiaExterna,
                 Valor = EstadoSaidaEnergiaExterna,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
             yield return new Metrica
             {
                 Porta = "Q3",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoEntradaInterruptor,
+                Tipo = Metricas.Tipos.EstadoEntradaInterruptor,
                 Valor = EstadoEntradaInterruptor,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
             yield return new Metrica
             {
                 Porta = "B1",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoEntradaDigital_1,
+                Tipo = Metricas.Tipos.EstadoEntradaDigital_1,
                 Valor = EstadoEntradaDigital_1,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
             yield return new Metrica
             {
                 Porta = "B2",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoEntradaDigital_2,
+                Tipo = Metricas.Tipos.EstadoEntradaDigital_2,
                 Valor = EstadoEntradaDigital_2,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
             yield return new Metrica
             {
                 Porta = "B3",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoEntradaDigital_3,
+                Tipo = Metricas.Tipos.EstadoEntradaDigital_3,
                 Valor = EstadoEntradaDigital_3,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
             yield return new Metrica
             {
                 Porta = "B4",
-                Tipo = TekonConstants.Metricas.Tipos.EstadoEntradaDigital_4,
+                Tipo = Metricas.Tipos.EstadoEntradaDigital_4,
                 Valor = EstadoEntradaDigital_4,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Boolean,
+                Unidade = Metricas.UnidadeMedidas.Boolean,
             };
         }
     }

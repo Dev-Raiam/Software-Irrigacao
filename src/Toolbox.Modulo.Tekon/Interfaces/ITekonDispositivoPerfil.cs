@@ -5,13 +5,16 @@ namespace Toolbox.Modulo.Tekon.Interfaces
     public interface ITekonDispositivoPerfil
     {
         string Modelo { get; }
-        ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index);
+        ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index);
         ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo();
-        ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index);
+        ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index);
         ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port);
-        ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index);
+        ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port);
+        ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index);
+        ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index);
         ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port);
-        ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, ushort index);
+        ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, byte index);
+        ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port);
 
         ITekonDispositivoDado Parse(DispositivoContextoLeitura context);
     }

@@ -26,23 +26,23 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         {
             yield return new Metrica
             {
-                Tipo = TekonConstants.Metricas.Tipos.TemperaturaInterna,
+                Tipo = Metricas.Tipos.TemperaturaInterna,
                 Valor = TemperaturaInterna,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Celsius,
+                Unidade = Metricas.UnidadeMedidas.Celsius,
             };
 
             yield return new Metrica
             {
-                Tipo = TekonConstants.Metricas.Tipos.TensaoAlimentacao,
+                Tipo = Metricas.Tipos.TensaoAlimentacao,
                 Valor = TensaoAlimentacao,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Volts,
+                Unidade = Metricas.UnidadeMedidas.Volts,
             };
 
             yield return new Metrica
             {
-                Tipo = TekonConstants.Metricas.Tipos.RSSI,
+                Tipo = Metricas.Tipos.RSSI,
                 Valor = RSSI,
-                Unidade = TekonConstants.Metricas.UnidadeMedidas.Decibeis,
+                Unidade = Metricas.UnidadeMedidas.Decibeis,
             };
         }
     }

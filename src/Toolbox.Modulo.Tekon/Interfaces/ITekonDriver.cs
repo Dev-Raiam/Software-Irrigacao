@@ -8,6 +8,8 @@ namespace Toolbox.Modulo.Tekon.Interfaces
         Task<ITekonDispositivoDado> LerDispositivo(string modelo, byte slaveAddress, byte index);
         Task<double> LerPortaAnalogica(string modelo, byte slaveAddress, byte index, string port);
         Task<double> LerPortaAnalogica(string modelo, byte slaveAddress, string port);
+        Task<double> LerPortaTemperatura(string modelo, byte slaveAddress, byte index, string port);
+        Task<double> LerPortaTemperatura(string modelo, byte slaveAddress, string port);
         Task<bool> LerPortaDigital(string modelo, byte slaveAddress, string port);
         Task<bool> LerPortaDigital(string modelo, byte slaveAddress, byte index, string port);
         Task EscreverPortaAnalogica(string modelo, byte slaveAddress, string port, int value);

@@ -5,7 +5,7 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 {
     internal class TWP_4AI4DI1UTPerfil : ITekonDispositivoPerfil
     {
-        public string Modelo => TekonConstants.Modelos.TWP_4AI4DI1UT;
+        public string Modelo => Modelos.TWP_4AI4DI1UT;
         private const string ExceptionMensager =
             $"O modelo Escolhido não pode ser lido por esse metodo.";
 
@@ -18,48 +18,85 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
             throw new NotSupportedException(ExceptionMensager);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index)
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port)
+            => throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index)
         {
             return port switch
             {
                 "A1" => new ConfiguracaoLeitura
                 {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                "A2" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                "A3" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
+                    StartAddress = (ushort)(((index - 1) * 20) + 9),
+                    NumberOfPoints = 3,
                 },
                 "A4" => new ConfiguracaoLeitura
                 {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
+                    StartAddress = (ushort)(((index - 1) * 20) + 11),
+                    NumberOfPoints = 3,
+                },
+                "A7" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 20) + 13),
+                    NumberOfPoints = 3,
+                },
+                "A10" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 20) + 15),
+                    NumberOfPoints = 3,
                 },
                 _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
             };
         }
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index)
+        /// Leitura de Entrada ou saida analogica em um metodo só
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index)
         {
             return port switch
             {
+                "B1" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 3),
+                    NumberOfPoints = 1,
+                },
+                "B2" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 4),
+                    NumberOfPoints = 1,
+                },
+                "B3" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 5),
+                    NumberOfPoints = 1,
+                },
+                "B4" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 6),
+                    NumberOfPoints = 1,
+                },
                 "Q1" => new ConfiguracaoLeitura
                 {
                     StartAddress = (ushort)(((index - 1) * 16) + 0),
                     NumberOfPoints = 1,
                 },
+                "Q2" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 1),
+                    NumberOfPoints = 1,
+                },
+                "Q3" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 2),
+                    NumberOfPoints = 1,
+                },
                 _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
             };
         }
 
-        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index)
+        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
         {
             return new ConfiguracaoLeituraDispositivo
             {
@@ -68,16 +105,34 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     StartAddress = (ushort)(((index - 1) * 20) + 0),
                     NumberOfPoints = 20,
                 },
+                CoilRegisters = new ConfiguracaoLeituraDispositivo.ConfiguracaoCoilRegisters
+                {
+                    StartAddress = (ushort)(((index - 1) * 16) + 0),
+                    NumberOfPoints = 7,
+                },
             };
         }
 
-        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, ushort index)
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, byte index)
         {
             return port switch
             {
                 "Q1" => new ConfiguracaoEscritaDigital
                 {
                     CoilAddress = (ushort)(((index - 1) * 16) + 0),
+                },
+                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+            };
+        }
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index)
+        {
+            return port switch
+            {
+                "UT" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 20) + 7),
+                    NumberOfPoints = 3,
                 },
                 _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
             };

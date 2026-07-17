@@ -5,7 +5,7 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 {
     internal class TWP_1UTPerfil : ITekonDispositivoPerfil
     {
-        public string Modelo => TekonConstants.Modelos.TWP_1UT;
+        public string Modelo => Modelos.TWP_1UT;
         private const string ExceptionMessage =
             "O modelo escolhido não pode ser lido por esse método.";
 
@@ -15,21 +15,30 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo() =>
             throw new NotSupportedException(ExceptionMessage);
 
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
+            throw new NotSupportedException(ExceptionMessage);
+
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
             throw new NotSupportedException(ExceptionMessage);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index) =>
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index) =>
             throw new NotSupportedException(ExceptionMessage);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index) =>
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index) =>
+            throw new NotSupportedException(ExceptionMessage);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index) =>
+            throw new NotSupportedException(ExceptionMessage);
+
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port) =>
             throw new NotSupportedException(ExceptionMessage);
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
             string port,
-            ushort index
+            byte index
         ) => throw new NotSupportedException(ExceptionMessage);
 
-        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index)
+        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
         {
             return new ConfiguracaoLeituraDispositivo
             {

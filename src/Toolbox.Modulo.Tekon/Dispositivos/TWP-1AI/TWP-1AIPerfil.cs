@@ -8,7 +8,7 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 {
     public class TWP_1AIPerfil : ITekonDispositivoPerfil
     {
-        public string Modelo => TekonConstants.Modelos.TWP_1AI;
+        public string Modelo => Modelos.TWP_1AI;
 
         public ConfiguracaoLeitura? CoilRegisters(int? index) => null;
 
@@ -22,12 +22,17 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         //    };
         //}
 
-        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, ushort index)
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port)
         {
             throw new NotImplementedException();
         }
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index)
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, byte index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index)
         {
             throw new NotImplementedException();
         }
@@ -37,7 +42,7 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
             throw new NotImplementedException();
         }
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index)
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index)
         {
             throw new NotImplementedException();
         }
@@ -47,12 +52,22 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
             throw new NotImplementedException();
         }
 
-        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index)
+        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
         {
             throw new NotImplementedException();
         }
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index)
         {
             throw new NotImplementedException();
         }
