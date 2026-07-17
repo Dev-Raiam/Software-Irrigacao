@@ -1,86 +1,47 @@
-﻿//namespace Toolbox.Modulo.Tekon.Modelos
-//{
-//    public class TWP_2AI
-//    {
-//        public long NumeroSerie { get; private set; }
-//        public string Modelo { get; set; } = null!;
-//        public int RSSI { get; private set; }
-//        public int PeriodoComunicacao { get; private set; }
-//        public int TempoDecorrido { get; private set; }
-//        public float TensaoAlimentacao { get; private set; }
-//        public float TemperaturaInterna { get; private set; }
-//        public float ValorEntradaAnalogica_1 { get; private set; }
-//        public float ValorEntradaAnalogica_2 { get; private set; }
-//        public int VersaoFirmware { get; private set; }
-//        public int RevisaoVersao { get; private set; }
-//        public int VersaoHardware { get; private set; }
+﻿using Toolbox.Modulo.Tekon.Interfaces;
+using Toolbox.Modulo.Tekon.Models;
 
-//        public TWP_2AI(ushort[] registradores)
-//        {
-//            NumeroSerie = (long)(registradores[0] << 16 | registradores[1]);
+namespace Toolbox.Modulo.Tekon.Dispositivos
+{
+    public class TWP_2AI : ITekonDispositivoDado
+    {
+        public long NumeroSerie { get; init; }
+        public string Modelo { get; init; } = null!;
+        public int RSSI { get; init; }
+        public int PeriodoComunicacao { get; init; }
+        public int TempoDecorrido { get; init; }
+        public float TensaoAlimentacao { get; init; }
+        public float TemperaturaInterna { get; init; }
+        public float ValorEntradaAnalogica_1 { get; init; }
+        public float ValorEntradaAnalogica_2 { get; init; }
+        public int VersaoFirmware { get; init; }
+        public int RevisaoVersao { get; init; }
+        public int VersaoHardware { get; init; }
 
-//            Modelo = IdentificarModelo(registradores[2]);
+        long? ITekonDispositivoDado.NumeroSerie => NumeroSerie;
 
-//            RSSI = registradores[3] / -2;
+        public IEnumerable<Metrica> ObterMetricas()
+        {
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.TemperaturaInterna,
+                Valor = TemperaturaInterna,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Celsius,
+            };
 
-//            PeriodoComunicacao = registradores[4];
-//            TempoDecorrido = registradores[5];
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.TensaoAlimentacao,
+                Valor = TensaoAlimentacao,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Volts,
+            };
 
-//            TensaoAlimentacao = registradores[6] / 10.0f;
-
-//            TemperaturaInterna = (float)
-//                Math.Round(Conversor.ToFloat(registradores[8], registradores[7]), 2);
-
-//            ValorEntradaAnalogica_1 = (float)
-//                Math.Round(Conversor.ToFloat(registradores[10], registradores[9]), 2);
-//            ValorEntradaAnalogica_2 = (float)
-//                Math.Round(Conversor.ToFloat(registradores[12], registradores[11]), 2);
-
-//            VersaoFirmware = registradores[17];
-//            RevisaoVersao = registradores[18];
-//            VersaoHardware = registradores[19];
-//        }
-
-//        public Telemetria ObterTelemetria(Guid moduloId)
-//        {
-//            return new Telemetria
-//            {
-//                Id = moduloId,
-//                Timestamp = DateTime.Now,
-//                Status = (TempoDecorrido > 10) ? "offline" : "online",
-//                Metricas =
-//                [
-//                    new Metrica
-//                    {
-//                        Tipo = "temperatura-interna",
-//                        Valor = TemperaturaInterna,
-//                        Unidade = "°C",
-//                    },
-//                    new Metrica
-//                    {
-//                        Tipo = "tensao-alimentacao",
-//                        Valor = TensaoAlimentacao,
-//                        Unidade = "V",
-//                    },
-//                    new Metrica
-//                    {
-//                        Tipo = "rssi",
-//                        Valor = RSSI,
-//                        Unidade = "dBm",
-//                    },
-//                ],
-//                Metadados = new Metadados { Modelo = Modelo, VersaoFirmware = VersaoFirmware },
-//            };
-//        }
-
-//        private static string IdentificarModelo(int modelo)
-//        {
-//            return modelo switch
-//            {
-//                48 => "TWP-2AI 868 MHZ",
-//                54 => "TWP-2AI 915 MHZ",
-//                _ => "",
-//            };
-//        }
-//    }
-//}
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.RSSI,
+                Valor = RSSI,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Decibeis,
+            };
+        }
+    }
+}

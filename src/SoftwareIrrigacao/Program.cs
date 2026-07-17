@@ -21,21 +21,21 @@ try
     var app = builder.Build();
     app.UseConfig();
 
-    using (var scope = app.Services.CreateScope())
-    {
-        var teste = scope.ServiceProvider.GetRequiredService<TesteWGW420>();
+    //using (var scope = app.Services.CreateScope())
+    //{
+    //    //var teste = scope.ServiceProvider.GetRequiredService<TesteWGW420>();
 
-        await teste.Ler();
+    //    //await teste.Ler();
 
-        var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
-        
-        var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
-        
-        var painelId = configuracao.ObterCredencialPainel();
+    //    var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
 
-        if (painelId != Guid.Empty)
-            await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
-    }
+    //    var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
+
+    //    var painelId = configuracao.ObterCredencialPainel();
+
+    //    if (painelId != Guid.Empty)
+    //        await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
+    //}
 
 
     await app.RunAsync();

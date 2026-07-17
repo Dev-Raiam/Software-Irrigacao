@@ -1,7 +1,7 @@
-﻿using Toolbox.Modulo.Tekon.Abstractions;
+﻿using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
-namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
+namespace Toolbox.Modulo.Tekon.Dispositivos
 {
     public class WGW420 : ITekonDispositivoDado
     {

@@ -1,63 +1,33 @@
-﻿using Toolbox.Modulo.Tekon.Interfaces;
+using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
 namespace Toolbox.Modulo.Tekon.Dispositivos
 {
-    internal class TWP_4AI4DI1UTPerfil : ITekonDispositivoPerfil
+    internal class TWP4AIPerfil : ITekonDispositivoPerfil
     {
-        public string Modelo => TekonConstants.Modelos.TWP_4AI4DI1UT;
-        private const string ExceptionMensager =
-            $"O modelo Escolhido não pode ser lido por esse metodo.";
+        public string Modelo => TekonConstants.Modelos.TWP4AI;
+        private const string ExceptionMessage =
+            "O modelo escolhido não pode ser lido por esse método.";
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port) =>
-            throw new NotSupportedException(ExceptionMensager);
+            throw new NotSupportedException(ExceptionMessage);
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo() =>
-            throw new NotSupportedException(ExceptionMensager);
+            throw new NotSupportedException(ExceptionMessage);
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
-            throw new NotSupportedException(ExceptionMensager);
+            throw new NotSupportedException(ExceptionMessage);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index)
-        {
-            return port switch
-            {
-                "A1" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                "A2" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                "A3" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                "A4" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
-            };
-        }
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index) =>
+            throw new NotSupportedException(ExceptionMessage);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index)
-        {
-            return port switch
-            {
-                "Q1" => new ConfiguracaoLeitura
-                {
-                    StartAddress = (ushort)(((index - 1) * 16) + 0),
-                    NumberOfPoints = 1,
-                },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
-            };
-        }
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index) =>
+            throw new NotSupportedException(ExceptionMessage);
+
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
+            string port,
+            ushort index
+        ) => throw new NotSupportedException(ExceptionMessage);
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index)
         {
@@ -71,21 +41,9 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
             };
         }
 
-        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, ushort index)
-        {
-            return port switch
-            {
-                "Q1" => new ConfiguracaoEscritaDigital
-                {
-                    CoilAddress = (ushort)(((index - 1) * 16) + 0),
-                },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
-            };
-        }
-
         public ITekonDispositivoDado Parse(DispositivoContextoLeitura context)
         {
-            return new TWP_4AI4DI1UT
+            return new TWP4AI
             {
                 NumeroSerie = (long)(
                     context.HoldingRegisters[0] << 16 | context.HoldingRegisters[1]
@@ -100,11 +58,12 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 
                 TensaoAlimentacao = context.HoldingRegisters[6] / 10.0f,
 
-                TemperaturaExterna = (float)
+                TemperaturaInterna = (float)
                     Math.Round(
                         Conversor.ToFloat(context.HoldingRegisters[8], context.HoldingRegisters[7]),
                         2
                     ),
+
                 ValorEntradaAnalogica_1 = (float)
                     Math.Round(
                         Conversor.ToFloat(
@@ -141,14 +100,6 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                 VersaoFirmware = context.HoldingRegisters[17],
                 RevisaoVersao = context.HoldingRegisters[18],
                 VersaoHardware = context.HoldingRegisters[19],
-
-                EstadoSaidaRemotaDigital = context.CoilRegisters[0],
-                EstadoSaidaEnergiaExterna = context.CoilRegisters[1],
-                EstadoEntradaInterruptor = context.CoilRegisters[2],
-                EstadoEntradaDigital_1 = context.CoilRegisters[3],
-                EstadoEntradaDigital_2 = context.CoilRegisters[4],
-                EstadoEntradaDigital_3 = context.CoilRegisters[5],
-                EstadoEntradaDigital_4 = context.CoilRegisters[6],
             };
         }
 
@@ -156,8 +107,8 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         {
             return modelo switch
             {
-                37 => "Transmissor TWP_4AI4DI1UT 868 MHZ",
-                38 => "Transmissor TWP_4AI4DI1UT 915 MHZ",
+                9 => "TWP4AI 868 MHZ",
+                26 => "TWP4AI 915 MHZ",
                 _ => "Desconhecido",
             };
         }

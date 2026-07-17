@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Toolbox.Modulo.Tekon.Models
+﻿namespace Toolbox.Modulo.Tekon.Models
 {
     public class DispositivoContextoLeitura
     {
         public ushort[] HoldingRegisters { get; init; } = null!;
-
         public bool[] CoilRegisters { get; init; } = null!;
     }
 }

@@ -42,7 +42,7 @@ public static class ModuloConfig
             : "Data Source=Irrigacao.db";
 
         services.AddModuloCore(builder.Configuration, connectionString);
-        services.AddModuloTekon();
+        //services.AddModuloTekon();
 
         services.AddRateLimiter(options =>
         {
@@ -50,8 +50,8 @@ public static class ModuloConfig
                 "limite-tentativas",
                 options =>
                 {
-                    options.PermitLimit = 5;
-                    options.QueueLimit = 5;
+                    options.PermitLimit = 2;
+                    options.QueueLimit = 2;
                     options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 }
             );

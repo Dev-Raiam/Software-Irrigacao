@@ -1,11 +1,9 @@
-﻿using Toolbox.Modulo.Tekon.Abstractions;
-using Toolbox.Modulo.Tekon.Dispositivos;
-using Toolbox.Modulo.Tekon.Dispositivos.WGW420;
+﻿using Toolbox.Modulo.Tekon.Dispositivos;
+using Toolbox.Modulo.Tekon.Interfaces;
 
 namespace Toolbox.Modulo.Tekon
 {
-
-    internal class TekonDispositivoFactory
+    public class TekonDispositivoFactory : ITekonDispositivoFactory
     {
         private readonly IEnumerable<ITekonDispositivoPerfil> _perfils;
 
@@ -14,17 +12,21 @@ namespace Toolbox.Modulo.Tekon
             _perfils =
             [
                 new TWP_1AIPerfil(),
+                new TWP_1DIPerfil(),
+                new TWP_1UTPerfil(),
+                new TWP_2AIPerfil(),
+                new TWP_2DIPerfil(),
+                new TWP_2UTPerfil(),
+                new TWP_4AI4DI1UTPerfil(),
+                new TWP4AIPerfil(),
+                new TWPH_1UTPerfil(),
                 new WGW420Perfil(),
-                new TWP_4AI4DI1UTPerfil()
             ];
         }
 
-        public ITekonDispositivoPerfil CriarModelo(
-            string modelo)
+        public ITekonDispositivoPerfil CriarModelo(string modelo)
         {
-            return _perfils
-                .First(x =>
-                    x.Modelo == modelo);
+            return _perfils.First(x => x.Modelo == modelo);
         }
     }
 }

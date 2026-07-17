@@ -1,6 +1,6 @@
 ﻿using Toolbox.Modulo.Tekon.Models;
 
-namespace Toolbox.Modulo.Tekon.Abstractions
+namespace Toolbox.Modulo.Tekon.Interfaces
 {
     public interface ITekonDispositivoDado
     {

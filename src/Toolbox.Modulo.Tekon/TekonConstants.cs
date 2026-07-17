@@ -4,10 +4,18 @@
     {
         public static class Modelos
         {
-            public const string  TWP_1AI = "TWP-1AI";
+            public const string TWP_1AI = "TWP-1AI";
+            public const string TWP_1DI = "TWP-1DI";
+            public const string TWP_1UT = "TWP-1UT";
+            public const string TWP_2AI = "TWP-2AI";
+            public const string TWP_2DI = "TWP-2DI";
+            public const string TWP_2UT = "TWP-2UT";
             public const string TWP_4AI4DI1UT = "TWP-4AI4DI1UT";
+            public const string TWP4AI = "TWP4AI";
+            public const string TWPH_1UT = "TWPH-1UT";
             public const string WGW420 = "WGW420";
         }
+
         public static class Metricas
         {
             public static class Tipos
@@ -32,6 +40,7 @@
                 public const string Analogica_7 = "valor-saida-analogica-7";
                 public const string Analogica_8 = "valor-saida-analogica-8";
             }
+
             public static class UnidadeMedidas
             {
                 public const string Celsius = "°C";

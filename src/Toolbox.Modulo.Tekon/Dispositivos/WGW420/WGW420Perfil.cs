@@ -1,21 +1,51 @@
-﻿using Toolbox.Modulo.Tekon.Abstractions;
+﻿using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
-using static Toolbox.Modulo.Tekon.Dispositivos.WGW420.WGW420;
+using static Toolbox.Modulo.Tekon.Dispositivos.WGW420;
 
-namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
+namespace Toolbox.Modulo.Tekon.Dispositivos
 {
     internal class WGW420Perfil : ITekonDispositivoPerfil
     {
         public string Modelo => TekonConstants.Modelos.WGW420;
+        private const string ExceptionMensager =
+            $"O modelo Escolhido não pode ser lido por esse metodo.";
 
-        public ConfiguracaoLeitura? CoilRegisters(int? index = null) => null;
+        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(ushort index)
+        {
+            throw new NotImplementedException();
+        }
 
-        public ConfiguracaoLeitura? HoldingRegisters(int? index = null)
+        ConfiguracaoLeituraDispositivo ITekonDispositivoPerfil.ObterConfiguracaoLeituraDispositivo()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
+            string port,
+            ushort index
+        ) => throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, ushort index) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, ushort index) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDispositivo(int index) =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDispositivo()
         {
             return new ConfiguracaoLeitura
             {
                 StartAddress = ((1 - 1) * 8) + 1100 + 0,
-                NumberOfRegister = 64,
+                NumberOfPoints = 64,
             };
         }
 
@@ -24,8 +54,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
             return new WGW420
             {
                 Analogica_1 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[1], context.HoldingRegisters[0]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[3], context.HoldingRegisters[2]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[1],
+                        context.HoldingRegisters[0]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[3],
+                        context.HoldingRegisters[2]
+                    ),
                     desvioSaida: context.HoldingRegisters[4],
                     numeroTentativas: context.HoldingRegisters[5],
                     linkEnderecoModbus: context.HoldingRegisters[6],
@@ -33,8 +69,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_2 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[9], context.HoldingRegisters[8]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[11], context.HoldingRegisters[10]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[9],
+                        context.HoldingRegisters[8]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[11],
+                        context.HoldingRegisters[10]
+                    ),
                     desvioSaida: context.HoldingRegisters[12],
                     numeroTentativas: context.HoldingRegisters[13],
                     linkEnderecoModbus: context.HoldingRegisters[14],
@@ -42,8 +84,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_3 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[17], context.HoldingRegisters[16]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[19], context.HoldingRegisters[18]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[17],
+                        context.HoldingRegisters[16]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[19],
+                        context.HoldingRegisters[18]
+                    ),
                     desvioSaida: context.HoldingRegisters[20],
                     numeroTentativas: context.HoldingRegisters[21],
                     linkEnderecoModbus: context.HoldingRegisters[22],
@@ -51,8 +99,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_4 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[25], context.HoldingRegisters[24]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[27], context.HoldingRegisters[26]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[25],
+                        context.HoldingRegisters[24]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[27],
+                        context.HoldingRegisters[26]
+                    ),
                     desvioSaida: context.HoldingRegisters[28],
                     numeroTentativas: context.HoldingRegisters[29],
                     linkEnderecoModbus: context.HoldingRegisters[30],
@@ -60,8 +114,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_5 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[33], context.HoldingRegisters[32]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[35], context.HoldingRegisters[34]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[33],
+                        context.HoldingRegisters[32]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[35],
+                        context.HoldingRegisters[34]
+                    ),
                     desvioSaida: context.HoldingRegisters[36],
                     numeroTentativas: context.HoldingRegisters[37],
                     linkEnderecoModbus: context.HoldingRegisters[38],
@@ -69,8 +129,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_6 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[41], context.HoldingRegisters[40]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[43], context.HoldingRegisters[42]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[41],
+                        context.HoldingRegisters[40]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[43],
+                        context.HoldingRegisters[42]
+                    ),
                     desvioSaida: context.HoldingRegisters[44],
                     numeroTentativas: context.HoldingRegisters[45],
                     linkEnderecoModbus: context.HoldingRegisters[46],
@@ -78,8 +144,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_7 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[49], context.HoldingRegisters[48]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[51], context.HoldingRegisters[50]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[49],
+                        context.HoldingRegisters[48]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[51],
+                        context.HoldingRegisters[50]
+                    ),
                     desvioSaida: context.HoldingRegisters[52],
                     numeroTentativas: context.HoldingRegisters[53],
                     linkEnderecoModbus: context.HoldingRegisters[54],
@@ -87,8 +159,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos.WGW420
                 ),
 
                 Analogica_8 = new Analogica(
-                    valorMinimo: Conversor.ToFloat(context.HoldingRegisters[57], context.HoldingRegisters[56]),
-                    valorMaximo: Conversor.ToFloat(context.HoldingRegisters[59], context.HoldingRegisters[58]),
+                    valorMinimo: Conversor.ToFloat(
+                        context.HoldingRegisters[57],
+                        context.HoldingRegisters[56]
+                    ),
+                    valorMaximo: Conversor.ToFloat(
+                        context.HoldingRegisters[59],
+                        context.HoldingRegisters[58]
+                    ),
                     desvioSaida: context.HoldingRegisters[60],
                     numeroTentativas: context.HoldingRegisters[61],
                     linkEnderecoModbus: context.HoldingRegisters[62],

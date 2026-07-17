@@ -1,86 +1,53 @@
-﻿//namespace Toolbox.Modulo.Tekon.Modelos
-//{
-//    public class TWPH_1UT
-//    {
-//        public long NumeroSerie { get; private set; }
-//        public string Modelo { get; set; } = null!;
-//        public int RSSI { get; private set; }
-//        public int PeriodoComunicacao { get; private set; }
-//        public int TempoDecorrido { get; private set; }
-//        public float TensaoAlimentacao { get; private set; }
-//        public float TemperaturaInterna { get; private set; }
-//        public float TemperaturaExterna { get; private set; }
-//        public int VersaoFirmware { get; private set; }
-//        public int RevisaoVersao { get; private set; }
-//        public int VersaoHardware { get; private set; }
+﻿using Toolbox.Modulo.Tekon.Interfaces;
+using Toolbox.Modulo.Tekon.Models;
 
-//        public TWPH_1UT(ushort[] buffer)
-//        {
-//            NumeroSerie = (long)(buffer[0] << 16 | buffer[1]);
+namespace Toolbox.Modulo.Tekon.Dispositivos
+{
+    public class TWPH_1UT : ITekonDispositivoDado
+    {
+        public long NumeroSerie { get; init; }
+        public string Modelo { get; init; } = null!;
+        public int RSSI { get; init; }
+        public int PeriodoComunicacao { get; init; }
+        public int TempoDecorrido { get; init; }
+        public float TensaoAlimentacao { get; init; }
+        public float TemperaturaInterna { get; init; }
+        public float TemperaturaExterna { get; init; }
+        public int VersaoFirmware { get; init; }
+        public int RevisaoVersao { get; init; }
+        public int VersaoHardware { get; init; }
 
-//            Modelo = IdentificarModelo(buffer[2]);
+        long? ITekonDispositivoDado.NumeroSerie => NumeroSerie;
 
-//            RSSI = buffer[3] / -2;
+        public IEnumerable<Metrica> ObterMetricas()
+        {
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.TemperaturaInterna,
+                Valor = TemperaturaInterna,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Celsius,
+            };
 
-//            PeriodoComunicacao = buffer[4];
-//            TempoDecorrido = buffer[5];
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.TemperaturaExterna,
+                Valor = TemperaturaExterna,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Celsius,
+            };
 
-//            TensaoAlimentacao = buffer[6] / 10;
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.TensaoAlimentacao,
+                Valor = TensaoAlimentacao,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Volts,
+            };
 
-//            TemperaturaInterna = (float)Math.Round(Conversor.ToFloat(buffer[8], buffer[7]), 2);
-//            TemperaturaExterna = (float)Math.Round(Conversor.ToFloat(buffer[10], buffer[9]), 2);
-
-//            VersaoFirmware = buffer[17];
-//            RevisaoVersao = buffer[18];
-//            VersaoHardware = buffer[19];
-//        }
-
-//        public Telemetria ObterTelemetria(Guid moduloId)
-//        {
-//            return new Telemetria
-//            {
-//                Id = moduloId,
-//                Timestamp = DateTime.Now,
-//                Status = (TempoDecorrido > 10) ? "offline" : "online",
-//                Metricas =
-//                [
-//                    new Metrica
-//                    {
-//                        Tipo = "temperatura-interna",
-//                        Valor = TemperaturaInterna,
-//                        Unidade = "°C",
-//                    },
-//                    new Metrica
-//                    {
-//                        Tipo = "temperatura-externa",
-//                        Valor = TemperaturaExterna,
-//                        Unidade = "°C",
-//                    },
-//                    new Metrica
-//                    {
-//                        Tipo = "tensao-alimentacao",
-//                        Valor = TensaoAlimentacao,
-//                        Unidade = "V",
-//                    },
-//                    new Metrica
-//                    {
-//                        Tipo = "rssi",
-//                        Valor = RSSI,
-//                        Unidade = "dBm",
-//                    },
-//                ],
-//                Metadados = new Metadados { Modelo = Modelo, VersaoFirmware = VersaoFirmware },
-//            };
-//        }
-
-//        private static string IdentificarModelo(int modelo)
-//        {
-//            return modelo switch
-//            {
-//                24 => "TWPH-1UT 868 MHZ",
-//                28 => "TWPH-1UT 915 MHZ",
-//                _ => "",
-//            };
-//        }
-//    }
-//}
+            yield return new Metrica
+            {
+                Tipo = TekonConstants.Metricas.Tipos.RSSI,
+                Valor = RSSI,
+                Unidade = TekonConstants.Metricas.UnidadeMedidas.Decibeis,
+            };
+        }
+    }
+}

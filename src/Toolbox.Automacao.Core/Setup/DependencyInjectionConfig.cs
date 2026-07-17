@@ -26,8 +26,6 @@ namespace Toolbox.Automacao.Core.Setup
 
             services.AddTransient<AutenticacaoHandler>();
 
-            services.AddSingleton<IModbusFacadeFactory, ModbusFacadeFactory>();
-
             services.AddSingleton<ILiteDatabase>(sp => new LiteDatabase(
                 @"Filename=Automacao.db;Connection=Shared"
             ));

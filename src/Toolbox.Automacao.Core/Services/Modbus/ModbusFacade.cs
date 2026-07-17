@@ -63,9 +63,9 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     /// Lê registros holding do dispositivo Modbus
     /// </summary>
     public async Task<ushort[]> LerHoldingRegistersAsync(
-        byte enderecoDispositivo,
-        ushort enderecoInicial,
-        ushort quantidadeRegistros
+        byte slaveAddress,
+        ushort startAddress,
+        ushort numberOfPoints
     )
     {
         if (_master == null)
@@ -73,20 +73,16 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
                 "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
             );
 
-        return await _master.ReadHoldingRegistersAsync(
-            enderecoDispositivo,
-            enderecoInicial,
-            quantidadeRegistros
-        );
+        return await _master.ReadHoldingRegistersAsync(slaveAddress, startAddress, numberOfPoints);
     }
 
     /// <summary>
     /// Lê coils do dispositivo Modbus
     /// </summary>
     public async Task<bool[]> LerCoilsAsync(
-        byte enderecoDispositivo,
-        ushort enderecoInicial,
-        ushort quantidadeCoils
+        byte slaveAddress,
+        ushort startAddress,
+        ushort numberOfPoints
     )
     {
         if (_master == null)
@@ -94,20 +90,20 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
                 "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
             );
 
-        return await _master.ReadCoilsAsync(enderecoDispositivo, enderecoInicial, quantidadeCoils);
+        return await _master.ReadCoilsAsync(slaveAddress, startAddress, numberOfPoints);
     }
 
     /// <summary>
     /// Escreve um único coil no dispositivo Modbus
     /// </summary>
-    public async Task EscreverCoilAsync(byte enderecoDispositivo, ushort enderecoCoil, bool valor)
+    public async Task EscreverCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
     {
         if (_master == null)
             throw new InvalidOperationException(
                 "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
             );
 
-        await _master.WriteSingleCoilAsync(enderecoDispositivo, enderecoCoil, valor);
+        await _master.WriteSingleCoilAsync(slaveAddress, coilAddress, value);
     }
 
     /// <summary>

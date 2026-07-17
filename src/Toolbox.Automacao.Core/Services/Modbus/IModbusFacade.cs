@@ -13,36 +13,32 @@ public interface IModbusFacade
     /// <summary>
     /// Lê registros holding do dispositivo Modbus
     /// </summary>
-    /// <param name="enderecoDispositivo">Endereço do dispositivo (slave address)</param>
-    /// <param name="enderecoInicial">Endereço inicial do registro</param>
-    /// <param name="quantidadeRegistros">Quantidade de registros a ler</param>
+    /// <param name="slaveAddress">Endereço do dispositivo (slave address)</param>
+    /// <param name="startAddress">Endereço inicial do registro</param>
+    /// <param name="numberOfPoints">Quantidade de registros a ler</param>
     /// <returns>Array com os valores dos registros</returns>
     Task<ushort[]> LerHoldingRegistersAsync(
-        byte enderecoDispositivo,
-        ushort enderecoInicial,
-        ushort quantidadeRegistros
+        byte slaveAddress,
+        ushort startAddress,
+        ushort numberOfPoints
     );
 
     /// <summary>
     /// Lê coils do dispositivo Modbus
     /// </summary>
-    /// <param name="enderecoDispositivo">Endereço do dispositivo (slave address)</param>
-    /// <param name="enderecoInicial">Endereço inicial do coil</param>
-    /// <param name="quantidadeCoils">Quantidade de coils a ler</param>
+    /// <param name="slaveAddress">Endereço do dispositivo (slave address)</param>
+    /// <param name="startAddress">Endereço inicial do coil</param>
+    /// <param name="numberOfPoints">Quantidade de coils a ler</param>
     /// <returns>Array com os valores dos coils</returns>
-    Task<bool[]> LerCoilsAsync(
-        byte enderecoDispositivo,
-        ushort enderecoInicial,
-        ushort quantidadeCoils
-    );
+    Task<bool[]> LerCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
 
     /// <summary>
     /// Escreve um único coil no dispositivo Modbus
     /// </summary>
-    /// <param name="enderecoDispositivo">Endereço do dispositivo (slave address)</param>
-    /// <param name="enderecoCoil">Endereço do coil</param>
-    /// <param name="valor">Valor a escrever (true/false)</param>
-    Task EscreverCoilAsync(byte enderecoDispositivo, ushort enderecoCoil, bool valor);
+    /// <param name="slaveAddress">Endereço do dispositivo (slave address)</param>
+    /// <param name="coilAddress">Endereço do coil</param>
+    /// <param name="value">Valor a escrever (true/false)</param>
+    Task EscreverCoilAsync(byte slaveAddress, ushort coilAddress, bool value);
 
     /// <summary>
     /// Fecha a conexão Modbus e libera recursos
