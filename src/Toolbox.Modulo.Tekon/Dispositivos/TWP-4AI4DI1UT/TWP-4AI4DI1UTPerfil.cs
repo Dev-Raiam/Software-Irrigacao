@@ -21,8 +21,8 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
             throw new NotImplementedException(ExceptionMensager);
 
-        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port)
-            => throw new NotImplementedException(ExceptionMensager);
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index)
         {
@@ -33,17 +33,17 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     StartAddress = (ushort)(((index - 1) * 20) + 9),
                     NumberOfPoints = 3,
                 },
-                "A4" => new ConfiguracaoLeitura
+                "A2" => new ConfiguracaoLeitura
                 {
                     StartAddress = (ushort)(((index - 1) * 20) + 11),
                     NumberOfPoints = 3,
                 },
-                "A7" => new ConfiguracaoLeitura
+                "A3" => new ConfiguracaoLeitura
                 {
                     StartAddress = (ushort)(((index - 1) * 20) + 13),
                     NumberOfPoints = 3,
                 },
-                "A10" => new ConfiguracaoLeitura
+                "A4" => new ConfiguracaoLeitura
                 {
                     StartAddress = (ushort)(((index - 1) * 20) + 15),
                     NumberOfPoints = 3,
@@ -205,6 +205,16 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                 EstadoEntradaDigital_3 = context.CoilRegisters[5],
                 EstadoEntradaDigital_4 = context.CoilRegisters[6],
             };
+        }
+
+        public double ConverterValorAnalogico(ushort[] buffer, ConfiguracaoLeitura configuracao)
+        {
+            return Math.Round(Conversor.ToFloat(buffer[1], buffer[0]), 2);
+        }
+
+        public double ConverterValorTemperatura(ushort[] buffer, ConfiguracaoLeitura configuracao)
+        {
+            return Math.Round(Conversor.ToFloat(buffer[1], buffer[0]), 2);
         }
 
         private string IdentificarModelo(int modelo)

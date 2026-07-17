@@ -125,7 +125,7 @@ namespace Toolbox.Modulo.Tekon
                 configuracao.NumberOfPoints
             );
 
-            return Conversor.ToFloat(bufferHolding[1], bufferHolding[0]);
+            return dispositivo.ConverterValorAnalogico(bufferHolding, configuracao);
         }
 
         public async Task<double> LerPortaAnalogica(string modelo, byte slaveAddress, string port)
@@ -142,7 +142,7 @@ namespace Toolbox.Modulo.Tekon
                 configuracao.NumberOfPoints
             );
 
-            return Conversor.ToFloat(bufferHolding[1], bufferHolding[0]);
+            return dispositivo.ConverterValorAnalogico(bufferHolding, configuracao);
         }
 
         public async Task<double> LerPortaTemperatura(
@@ -164,7 +164,7 @@ namespace Toolbox.Modulo.Tekon
                 configuracao.NumberOfPoints
             );
 
-            return Math.Round(Conversor.ToFloat(bufferHolding[1], bufferHolding[0]),2);
+            return dispositivo.ConverterValorTemperatura(bufferHolding, configuracao);
         }
 
         public async Task<double> LerPortaTemperatura(string modelo, byte slaveAddress, string port)
@@ -181,7 +181,7 @@ namespace Toolbox.Modulo.Tekon
                 configuracao.NumberOfPoints
             );
 
-            return Math.Round(Conversor.ToFloat(bufferHolding[1], bufferHolding[0]),2);
+            return dispositivo.ConverterValorTemperatura(bufferHolding, configuracao);
         }
 
         public async Task<bool> LerPortaDigital(string modelo, byte slaveAddress, string port)
@@ -239,7 +239,12 @@ namespace Toolbox.Modulo.Tekon
             throw new NotImplementedException();
         }
 
-        public async Task EscreverPortaDigital(string modelo, byte slaveAddress, string port, bool value)
+        public async Task EscreverPortaDigital(
+            string modelo,
+            byte slaveAddress,
+            string port,
+            bool value
+        )
         {
             EnsureConnection();
 
@@ -266,6 +271,7 @@ namespace Toolbox.Modulo.Tekon
 
             await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
         }
+
         public void Dispose()
         {
             if (_disposed)

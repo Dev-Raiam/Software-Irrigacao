@@ -10,13 +10,14 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         private const string ExceptionMensager =
             $"O modelo Escolhido não pode ser lido por esse metodo.";
 
-        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
-            => throw new NotImplementedException(ExceptionMensager);
+        public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index) =>
+            throw new NotImplementedException(ExceptionMensager);
 
-        ConfiguracaoLeituraDispositivo ITekonDispositivoPerfil.ObterConfiguracaoLeituraDispositivo()
-            => throw new NotImplementedException(ExceptionMensager);
-        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port)
-            => throw new NotImplementedException(ExceptionMensager);
+        ConfiguracaoLeituraDispositivo ITekonDispositivoPerfil.ObterConfiguracaoLeituraDispositivo() =>
+            throw new NotImplementedException(ExceptionMensager);
+
+        public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port) =>
+            throw new NotImplementedException(ExceptionMensager);
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
             string port,
@@ -26,8 +27,53 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index) =>
             throw new NotImplementedException(ExceptionMensager);
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
-            throw new NotImplementedException(ExceptionMensager);
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port)
+        {
+            return port switch
+            {
+                "A4" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((1 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A5" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((2 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A6" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((3 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A10" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((4 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A11" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((5 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A12" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((6 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A16" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((7 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                "A17" => new ConfiguracaoLeitura
+                {
+                    StartAddress = ((8 - 1) * 8) + 1100 + 7,
+                    NumberOfPoints = 1,
+                },
+                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+            };
+        }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index) =>
             throw new NotImplementedException(ExceptionMensager);
@@ -177,6 +223,16 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     valorCorrenteAtual: context.HoldingRegisters[63] / 100.0f
                 ),
             };
+        }
+
+        public double ConverterValorAnalogico(ushort[] buffer, ConfiguracaoLeitura configuracao)
+        {
+            return Math.Round(buffer[0] / 100.0, 2);
+        }
+
+        public double ConverterValorTemperatura(ushort[] buffer, ConfiguracaoLeitura configuracao)
+        {
+            throw new NotSupportedException("WGW420 não suporta leitura de temperatura");
         }
     }
 }

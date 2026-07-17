@@ -96,6 +96,16 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
             };
         }
 
+        public double ConverterValorAnalogico(ushort[] buffer, ConfiguracaoLeitura configuracao)
+        {
+            throw new NotSupportedException("TWP-2DI não suporta leitura analógica");
+        }
+
+        public double ConverterValorTemperatura(ushort[] buffer, ConfiguracaoLeitura configuracao)
+        {
+            return Math.Round(Conversor.ToFloat(buffer[1], buffer[0]), 2);
+        }
+
         private string IdentificarModelo(int modelo)
         {
             return modelo switch

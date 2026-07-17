@@ -16,6 +16,9 @@ namespace Toolbox.Modulo.Tekon.Interfaces
         ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, byte index);
         ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port);
 
+        double ConverterValorAnalogico(ushort[] buffer, ConfiguracaoLeitura configuracao);
+        double ConverterValorTemperatura(ushort[] buffer, ConfiguracaoLeitura configuracao);
+
         ITekonDispositivoDado Parse(DispositivoContextoLeitura context);
     }
 }

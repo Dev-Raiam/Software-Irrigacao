@@ -37,9 +37,9 @@ namespace SoftwareIrrigacao.Features.Telemetria.Tekon
                     var temperatura = await _driver.LerPortaTemperatura(modelo: modelo, slaveAddress: slaveAddress, index: index, "UT");
 
                     var analogica1 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A1");
-                    var analogica4 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A4");
-                    var analogica7 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A7");
-                    var analogica10 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A10");
+                    var analogica4 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A2");
+                    var analogica7 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A3");
+                    var analogica10 = await _driver.LerPortaAnalogica(modelo: modelo, slaveAddress: slaveAddress, index: index, "A4");
 
                     var entradaB1 = await _driver.LerPortaDigital(modelo: modelo, slaveAddress: slaveAddress, index: index, "B1");
                     var entradaB2 = await _driver.LerPortaDigital(modelo: modelo, slaveAddress: slaveAddress, index: index, "B2");
@@ -57,7 +57,16 @@ namespace SoftwareIrrigacao.Features.Telemetria.Tekon
                     Console.WriteLine($"Modelo: {TWP_4AI4DI1UT.Modelo}    NumeroSerie: {TWP_4AI4DI1UT.NumeroSerie}");
                     Console.WriteLine(JsonSerializer.Serialize(TWP_4AI4DI1UT.ObterMetricas(), options));
 
-
+                    //Modulo WGW420
+                    var analogicaA4 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A4");
+                    var analogicaA5 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A5");
+                    var analogicaA6 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A6");
+                    var analogicaA10 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A10");
+                    var analogicaA11 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A11");
+                    var analogicaA12 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A12");
+                    var analogicaA16 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A16");
+                    var analogicaA17 = await _driver.LerPortaAnalogica(modelo: Modelos.WGW420, slaveAddress: slaveAddress, "A17");
+                    
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }
                 catch (Exception ex) 
