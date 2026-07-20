@@ -1,4 +1,4 @@
-namespace SoftwareIrrigacao.Infra.Cache
+namespace SoftwareIrrigacao.Infrastructure.Cache
 {
     public class CredenciaisAplicacao
     {

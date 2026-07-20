@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Toolbox.Automacao.Core.Setup;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Toolbox.Modulo.Tekon.Setup
 {

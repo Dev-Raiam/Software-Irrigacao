@@ -1,10 +1,10 @@
-using MQTTnet;
-using SoftwareIrrigacao.Features.Telemetria.Tekon;
-using SoftwareIrrigacao.Infra.Cache;
-using SoftwareIrrigacao.Infra.Mqtt;
+using Microsoft.Extensions.Options;
+using SoftwareIrrigacao.Infrastructure.Cache;
 using SoftwareIrrigacao.Shared.State;
 using System.Reflection;
 using Toolbox.Automacao.Core.Services.Modbus;
+using Toolbox.Automacao.Core.Services.Mqtt;
+using Toolbox.Automacao.Core.Setup;
 using Toolbox.Automacao.Irrigacao.Comandos.Controle;
 using Toolbox.Core.Api.Configuration;
 using Toolbox.Modulo.Tekon;
@@ -25,19 +25,48 @@ public static class DependencyInjectionConfig
         services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
         services.AddSingleton<IModbusFacadeFactory, ModbusFacadeFactory>();
         services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
+        services.AddSingleton<IMqttFacadeFactory, MqttFacadeFactory>();
+        
+        services.AddKeyedSingleton<IMqttFacade>(
+            "local",
+            (provider, key) =>
+            {
+                var factory = provider.GetRequiredService<IMqttFacadeFactory>();
+                var config = provider.GetRequiredService<IOptions<MqttConfiguracao>>().Value;
 
-        services.AddHostedService<WorkerTeste>();
+                var mqttConfig = new MqttConfig
+                {
+                    Host = config.Servidor,
+                    Port = config.Porta,
+                    ClientId = Guid.NewGuid().ToString(),
+                    Username = config.Usuario,
+                    Password = config.Senha,
+                };
 
-        services.AddSingleton<MqttClienteRemoto>(provider => new MqttClienteRemoto(
-            new MqttClientFactory().CreateMqttClient(),
-            provider,
-            provider.GetRequiredService<ILogger<MqttCliente>>()
-        ));
-        services.AddSingleton<MqttClienteLocal>(provider => new MqttClienteLocal(
-            new MqttClientFactory().CreateMqttClient(),
-            provider,
-            provider.GetRequiredService<ILogger<MqttCliente>>()
-        ));
+                return factory.Criar(mqttConfig);
+            }
+        );
+
+        services.AddKeyedSingleton<IMqttFacade>(
+            "remoto",
+            (provider, key) =>
+            {
+                var factory = provider.GetRequiredService<IMqttFacadeFactory>();
+
+                var mqttConfig = new MqttConfig
+                {
+                    Host = "broker.freemqtt.com",
+                    Port = 1883,
+                    ClientId = Guid.NewGuid().ToString(),
+                    Username = "freemqtt",
+                    Password = "public",
+                };
+
+                return factory.Criar(mqttConfig);
+            }
+        );
+
+        //services.AddHostedService<WorkerTeste>();
 
         services.AddMediator(
             Assembly.GetExecutingAssembly(),

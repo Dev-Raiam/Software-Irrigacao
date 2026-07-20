@@ -1,7 +1,7 @@
 
 using Toolbox.Automacao.Core.Models;
 
-namespace SoftwareIrrigacao.Infra.Cache
+namespace SoftwareIrrigacao.Infrastructure.Cache
 {
     public class ArmazenamentoAutomacao
     {

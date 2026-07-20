@@ -37,14 +37,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NModbus" Version="3.0.83" />
-    <PackageReference Include="NModbus.Serial" Version="3.0.83" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
-    <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
@@ -61,6 +58,6 @@
 
   <ItemGroup>
     <Folder Include="Domain\Entity\" />
-    <Folder Include="Infra\Data\" />
+    <Folder Include="Infrastructure\Data\" />
   </ItemGroup>
 </Project>

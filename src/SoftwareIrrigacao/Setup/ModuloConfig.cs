@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
-using SoftwareIrrigacao.Infra.Handlers.Exceptions;
+using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Presentation.Edpoints;
 using SoftwareIrrigacao.Workes;
 using System.Threading.RateLimiting;
 using Toolbox.Automacao.Core.Setup;
-using Toolbox.Modulo.Tekon.Setup;
 
 namespace SoftwareIrrigacao.Setup;
 

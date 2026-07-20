@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Toolbox.Core.Mediator;
 
-namespace SoftwareIrrigacao.Infra.Handlers.Exceptions;
+namespace SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {

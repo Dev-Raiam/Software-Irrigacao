@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using NModbus;
 using Toolbox.Automacao.Core.Services.Modbus;
-using Toolbox.Modulo.Tekon;
 using Toolbox.Modulo.Tekon.Interfaces;
 
 namespace Toolbox.Modulo.Tekon.Setup
