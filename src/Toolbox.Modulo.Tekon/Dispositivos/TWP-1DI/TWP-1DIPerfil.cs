@@ -1,3 +1,4 @@
+using Toolbox.Modulo.Tekon.Exceptions;
 using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
@@ -6,37 +7,62 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
     internal class TWP_1DIPerfil : ITekonDispositivoPerfil
     {
         public string Modelo => Modelos.TWP_1DI;
-        private const string ExceptionMessage =
-            "O modelo escolhido não pode ser lido por esse método.";
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port) =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura digital na porta {port}"
+            );
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo() =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                "{Modelo} não suporta leitura de dispositivo sem índice"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura analógica na porta {port}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index) =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura analógica na porta {port} com índice {index}"
+            );
 
-        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index) =>
-            throw new NotSupportedException(ExceptionMessage);
+        public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index) 
+        {
+            return port switch
+            {
+                "B1" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 20) + 9),
+                    NumberOfPoints = 3
+                },
+                _ => throw new TekonPortaInvalidaException($"{Modelo} não suporta leitura analógica na porta {port}")
+            };
+        }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index) =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port} com índice {index}"
+            );
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port) =>
-            throw new NotSupportedException(ExceptionMessage);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port}"
+            );
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
             string port,
             byte index
-        ) => throw new NotSupportedException(ExceptionMessage);
+        ) =>
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port} com índice {index}"
+            );
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
         {
@@ -90,7 +116,7 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 
         public double ConverterValorAnalogico(ushort[] buffer, ConfiguracaoLeitura configuracao)
         {
-            throw new NotSupportedException("TWP-1DI não suporta leitura analógica");
+            throw new TekonOperacaoNaoSuportadaException($"{Modelo} não suporta leitura analógica");
         }
 
         public double ConverterValorTemperatura(ushort[] buffer, ConfiguracaoLeitura configuracao)

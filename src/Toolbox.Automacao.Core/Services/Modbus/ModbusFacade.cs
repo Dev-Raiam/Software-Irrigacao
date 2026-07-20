@@ -1,6 +1,7 @@
 ﻿using System.IO.Ports;
 using NModbus;
 using NModbus.Serial;
+using Toolbox.Automacao.Core.Services.Modbus.Exceptions;
 
 namespace Toolbox.Automacao.Core.Services.Modbus;
 
@@ -41,22 +42,32 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
         if (_serialPort != null && _serialPort.IsOpen)
             return;
 
-        _serialPort = new SerialPort(_port)
+        try
         {
-            BaudRate = _baudRate,
-            DataBits = _dataBits,
-            Handshake = Handshake.None,
-            RtsEnable = true,
-            DtrEnable = false,
-            Parity = _parity,
-            StopBits = _stopBits,
-            ReadTimeout = _readTimeout,
-            WriteTimeout = _writeTimeout,
-        };
+            _serialPort = new SerialPort(_port)
+            {
+                BaudRate = _baudRate,
+                DataBits = _dataBits,
+                Handshake = Handshake.None,
+                RtsEnable = true,
+                DtrEnable = false,
+                Parity = _parity,
+                StopBits = _stopBits,
+                ReadTimeout = _readTimeout,
+                WriteTimeout = _writeTimeout,
+            };
 
-        _serialPort.Open();
-        var adapter = new SerialPortAdapter(_serialPort);
-        _master = new ModbusFactory().CreateRtuMaster(adapter);
+            _serialPort.Open();
+            var adapter = new SerialPortAdapter(_serialPort);
+            _master = new ModbusFactory().CreateRtuMaster(adapter);
+        }
+        catch (Exception ex)
+        {
+            throw new ModbusConexaoException(
+                $"Erro ao conectar na porta {_port}: {ex.Message}",
+                ex
+            );
+        }
     }
 
     /// <summary>
@@ -69,11 +80,25 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     )
     {
         if (_master == null)
-            throw new InvalidOperationException(
+            throw new ModbusConexaoException(
                 "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
             );
 
-        return await _master.ReadHoldingRegistersAsync(slaveAddress, startAddress, numberOfPoints);
+        try
+        {
+            return await _master.ReadHoldingRegistersAsync(
+                slaveAddress,
+                startAddress,
+                numberOfPoints
+            );
+        }
+        catch (Exception ex)
+        {
+            throw new ModbusLeituraException(
+                $"Erro ao ler holding registers (slave: {slaveAddress}, start: {startAddress}, count: {numberOfPoints}): {ex.Message}",
+                ex
+            );
+        }
     }
 
     /// <summary>
@@ -86,11 +111,21 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     )
     {
         if (_master == null)
-            throw new InvalidOperationException(
+            throw new ModbusConexaoException(
                 "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
             );
 
-        return await _master.ReadCoilsAsync(slaveAddress, startAddress, numberOfPoints);
+        try
+        {
+            return await _master.ReadCoilsAsync(slaveAddress, startAddress, numberOfPoints);
+        }
+        catch (Exception ex)
+        {
+            throw new ModbusLeituraException(
+                $"Erro ao ler coils (slave: {slaveAddress}, start: {startAddress}, count: {numberOfPoints}): {ex.Message}",
+                ex
+            );
+        }
     }
 
     /// <summary>
@@ -99,11 +134,21 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     public async Task EscreverCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
     {
         if (_master == null)
-            throw new InvalidOperationException(
+            throw new ModbusConexaoException(
                 "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
             );
 
-        await _master.WriteSingleCoilAsync(slaveAddress, coilAddress, value);
+        try
+        {
+            await _master.WriteSingleCoilAsync(slaveAddress, coilAddress, value);
+        }
+        catch (Exception ex)
+        {
+            throw new ModbusEscritaException(
+                $"Erro ao escrever coil (slave: {slaveAddress}, address: {coilAddress}, value: {value}): {ex.Message}",
+                ex
+            );
+        }
     }
 
     /// <summary>

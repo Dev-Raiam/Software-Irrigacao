@@ -1,4 +1,5 @@
-﻿using Toolbox.Modulo.Tekon.Interfaces;
+﻿using Toolbox.Modulo.Tekon.Exceptions;
+using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 using static Toolbox.Modulo.Tekon.Dispositivos.WGW420;
 
@@ -7,25 +8,34 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
     internal class WGW420Perfil : ITekonDispositivoPerfil
     {
         public string Modelo => Modelos.WGW420;
-        private const string ExceptionMensager =
-            $"O modelo Escolhido não pode ser lido por esse metodo.";
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de dispositivo com índice {index}"
+            );
 
         ConfiguracaoLeituraDispositivo ITekonDispositivoPerfil.ObterConfiguracaoLeituraDispositivo() =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de dispositivo"
+            );
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port}"
+            );
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(
             string port,
             byte index
-        ) => throw new NotImplementedException(ExceptionMensager);
+        ) =>
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port} com índice {index}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura analógica na porta {port} com índice {index}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port)
         {
@@ -71,24 +81,36 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     StartAddress = ((8 - 1) * 8) + 1100 + 7,
                     NumberOfPoints = 1,
                 },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+                _ => throw new TekonPortaInvalidaException(
+                    $"Porta {port} não existe para o modelo WGW420"
+                ),
             };
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura digital na porta {port} com índice {index}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura digital na porta {port}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port} com índice {index}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDispositivo(int index) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de dispositivo com índice {index}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDispositivo()
         {
@@ -232,7 +254,9 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 
         public double ConverterValorTemperatura(ushort[] buffer, ConfiguracaoLeitura configuracao)
         {
-            throw new NotSupportedException("WGW420 não suporta leitura de temperatura");
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura"
+            );
         }
     }
 }

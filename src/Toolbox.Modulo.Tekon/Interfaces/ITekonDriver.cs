@@ -88,23 +88,23 @@ namespace Toolbox.Modulo.Tekon.Interfaces
         /// <param name="slaveAddress">Endereço do escravo Modbus.</param>
         /// <param name="port">Identificador da porta.</param>
         /// <param name="value">Valor a ser escrito.</param>
-        Task EscreverPortaAnalogica(string modelo, byte slaveAddress, string port, int value);
+        //Task EscreverPortaAnalogica(string modelo, byte slaveAddress, string port, int value);
 
-        /// <summary>
-        /// Escreve um valor em uma porta analógica de um dispositivo com índice.
-        /// </summary>
-        /// <param name="modelo">Modelo do dispositivo.</param>
-        /// <param name="slaveAddress">Endereço do escravo Modbus.</param>
-        /// <param name="index">Índice do dispositivo.</param>
-        /// <param name="port">Identificador da porta.</param>
-        /// <param name="value">Valor a ser escrito.</param>
-        Task EscreverPortaAnalogica(
-            string modelo,
-            byte slaveAddress,
-            byte index,
-            string port,
-            int value
-        );
+        ///// <summary>
+        ///// Escreve um valor em uma porta analógica de um dispositivo com índice.
+        ///// </summary>
+        ///// <param name="modelo">Modelo do dispositivo.</param>
+        ///// <param name="slaveAddress">Endereço do escravo Modbus.</param>
+        ///// <param name="index">Índice do dispositivo.</param>
+        ///// <param name="port">Identificador da porta.</param>
+        ///// <param name="value">Valor a ser escrito.</param>
+        //Task EscreverPortaAnalogica(
+        //    string modelo,
+        //    byte slaveAddress,
+        //    byte index,
+        //    string port,
+        //    int value
+        //);
 
         /// <summary>
         /// Escreve um estado em uma porta digital de um dispositivo.

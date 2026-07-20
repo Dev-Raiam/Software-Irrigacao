@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Toolbox.Modulo.Tekon.Exceptions;
 using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
 namespace Toolbox.Modulo.Tekon.Dispositivos
 {
-    public class TWP_1AIPerfil : ITekonDispositivoPerfil
+    internal class TWP_1AIPerfil : ITekonDispositivoPerfil
     {
         public string Modelo => Modelos.TWP_1AI;
 
@@ -24,52 +25,78 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port}"
+            );
         }
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port, byte index)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port} com índice {index}"
+            );
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index)
         {
-            throw new NotImplementedException();
+            return port switch
+            {
+                "A1" => new ConfiguracaoLeitura
+                {
+                    StartAddress = (ushort)(((index - 1) * 20) + 9),
+                    NumberOfPoints = 3
+                },
+                _ => throw new TekonPortaInvalidaException($"{Modelo} não suporta leitura analógica na porta {port}")
+            };
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura analógica na porta {port}"
+            );
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port, byte index)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura digital na porta {port} com índice {index}"
+            );
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura digital na porta {port}"
+            );
         }
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo(byte index)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de dispositivo com índice {index}"
+            );
         }
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo()
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                "{Modelo} não suporta leitura de dispositivo"
+            );
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port}"
+            );
         }
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port, byte index)
         {
-            throw new NotImplementedException();
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port} com índice {index}"
+            );
         }
 
         public ITekonDispositivoDado Parse(DispositivoContextoLeitura context)

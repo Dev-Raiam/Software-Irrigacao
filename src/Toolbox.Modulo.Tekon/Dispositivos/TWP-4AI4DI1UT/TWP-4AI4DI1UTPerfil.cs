@@ -1,4 +1,5 @@
-﻿using Toolbox.Modulo.Tekon.Interfaces;
+﻿using Toolbox.Modulo.Tekon.Exceptions;
+using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
 namespace Toolbox.Modulo.Tekon.Dispositivos
@@ -6,23 +7,31 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
     internal class TWP_4AI4DI1UTPerfil : ITekonDispositivoPerfil
     {
         public string Modelo => Modelos.TWP_4AI4DI1UT;
-        private const string ExceptionMensager =
-            $"O modelo Escolhido não pode ser lido por esse metodo.";
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraDigital(string port) =>
-            throw new NotSupportedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura digital na porta {port}"
+            );
 
         public ConfiguracaoLeituraDispositivo ObterConfiguracaoLeituraDispositivo() =>
-            throw new NotSupportedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de dispositivo sem índice"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port) =>
-            throw new NotSupportedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura analógica na porta {port}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraTemperatura(string port) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta leitura de temperatura na porta {port}"
+            );
 
         public ConfiguracaoEscritaDigital ObterConfiguracaoEscritaDigital(string port) =>
-            throw new NotImplementedException(ExceptionMensager);
+            throw new TekonOperacaoNaoSuportadaException(
+                $"{Modelo} não suporta escrita digital na porta {port}"
+            );
 
         public ConfiguracaoLeitura ObterConfiguracaoLeituraAnalogica(string port, byte index)
         {
@@ -48,7 +57,9 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     StartAddress = (ushort)(((index - 1) * 20) + 15),
                     NumberOfPoints = 3,
                 },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+                _ => throw new TekonPortaInvalidaException(
+                    $"Porta {port} não existe para o modelo TWP-4AI4DI1UT"
+                ),
             };
         }
 
@@ -92,7 +103,9 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     StartAddress = (ushort)(((index - 1) * 16) + 2),
                     NumberOfPoints = 1,
                 },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+                _ => throw new TekonPortaInvalidaException(
+                    $"Porta {port} não existe para o modelo TWP-4AI4DI1UT"
+                ),
             };
         }
 
@@ -121,7 +134,9 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                 {
                     CoilAddress = (ushort)(((index - 1) * 16) + 0),
                 },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+                _ => throw new TekonPortaInvalidaException(
+                    $"Porta {port} não existe para o modelo TWP-4AI4DI1UT"
+                ),
             };
         }
 
@@ -134,7 +149,9 @@ namespace Toolbox.Modulo.Tekon.Dispositivos
                     StartAddress = (ushort)(((index - 1) * 20) + 7),
                     NumberOfPoints = 3,
                 },
-                _ => throw new NotSupportedException("Porta não existe para o modelo escolhido"),
+                _ => throw new TekonPortaInvalidaException(
+                    $"Porta {port} não existe para o modelo TWP-4AI4DI1UT"
+                ),
             };
         }
 

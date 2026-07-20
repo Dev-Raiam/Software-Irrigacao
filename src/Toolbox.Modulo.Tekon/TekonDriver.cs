@@ -1,5 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Toolbox.Automacao.Core.Services.Modbus;
+using Toolbox.Automacao.Core.Services.Modbus.Exceptions;
+using Toolbox.Modulo.Tekon.Exceptions;
 using Toolbox.Modulo.Tekon.Interfaces;
 using Toolbox.Modulo.Tekon.Models;
 
@@ -19,7 +21,17 @@ namespace Toolbox.Modulo.Tekon
 
         private void EnsureConnection()
         {
-            _modbus.Conectar();
+            try
+            {
+                _modbus.Conectar();
+            }
+            catch (ModbusConexaoException ex)
+            {
+                throw new TekonComunicacaoException(
+                    "Não foi possível estabelecer conexão com o dispositivo Tekon. Verifique se o dispositivo está ligado e conectado.",
+                    ex
+                );
+            }
         }
 
         public async Task<ITekonDispositivoDado> LerDispositivo(string modelo, byte slaveAddress)
@@ -37,20 +49,40 @@ namespace Toolbox.Modulo.Tekon
 
             if (HoldingRegistersConfig != null)
             {
-                bufferHolding = await _modbus.LerHoldingRegistersAsync(
-                    slaveAddress,
-                    HoldingRegistersConfig.StartAddress,
-                    HoldingRegistersConfig.NumberOfPoints
-                );
+                try
+                {
+                    bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                        slaveAddress,
+                        HoldingRegistersConfig.StartAddress,
+                        HoldingRegistersConfig.NumberOfPoints
+                    );
+                }
+                catch (ModbusLeituraException ex)
+                {
+                    throw new TekonLeituraException(
+                        $"Não foi possível ler dados do dispositivo modelo {modelo}. Verifique a conexão e tente novamente.",
+                        ex
+                    );
+                }
             }
 
             if (CoilRegistersConfig != null)
             {
-                bufferCoils = await _modbus.LerCoilsAsync(
-                    slaveAddress,
-                    CoilRegistersConfig.StartAddress,
-                    CoilRegistersConfig.NumberOfPoints
-                );
+                try
+                {
+                    bufferCoils = await _modbus.LerCoilsAsync(
+                        slaveAddress,
+                        CoilRegistersConfig.StartAddress,
+                        CoilRegistersConfig.NumberOfPoints
+                    );
+                }
+                catch (ModbusLeituraException ex)
+                {
+                    throw new TekonLeituraException(
+                        $"Não foi possível ler dados do dispositivo modelo {modelo}. Verifique a conexão e tente novamente.",
+                        ex
+                    );
+                }
             }
 
             var contexto = new DispositivoContextoLeitura
@@ -81,20 +113,40 @@ namespace Toolbox.Modulo.Tekon
 
             if (HoldingRegistersConfig != null)
             {
-                bufferHolding = await _modbus.LerHoldingRegistersAsync(
-                    slaveAddress,
-                    HoldingRegistersConfig.StartAddress,
-                    HoldingRegistersConfig.NumberOfPoints
-                );
+                try
+                {
+                    bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                        slaveAddress,
+                        HoldingRegistersConfig.StartAddress,
+                        HoldingRegistersConfig.NumberOfPoints
+                    );
+                }
+                catch (ModbusLeituraException ex)
+                {
+                    throw new TekonLeituraException(
+                        $"Não foi possível ler dados do dispositivo modelo {modelo}. Verifique a conexão e tente novamente.",
+                        ex
+                    );
+                }
             }
 
             if (CoilRegistersConfig != null)
             {
-                bufferCoils = await _modbus.LerCoilsAsync(
-                    slaveAddress,
-                    CoilRegistersConfig.StartAddress,
-                    CoilRegistersConfig.NumberOfPoints
-                );
+                try
+                {
+                    bufferCoils = await _modbus.LerCoilsAsync(
+                        slaveAddress,
+                        CoilRegistersConfig.StartAddress,
+                        CoilRegistersConfig.NumberOfPoints
+                    );
+                }
+                catch (ModbusLeituraException ex)
+                {
+                    throw new TekonLeituraException(
+                        $"Não foi possível ler dados do dispositivo modelo {modelo}. Verifique a conexão e tente novamente.",
+                        ex
+                    );
+                }
             }
 
             var contexto = new DispositivoContextoLeitura
@@ -119,13 +171,23 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoLeituraAnalogica(port, index);
 
-            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
-                slaveAddress,
-                configuracao.StartAddress,
-                configuracao.NumberOfPoints
-            );
+            try
+            {
+                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                    slaveAddress,
+                    configuracao.StartAddress,
+                    configuracao.NumberOfPoints
+                );
 
-            return dispositivo.ConverterValorAnalogico(bufferHolding, configuracao);
+                return dispositivo.ConverterValorAnalogico(bufferHolding, configuracao);
+            }
+            catch (ModbusLeituraException ex)
+            {
+                throw new TekonLeituraException(
+                    $"Não foi possível ler a porta analógica {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public async Task<double> LerPortaAnalogica(string modelo, byte slaveAddress, string port)
@@ -136,13 +198,23 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoLeituraAnalogica(port);
 
-            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
-                slaveAddress,
-                configuracao.StartAddress,
-                configuracao.NumberOfPoints
-            );
+            try
+            {
+                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                    slaveAddress,
+                    configuracao.StartAddress,
+                    configuracao.NumberOfPoints
+                );
 
-            return dispositivo.ConverterValorAnalogico(bufferHolding, configuracao);
+                return dispositivo.ConverterValorAnalogico(bufferHolding, configuracao);
+            }
+            catch (ModbusLeituraException ex)
+            {
+                throw new TekonLeituraException(
+                    $"Não foi possível ler a porta analógica {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public async Task<double> LerPortaTemperatura(
@@ -158,13 +230,23 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoLeituraTemperatura(port, index);
 
-            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
-                slaveAddress,
-                configuracao.StartAddress,
-                configuracao.NumberOfPoints
-            );
+            try
+            {
+                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                    slaveAddress,
+                    configuracao.StartAddress,
+                    configuracao.NumberOfPoints
+                );
 
-            return dispositivo.ConverterValorTemperatura(bufferHolding, configuracao);
+                return dispositivo.ConverterValorTemperatura(bufferHolding, configuracao);
+            }
+            catch (ModbusLeituraException ex)
+            {
+                throw new TekonLeituraException(
+                    $"Não foi possível ler a porta de temperatura {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public async Task<double> LerPortaTemperatura(string modelo, byte slaveAddress, string port)
@@ -175,13 +257,23 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoLeituraTemperatura(port);
 
-            ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
-                slaveAddress,
-                configuracao.StartAddress,
-                configuracao.NumberOfPoints
-            );
+            try
+            {
+                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                    slaveAddress,
+                    configuracao.StartAddress,
+                    configuracao.NumberOfPoints
+                );
 
-            return dispositivo.ConverterValorTemperatura(bufferHolding, configuracao);
+                return dispositivo.ConverterValorTemperatura(bufferHolding, configuracao);
+            }
+            catch (ModbusLeituraException ex)
+            {
+                throw new TekonLeituraException(
+                    $"Não foi possível ler a porta de temperatura {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public async Task<bool> LerPortaDigital(string modelo, byte slaveAddress, string port)
@@ -192,13 +284,23 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoLeituraDigital(port);
 
-            bool[] bufferCoils = await _modbus.LerCoilsAsync(
-                slaveAddress,
-                configuracao.StartAddress,
-                configuracao.NumberOfPoints
-            );
+            try
+            {
+                bool[] bufferCoils = await _modbus.LerCoilsAsync(
+                    slaveAddress,
+                    configuracao.StartAddress,
+                    configuracao.NumberOfPoints
+                );
 
-            return bufferCoils[0];
+                return bufferCoils[0];
+            }
+            catch (ModbusLeituraException ex)
+            {
+                throw new TekonLeituraException(
+                    $"Não foi possível ler a porta digital {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public async Task<bool> LerPortaDigital(
@@ -214,30 +316,40 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoLeituraDigital(port, index);
 
-            bool[] bufferCoils = await _modbus.LerCoilsAsync(
-                slaveAddress,
-                configuracao.StartAddress,
-                configuracao.NumberOfPoints
-            );
+            try
+            {
+                bool[] bufferCoils = await _modbus.LerCoilsAsync(
+                    slaveAddress,
+                    configuracao.StartAddress,
+                    configuracao.NumberOfPoints
+                );
 
-            return bufferCoils[0];
+                return bufferCoils[0];
+            }
+            catch (ModbusLeituraException ex)
+            {
+                throw new TekonLeituraException(
+                    $"Não foi possível ler a porta digital {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
-        public Task EscreverPortaAnalogica(string modelo, byte slaveAddress, string port, int value)
-        {
-            throw new NotImplementedException();
-        }
+        //public Task EscreverPortaAnalogica(string modelo, byte slaveAddress, string port, int value)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        public Task EscreverPortaAnalogica(
-            string modelo,
-            byte slaveAddress,
-            byte index,
-            string port,
-            int value
-        )
-        {
-            throw new NotImplementedException();
-        }
+        //public Task EscreverPortaAnalogica(
+        //    string modelo,
+        //    byte slaveAddress,
+        //    byte index,
+        //    string port,
+        //    int value
+        //)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public async Task EscreverPortaDigital(
             string modelo,
@@ -252,7 +364,17 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoEscritaDigital(port);
 
-            await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+            try
+            {
+                await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+            }
+            catch (ModbusEscritaException ex)
+            {
+                throw new TekonEscritaException(
+                    $"Não foi possível escrever na porta digital {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public async Task EscreverPortaDigital(
@@ -269,7 +391,17 @@ namespace Toolbox.Modulo.Tekon
 
             var configuracao = dispositivo.ObterConfiguracaoEscritaDigital(port, index);
 
-            await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+            try
+            {
+                await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+            }
+            catch (ModbusEscritaException ex)
+            {
+                throw new TekonEscritaException(
+                    $"Não foi possível escrever na porta digital {port} do dispositivo modelo {modelo}. Verifique a conexão.",
+                    ex
+                );
+            }
         }
 
         public void Dispose()
