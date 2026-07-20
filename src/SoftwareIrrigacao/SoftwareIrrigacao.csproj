@@ -52,7 +52,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Toolbox.Automacao.Core\Toolbox.Automacao.Core.csproj" />
-    <ProjectReference Include="..\Toolbox.Automacao.Irrigacao\Toolbox.Automacao.Irrigacao.csproj" />
     <ProjectReference Include="..\Toolbox.Modulo.Tekon\Toolbox.Modulo.Tekon.csproj" />
   </ItemGroup>
 

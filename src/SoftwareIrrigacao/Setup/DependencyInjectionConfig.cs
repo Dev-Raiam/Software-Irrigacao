@@ -1,11 +1,8 @@
 using Microsoft.Extensions.Options;
 using SoftwareIrrigacao.Infrastructure.Cache;
-using System.Reflection;
 using Toolbox.Automacao.Core.Services.Modbus;
 using Toolbox.Automacao.Core.Services.Mqtt;
 using Toolbox.Automacao.Core.Setup;
-using Toolbox.Automacao.Irrigacao.Comandos.Controle;
-using Toolbox.Core.Api.Configuration;
 using Toolbox.Modulo.Tekon;
 using Toolbox.Modulo.Tekon.Interfaces;
 
@@ -67,9 +64,9 @@ public static class DependencyInjectionConfig
 
         //services.AddHostedService<WorkerTeste>();
 
-        services.AddMediator(
-            Assembly.GetExecutingAssembly(),
-            typeof(AcionarBomba).GetTypeInfo().Assembly
-        );
+        //services.AddMediator(
+        //    Assembly.GetExecutingAssembly(),
+        //    typeof(AcionarBomba).GetTypeInfo().Assembly
+        //);
     }
 }
