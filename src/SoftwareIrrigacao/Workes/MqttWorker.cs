@@ -1,10 +1,7 @@
-using System.IO.Ports;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.IO.Ports;
 using Toolbox.Automacao.Core.Services.Mqtt;
-using Toolbox.Automacao.Core.Setup;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Modulo.Tekon.Interfaces;
@@ -14,8 +11,8 @@ namespace SoftwareIrrigacao.Workes;
 
 public class MqttWorker : BackgroundService
 {
-    private readonly IMqttFacade _mqttLocal;
-    private readonly IMqttFacade _mqttRemoto;
+    private readonly IMqtt _mqttLocal;
+    private readonly IMqtt _mqttRemoto;
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITekonDriver _driver;
@@ -23,8 +20,8 @@ public class MqttWorker : BackgroundService
     private readonly JsonSerializerSettings _jsonSettingsRemoto;
 
     public MqttWorker(
-        [FromKeyedServices("local")] IMqttFacade mqttLocal,
-        [FromKeyedServices("remoto")] IMqttFacade mqttRemoto,
+        [FromKeyedServices("local")] IMqtt mqttLocal,
+        [FromKeyedServices("remoto")] IMqtt mqttRemoto,
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
         ITekonDriverFactory factory
@@ -67,14 +64,14 @@ public class MqttWorker : BackgroundService
             TypeNameHandling = TypeNameHandling.Objects,
         };
 
-        _mqttLocal.DefinirManipuladorGlobal(
+        _mqttLocal.SetGlobalHandler(
             async (topic, payload) =>
             {
                 await ProcessarMensagemLocalAsync(topic, payload);
             }
         );
 
-        _mqttRemoto.DefinirManipuladorGlobal(
+        _mqttRemoto.SetGlobalHandler(
             async (topic, payload) =>
             {
                 await ProcessarMensagemRemotoAsync(topic, payload);
@@ -99,14 +96,14 @@ public class MqttWorker : BackgroundService
 
                 if (!ConexaoLocalAtiva)
                 {
-                    await _mqttLocal.ConectarAsync();
-                    await _mqttLocal.AssinarAsync("teste/local", qos: 0);
+                    await _mqttLocal.ConnectAsync();
+                    await _mqttLocal.SubscribeAsync("teste/local", qos: 0);
                 }
 
                 if (!ConexaoRemotaAtiva)
                 {
-                    await _mqttRemoto.ConectarAsync();
-                    await _mqttRemoto.AssinarAsync("teste/remoto", qos: 0);
+                    await _mqttRemoto.ConnectAsync();
+                    await _mqttRemoto.SubscribeAsync("teste/remoto", qos: 0);
                 }
 
                 if (_mqttRemoto.IsConnected && !ConexaoRemotaAtiva)
@@ -216,10 +213,10 @@ public class MqttWorker : BackgroundService
     {
         _logger.LogInformation("Encerrando Serviço MQTT...");
 
-        await _mqttLocal.DesconectarAsync();
+        await _mqttLocal.DisconnectAsync();
         _mqttLocal.Dispose();
 
-        await _mqttRemoto.DesconectarAsync();
+        await _mqttRemoto.DisconnectAsync();
         _mqttRemoto.Dispose();
 
         await base.StopAsync(cancellationToken);

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
+using SoftwareIrrigacao.Edpoints;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
-using SoftwareIrrigacao.Presentation.Edpoints;
 using SoftwareIrrigacao.Workes;
 using System.Threading.RateLimiting;
 using Toolbox.Automacao.Core.Setup;

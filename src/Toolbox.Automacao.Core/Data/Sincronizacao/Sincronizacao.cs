@@ -1,27 +1,27 @@
 using LiteDB;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Models;
+using Toolbox.Automacao.Core.Services;
 
-namespace Toolbox.Automacao.Core.Services;
+namespace Toolbox.Automacao.Core.Data;
 
-public interface ISincronizarControladores
+public interface ISincronizacao
 {
-    Task ExecutarAsync(Guid PainelId, CancellationToken cancellationToken);
+    Task SincronizarAutomacao(Guid PainelId, CancellationToken cancellationToken);
 }
 
-internal sealed class SincronizarControladores : ISincronizarControladores
+internal sealed class Sincronizacao : ISincronizacao
 {
     private readonly IServicoAutomacao _servicoAutomacao;
     private readonly ILiteDatabase _database;
-    private readonly ILogger<SincronizarControladores> _logger;
+    private readonly ILogger<Sincronizacao> _logger;
     private readonly IGerenciadorConfiguracao _gerenciadorConfiguracao;
 
-    public SincronizarControladores(
+    public Sincronizacao(
         IServicoAutomacao servicoAutomacao,
         ILiteDatabase database,
-        ILogger<SincronizarControladores> logger,
+        ILogger<Sincronizacao> logger,
         IGerenciadorConfiguracao gerenciadorConfiguracao
     )
     {
@@ -31,7 +31,7 @@ internal sealed class SincronizarControladores : ISincronizarControladores
         _gerenciadorConfiguracao = gerenciadorConfiguracao;
     }
 
-    public async Task ExecutarAsync(Guid painelId, CancellationToken cancellationToken)
+    public async Task SincronizarAutomacao(Guid painelId, CancellationToken cancellationToken)
     {
         using (LogContext.PushProperty("PainelId", painelId))
         {

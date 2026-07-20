@@ -1,14 +1,15 @@
-using System.ComponentModel.DataAnnotations;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using System.ComponentModel.DataAnnotations;
+using System.Net;
+using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Services;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
-namespace SoftwareIrrigacao.Presentation.Edpoints;
+namespace SoftwareIrrigacao.Edpoints;
 
 public static class Credenciais
 {
@@ -30,18 +31,18 @@ public static class Credenciais
     public class Handler : ICommandHandler<Credencial>
     {
         private readonly IMediator _mediator;
-        private readonly ISincronizarControladores _sincronizar;
+        private readonly ISincronizacao _sincronizacao;
         private readonly IGerenciadorConfiguracao _gerenciadorConfiguracao;
 
         public Handler(
             IMediator mediator,
             IGerenciadorConfiguracao gerenciadorConfiguracao,
-            ISincronizarControladores sincronizar
+            ISincronizacao sincronizacao
         )
         {
             _mediator = mediator;
             _gerenciadorConfiguracao = gerenciadorConfiguracao;
-            _sincronizar = sincronizar;
+            _sincronizacao = sincronizacao;
         }
 
         public async Task<ResponseResult> Handle(
@@ -58,7 +59,7 @@ public static class Credenciais
                 )
             );
 
-            await _sincronizar.ExecutarAsync(request.PainelId, cancellationToken);
+            await _sincronizacao.SincronizarAutomacao(request.PainelId, cancellationToken);
 
             return ResponseResult.Result(HttpStatusCode.OK);
         }

@@ -58,6 +58,5 @@
 
   <ItemGroup>
     <Folder Include="Domain\Entity\" />
-    <Folder Include="Infrastructure\Data\" />
   </ItemGroup>
 </Project>

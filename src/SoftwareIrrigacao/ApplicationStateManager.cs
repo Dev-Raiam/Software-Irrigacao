@@ -1,4 +1,4 @@
-namespace SoftwareIrrigacao.Shared.State;
+namespace SoftwareIrrigacao;
 
 public class ApplicationStateManager
 {

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using SoftwareIrrigacao.Infrastructure.Cache;
-using SoftwareIrrigacao.Shared.State;
 using System.Reflection;
 using Toolbox.Automacao.Core.Services.Modbus;
 using Toolbox.Automacao.Core.Services.Mqtt;
@@ -23,15 +22,15 @@ public static class DependencyInjectionConfig
         services.AddSingleton<ApplicationStateManager>();
 
         services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
-        services.AddSingleton<IModbusFacadeFactory, ModbusFacadeFactory>();
+        services.AddSingleton<IModbusFactory, ModbusFactory>();
         services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
-        services.AddSingleton<IMqttFacadeFactory, MqttFacadeFactory>();
+        services.AddSingleton<IMqttFactory, MqttFactory>();
         
-        services.AddKeyedSingleton<IMqttFacade>(
+        services.AddKeyedSingleton<IMqtt>(
             "local",
             (provider, key) =>
             {
-                var factory = provider.GetRequiredService<IMqttFacadeFactory>();
+                var factory = provider.GetRequiredService<IMqttFactory>();
                 var config = provider.GetRequiredService<IOptions<MqttConfiguracao>>().Value;
 
                 var mqttConfig = new MqttConfig
@@ -47,11 +46,11 @@ public static class DependencyInjectionConfig
             }
         );
 
-        services.AddKeyedSingleton<IMqttFacade>(
+        services.AddKeyedSingleton<IMqtt>(
             "remoto",
             (provider, key) =>
             {
-                var factory = provider.GetRequiredService<IMqttFacadeFactory>();
+                var factory = provider.GetRequiredService<IMqttFactory>();
 
                 var mqttConfig = new MqttConfig
                 {

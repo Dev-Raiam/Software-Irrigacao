@@ -1,8 +1,7 @@
-﻿using LiteDB;
-using Toolbox.Automacao.Core.Data;
+using LiteDB;
 using Toolbox.Automacao.Core.Models;
 
-namespace Toolbox.Automacao.Core.Services;
+namespace Toolbox.Automacao.Core.Data;
 
 public interface IProvedorDataSincronizacao
 {

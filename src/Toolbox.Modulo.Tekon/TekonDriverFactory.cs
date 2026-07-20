@@ -7,11 +7,11 @@ namespace Toolbox.Modulo.Tekon
     public class TekonDriverFactory : ITekonDriverFactory
     {
         private readonly ITekonDispositivoFactory _dispositivoFactory;
-        private readonly IModbusFacadeFactory _modbusFactory;
+        private readonly IModbusFactory _modbusFactory;
 
         public TekonDriverFactory(
             ITekonDispositivoFactory dispositivoFactory,
-            IModbusFacadeFactory modbusFactory)
+            IModbusFactory modbusFactory)
         {
             _dispositivoFactory = dispositivoFactory;
             _modbusFactory = modbusFactory;

@@ -3,21 +3,21 @@ namespace Toolbox.Automacao.Core.Services.Mqtt;
 /// <summary>
 /// Factory para criar instâncias do MqttFacade
 /// </summary>
-public interface IMqttFacadeFactory
+public interface IMqttFactory
 {
     /// <summary>
     /// Cria uma nova instância do MqttFacade com a configuração fornecida
     /// </summary>
-    IMqttFacade Criar(MqttConfig config);
+    IMqtt Criar(MqttConfig config);
 }
 
 /// <summary>
 /// Implementação da factory para criar instâncias do MqttFacade
 /// </summary>
-public class MqttFacadeFactory : IMqttFacadeFactory
+public class MqttFactory : IMqttFactory
 {
-    public IMqttFacade Criar(MqttConfig config)
+    public IMqtt Criar(MqttConfig config)
     {
-        return new MqttFacade(config);
+        return new Mqtt(config);
     }
 }

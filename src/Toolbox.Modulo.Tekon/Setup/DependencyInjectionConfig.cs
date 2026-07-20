@@ -9,7 +9,7 @@ namespace Toolbox.Modulo.Tekon.Setup
         public static void RegisterServices(this IServiceCollection services)
         {
             services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
-            services.AddSingleton<IModbusFacadeFactory, ModbusFacadeFactory>();
+            services.AddSingleton<IModbusFactory, ModbusFactory>();
             services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
 
         }

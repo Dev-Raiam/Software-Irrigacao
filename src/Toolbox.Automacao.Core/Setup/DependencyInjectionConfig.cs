@@ -1,10 +1,8 @@
 ﻿using LiteDB;
 using Microsoft.Extensions.DependencyInjection;
-using NModbus;
-using NModbus.Device;
+using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Models;
 using Toolbox.Automacao.Core.Services;
-using Toolbox.Automacao.Core.Services.Modbus;
 
 namespace Toolbox.Automacao.Core.Setup
 {
@@ -18,7 +16,7 @@ namespace Toolbox.Automacao.Core.Setup
 
             services.AddTransient<IServicoAutomacao, ServicoAutomacao>();
 
-            services.AddTransient<ISincronizarControladores, SincronizarControladores>();
+            services.AddTransient<ISincronizacao, Sincronizacao>();
 
             services.AddTransient<IProvedorDataSincronizacao, ProvedorDataSincronizacao>();
 

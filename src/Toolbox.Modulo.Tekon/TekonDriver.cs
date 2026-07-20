@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Toolbox.Automacao.Core.Services.Modbus;
+﻿using Toolbox.Automacao.Core.Services.Modbus;
 using Toolbox.Automacao.Core.Services.Modbus.Exceptions;
 using Toolbox.Modulo.Tekon.Exceptions;
 using Toolbox.Modulo.Tekon.Interfaces;
@@ -9,11 +8,11 @@ namespace Toolbox.Modulo.Tekon
 {
     internal class TekonDriver : ITekonDriver, IDisposable
     {
-        private readonly IModbusFacade _modbus;
+        private readonly IModbus _modbus;
         private readonly ITekonDispositivoFactory _factory;
         private bool _disposed;
 
-        public TekonDriver(IModbusFacade modbus, ITekonDispositivoFactory factory)
+        public TekonDriver(IModbus modbus, ITekonDispositivoFactory factory)
         {
             _modbus = modbus;
             _factory = factory;
@@ -23,7 +22,7 @@ namespace Toolbox.Modulo.Tekon
         {
             try
             {
-                _modbus.Conectar();
+                _modbus.Connect();
             }
             catch (ModbusConexaoException ex)
             {
@@ -51,7 +50,7 @@ namespace Toolbox.Modulo.Tekon
             {
                 try
                 {
-                    bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                    bufferHolding = await _modbus.ReadHoldingRegistersAsync(
                         slaveAddress,
                         HoldingRegistersConfig.StartAddress,
                         HoldingRegistersConfig.NumberOfPoints
@@ -70,7 +69,7 @@ namespace Toolbox.Modulo.Tekon
             {
                 try
                 {
-                    bufferCoils = await _modbus.LerCoilsAsync(
+                    bufferCoils = await _modbus.ReadCoilsAsync(
                         slaveAddress,
                         CoilRegistersConfig.StartAddress,
                         CoilRegistersConfig.NumberOfPoints
@@ -115,7 +114,7 @@ namespace Toolbox.Modulo.Tekon
             {
                 try
                 {
-                    bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                    bufferHolding = await _modbus.ReadHoldingRegistersAsync(
                         slaveAddress,
                         HoldingRegistersConfig.StartAddress,
                         HoldingRegistersConfig.NumberOfPoints
@@ -134,7 +133,7 @@ namespace Toolbox.Modulo.Tekon
             {
                 try
                 {
-                    bufferCoils = await _modbus.LerCoilsAsync(
+                    bufferCoils = await _modbus.ReadCoilsAsync(
                         slaveAddress,
                         CoilRegistersConfig.StartAddress,
                         CoilRegistersConfig.NumberOfPoints
@@ -173,7 +172,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                ushort[] bufferHolding = await _modbus.ReadHoldingRegistersAsync(
                     slaveAddress,
                     configuracao.StartAddress,
                     configuracao.NumberOfPoints
@@ -200,7 +199,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                ushort[] bufferHolding = await _modbus.ReadHoldingRegistersAsync(
                     slaveAddress,
                     configuracao.StartAddress,
                     configuracao.NumberOfPoints
@@ -232,7 +231,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                ushort[] bufferHolding = await _modbus.ReadHoldingRegistersAsync(
                     slaveAddress,
                     configuracao.StartAddress,
                     configuracao.NumberOfPoints
@@ -259,7 +258,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                ushort[] bufferHolding = await _modbus.LerHoldingRegistersAsync(
+                ushort[] bufferHolding = await _modbus.ReadHoldingRegistersAsync(
                     slaveAddress,
                     configuracao.StartAddress,
                     configuracao.NumberOfPoints
@@ -286,7 +285,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                bool[] bufferCoils = await _modbus.LerCoilsAsync(
+                bool[] bufferCoils = await _modbus.ReadCoilsAsync(
                     slaveAddress,
                     configuracao.StartAddress,
                     configuracao.NumberOfPoints
@@ -318,7 +317,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                bool[] bufferCoils = await _modbus.LerCoilsAsync(
+                bool[] bufferCoils = await _modbus.ReadCoilsAsync(
                     slaveAddress,
                     configuracao.StartAddress,
                     configuracao.NumberOfPoints
@@ -366,7 +365,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+                await _modbus.WriteCoilAsync(slaveAddress, configuracao.CoilAddress, value);
             }
             catch (ModbusEscritaException ex)
             {
@@ -393,7 +392,7 @@ namespace Toolbox.Modulo.Tekon
 
             try
             {
-                await _modbus.EscreverCoilAsync(slaveAddress, configuracao.CoilAddress, value);
+                await _modbus.WriteCoilAsync(slaveAddress, configuracao.CoilAddress, value);
             }
             catch (ModbusEscritaException ex)
             {
@@ -409,7 +408,7 @@ namespace Toolbox.Modulo.Tekon
             if (_disposed)
                 return;
 
-            _modbus.Desconectar();
+            _modbus.Disconnect();
 
             _disposed = true;
             GC.SuppressFinalize(this);

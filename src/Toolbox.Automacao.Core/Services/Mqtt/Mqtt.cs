@@ -9,7 +9,7 @@ namespace Toolbox.Automacao.Core.Services.Mqtt;
 /// Facade para operações MQTT usando MQTTnet
 /// Simplifica a interação com brokers MQTT
 /// </summary>
-internal sealed class MqttFacade : IMqttFacade
+internal sealed class Mqtt : IMqtt
 {
     private readonly MqttConfig _config;
     private readonly IMqttClient _mqttClient;
@@ -19,7 +19,7 @@ internal sealed class MqttFacade : IMqttFacade
 
     public bool IsConnected => _mqttClient.IsConnected;
 
-    public MqttFacade(MqttConfig config)
+    public Mqtt(MqttConfig config)
     {
         _config = config;
         _mqttClient = new MqttClientFactory().CreateMqttClient();
@@ -44,9 +44,9 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Conecta ao broker MQTT
+    /// Connects to the MQTT broker
     /// </summary>
-    public async Task ConectarAsync()
+    public async Task ConnectAsync()
     {
         if (_mqttClient.IsConnected)
             return;
@@ -87,9 +87,9 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Desconecta do broker MQTT
+    /// Disconnects from the MQTT broker
     /// </summary>
-    public async Task DesconectarAsync()
+    public async Task DisconnectAsync()
     {
         if (!_mqttClient.IsConnected)
             return;
@@ -105,13 +105,13 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Publica uma mensagem em um tópico MQTT
+    /// Publishes a message to an MQTT topic
     /// </summary>
-    public async Task PublicarAsync(string topic, string payload, bool retain = false, int qos = 0)
+    public async Task PublishAsync(string topic, string payload, bool retain = false, int qos = 0)
     {
         if (!_mqttClient.IsConnected)
             throw new MqttConexaoException(
-                "Cliente MQTT não está conectado. Chame ConectarAsync() primeiro."
+                "MQTT client is not connected. Call ConnectAsync() first."
             );
 
         try
@@ -139,13 +139,13 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Publica uma mensagem em um tópico MQTT
+    /// Publishes a message to an MQTT topic
     /// </summary>
-    public async Task PublicarAsync(string topic, byte[] payload, bool retain = false, int qos = 0)
+    public async Task PublishAsync(string topic, byte[] payload, bool retain = false, int qos = 0)
     {
         if (!_mqttClient.IsConnected)
             throw new MqttConexaoException(
-                "Cliente MQTT não está conectado. Chame ConectarAsync() primeiro."
+                "MQTT client is not connected. Call ConnectAsync() first."
             );
 
         try
@@ -173,9 +173,9 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Assina um tópico MQTT para receber mensagens
+    /// Subscribes to an MQTT topic to receive messages
     /// </summary>
-    public async Task AssinarAsync(
+    public async Task SubscribeAsync(
         string topic,
         int qos = 0,
         Action<string, string>? messageHandler = null
@@ -183,7 +183,7 @@ internal sealed class MqttFacade : IMqttFacade
     {
         if (!_mqttClient.IsConnected)
             throw new MqttConexaoException(
-                "Cliente MQTT não está conectado. Chame ConectarAsync() primeiro."
+                "MQTT client is not connected. Call ConnectAsync() first."
             );
 
         try
@@ -211,13 +211,13 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Cancela assinatura de um tópico MQTT
+    /// Unsubscribes from an MQTT topic
     /// </summary>
-    public async Task DesassinarAsync(string topic)
+    public async Task UnsubscribeAsync(string topic)
     {
         if (!_mqttClient.IsConnected)
             throw new MqttConexaoException(
-                "Cliente MQTT não está conectado. Chame ConectarAsync() primeiro."
+                "MQTT client is not connected. Call ConnectAsync() first."
             );
 
         try
@@ -243,9 +243,9 @@ internal sealed class MqttFacade : IMqttFacade
     }
 
     /// <summary>
-    /// Define um handler global que será chamado para todas as mensagens recebidas
+    /// Sets a global handler that will be called for all received messages
     /// </summary>
-    public void DefinirManipuladorGlobal(Action<string, string>? handler)
+    public void SetGlobalHandler(Action<string, string>? handler)
     {
         _globalHandler = handler;
     }

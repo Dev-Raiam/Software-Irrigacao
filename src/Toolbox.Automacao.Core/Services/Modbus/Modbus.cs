@@ -9,7 +9,7 @@ namespace Toolbox.Automacao.Core.Services.Modbus;
 /// Facade para operações Modbus usando NModbus
 /// Simplifica a interação com dispositivos Modbus RTU via porta serial
 /// </summary>
-internal sealed class ModbusFacade : IModbusFacade, IDisposable
+internal sealed class Modbus : IModbus, IDisposable
 {
     private readonly string _port;
     private readonly int _baudRate;
@@ -23,7 +23,7 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     private IModbusMaster? _master;
     private bool _disposed;
 
-    public ModbusFacade(ModbusConfig config)
+    public Modbus(ModbusConfig config)
     {
         _port = config.Porta;
         _baudRate = config.BaudRate;
@@ -35,9 +35,9 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     }
 
     /// <summary>
-    /// Abre a conexão Modbus RTU
+    /// Opens the Modbus RTU connection
     /// </summary>
-    public void Conectar()
+    public void Connect()
     {
         if (_serialPort != null && _serialPort.IsOpen)
             return;
@@ -59,7 +59,7 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
 
             _serialPort.Open();
             var adapter = new SerialPortAdapter(_serialPort);
-            _master = new ModbusFactory().CreateRtuMaster(adapter);
+            _master = new NModbus.ModbusFactory().CreateRtuMaster(adapter);
         }
         catch (Exception ex)
         {
@@ -71,9 +71,9 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     }
 
     /// <summary>
-    /// Lê registros holding do dispositivo Modbus
+    /// Reads holding registers from the Modbus device
     /// </summary>
-    public async Task<ushort[]> LerHoldingRegistersAsync(
+    public async Task<ushort[]> ReadHoldingRegistersAsync(
         byte slaveAddress,
         ushort startAddress,
         ushort numberOfPoints
@@ -81,7 +81,7 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     {
         if (_master == null)
             throw new ModbusConexaoException(
-                "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
+                "Modbus connection not established. Call Connect() first."
             );
 
         try
@@ -102,9 +102,9 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     }
 
     /// <summary>
-    /// Lê coils do dispositivo Modbus
+    /// Reads coils from the Modbus device
     /// </summary>
-    public async Task<bool[]> LerCoilsAsync(
+    public async Task<bool[]> ReadCoilsAsync(
         byte slaveAddress,
         ushort startAddress,
         ushort numberOfPoints
@@ -112,7 +112,7 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     {
         if (_master == null)
             throw new ModbusConexaoException(
-                "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
+                "Modbus connection not established. Call Connect() first."
             );
 
         try
@@ -129,13 +129,13 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     }
 
     /// <summary>
-    /// Escreve um único coil no dispositivo Modbus
+    /// Writes a single coil to the Modbus device
     /// </summary>
-    public async Task EscreverCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
+    public async Task WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
     {
         if (_master == null)
             throw new ModbusConexaoException(
-                "Conexão Modbus não estabelecida. Chame Conectar() primeiro."
+                "Modbus connection not established. Call Connect() first."
             );
 
         try
@@ -152,9 +152,9 @@ internal sealed class ModbusFacade : IModbusFacade, IDisposable
     }
 
     /// <summary>
-    /// Fecha a conexão Modbus e libera recursos
+    /// Closes the Modbus connection and releases resources
     /// </summary>
-    public void Desconectar()
+    public void Disconnect()
     {
         Dispose();
     }
