@@ -1,4 +1,7 @@
-﻿namespace Toolbox.Automacao.Core.Application.Comandos.Controle
+﻿namespace Toolbox.Automacao.Core.Application.Comandos
 {
-    public class DesligarSolenoide : CommandBase { }
+    public class DesligarSolenoide : CommandBase
+    {
+        public Guid SolenoideId { get; init; }
+    }
 }

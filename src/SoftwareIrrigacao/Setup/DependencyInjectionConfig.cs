@@ -1,8 +1,10 @@
+using System.Reflection;
 using Microsoft.Extensions.Options;
-using SoftwareIrrigacao.Infrastructure.Cache;
+using Toolbox.Automacao.Core.Application.Comandos;
 using Toolbox.Automacao.Core.Services.Modbus;
 using Toolbox.Automacao.Core.Services.Mqtt;
 using Toolbox.Automacao.Core.Setup;
+using Toolbox.Core.Api.Configuration;
 using Toolbox.Modulo.Tekon;
 using Toolbox.Modulo.Tekon.Interfaces;
 
@@ -14,22 +16,18 @@ public static class DependencyInjectionConfig
     {
         services.AddHttpContextAccessor();
 
-        services.AddSingleton<CredenciaisAplicacao>();
-        services.AddSingleton<ArmazenamentoAutomacao>();
-        services.AddSingleton<ApplicationStateManager>();
-
         services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
         services.AddSingleton<IModbusFactory, ModbusFactory>();
         services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
         services.AddSingleton<IMqttFactory, MqttFactory>();
-        
+
         services.AddKeyedSingleton<IMqtt>(
             "local",
             (provider, key) =>
             {
                 var factory = provider.GetRequiredService<IMqttFactory>();
                 var config = provider.GetRequiredService<IOptions<MqttConfiguracao>>().Value;
-                //Dados Contante 
+                //Dados Contante
                 var mqttConfig = new MqttConfig
                 {
                     Host = config.Servidor,
@@ -65,9 +63,11 @@ public static class DependencyInjectionConfig
 
         //services.AddHostedService<WorkerTeste>();
 
-        //services.AddMediator(
-        //    Assembly.GetExecutingAssembly(),
-        //    typeof(AcionarBomba).GetTypeInfo().Assembly
-        //);
+        services.AddMediator(
+            Assembly.GetExecutingAssembly(),
+            typeof(SincronizarAutomacao).GetTypeInfo().Assembly
+        );
+
+        services.AddScoped<CommandDispatcher>();
     }
 }

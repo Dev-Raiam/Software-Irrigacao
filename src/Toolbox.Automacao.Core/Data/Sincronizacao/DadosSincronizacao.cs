@@ -3,28 +3,28 @@ using Toolbox.Automacao.Core.Models;
 
 namespace Toolbox.Automacao.Core.Data;
 
-public interface IProvedorDataSincronizacao
+public interface IDadosSincronizacao
 {
-    Controlador? ObterControlador(CancellationToken cancellationToken);
-    List<Modulo> ObterModulos(CancellationToken cancellationToken);
+    Controlador? ObterControlador(CancellationToken cancellationToken = default);
+    List<Modulo> ObterModulos(CancellationToken cancellationToken= default);
 }
 
-internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
+internal sealed class DadosSincronizacao : IDadosSincronizacao
 {
     private readonly ILiteDatabase _database;
 
-    public ProvedorDataSincronizacao(ILiteDatabase database)
+    public DadosSincronizacao(ILiteDatabase database)
     {
         _database = database;
     }
 
-    public Controlador? ObterControlador(CancellationToken cancellationToken)
+    public Controlador? ObterControlador(CancellationToken cancellationToken = default)
     {
         var controlador = ObterControladorMaster(cancellationToken);
         return controlador;
     }
 
-    public List<Dispositivo> ObterDispositivos(CancellationToken cancellationToken)
+    public List<Dispositivo> ObterDispositivos(CancellationToken cancellationToken = default)
     {
         var controlador = ObterControladorMaster(cancellationToken);
 
@@ -41,7 +41,7 @@ internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
         return dispositivos;
     }
 
-    public List<Modulo> ObterModulos(CancellationToken cancellationToken)
+    public List<Modulo> ObterModulos(CancellationToken cancellationToken = default)
     {
         var controlador = ObterControladorMaster(cancellationToken);
 
@@ -58,7 +58,7 @@ internal sealed class ProvedorDataSincronizacao : IProvedorDataSincronizacao
         return modulos;
     }
 
-    private Controlador? ObterControladorMaster(CancellationToken cancellationToken)
+    private Controlador? ObterControladorMaster(CancellationToken cancellationToken = default)
     {
         var colecao = _database.GetCollection<ControladorConfiguracao>(Tabela.Controladores);
 

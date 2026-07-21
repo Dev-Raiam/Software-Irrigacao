@@ -1,4 +1,7 @@
-﻿namespace Toolbox.Automacao.Core.Application.Comandos.Controle
+﻿namespace Toolbox.Automacao.Core.Application.Comandos
 {
-    public class DesligarBomba : CommandBase { }
+    public class DesligarBomba : CommandBase
+    {
+        public Guid BombaId { get; init; }
+    }
 }

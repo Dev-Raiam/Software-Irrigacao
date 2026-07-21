@@ -1,58 +1,36 @@
-// using SoftwareIrrigacao.Domain.Entities.Hardware;
-// using SoftwareIrrigacao.Infrastructure.Data;
-// using SoftwareIrrigacao.Infrastructure.Mqtt;
-// using SoftwareIrrigacao.State;
-// using Microsoft.Extensions.Options;
-// using Toolbox.Automacao.Irrigacao.Comandos.Sensores;
-// using Toolbox.Core.Api.Data;
-// using Toolbox.Core.Data;
-// using Toolbox.Core.Mediator;
-// using Toolbox.Core.Messages;
+using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Toolbox.Automacao.Core.Application.Comandos;
+using Toolbox.Automacao.Core.Models.Comandos;
+using Toolbox.Automacao.Core.Services.Mqtt;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 
-// namespace SoftwareIrrigacao.Features.Hardware.Sensores;
+namespace SoftwareIrrigacao.Features.Hardware.Leitura;
 
-// public class LerSensorUmidadeHandler : CommandHandler, ICommandHandler<LerSensorUmidade>
-// {
-//     private readonly ArmazenamentoAutomacao _armazenamento;
-//     private readonly MqttClienteLocal _mqttClient;
-//     private readonly MqttConfiguracao _mqttConfiguracao;
+public class LerSensorUmidadeHandler : ICommandHandler<LerSensorUmidade>
+{
+    private readonly IMqtt _mqtt;
 
-//     public LerSensorUmidadeHandler(
-//         ArmazenamentoAutomacao armazenamento,
-//         MqttClienteLocal mqttClient,
-//         IOptions<MqttConfiguracao> mqttConfiguracao,
-//         IUnitOfWork<SoftwareIrrigacaoContext> uow
-//     )
-//         : base(uow)
-//     {
-//         _armazenamento = armazenamento;
-//         _mqttClient = mqttClient;
-//         _mqttConfiguracao = mqttConfiguracao.Value;
-//     }
+    public LerSensorUmidadeHandler([FromKeyedServices("local")] IMqtt mqtt)
+    {
+        _mqtt = mqtt;
+    }
 
-//     public async Task<ResponseResult> Handle(
-//         LerSensorUmidade request,
-//         CancellationToken cancellationToken = default
-//     )
-//     {
-//         var dispositivo = _armazenamento.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
+    public async Task<ResponseResult> Handle(
+        LerSensorUmidade request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Pegar a porta da interface de dados
+        // de sincronizacao ou seja o meu handler ja deverar ter feito
+        // a requisicao para buscar as infromacoes de qual é o dispositivo com id que vem no request
+        var comando = new ComandoLeitura { Porta = "Q1" };
+        var payload = JsonSerializer.Serialize(comando);
 
-//         if (dispositivo is null)
-//             return NotFound();
+        // TODO: Implementar lógica de publicação no MQTT
+        await _mqtt.PublishAsync("topic", payload);
 
-//         var porta = _armazenamento
-//             .Portas.Where(p => p.DispositivoConectadoId == dispositivo.Id)
-//             .FirstOrDefault();
-
-//         if (porta is null)
-//             return NotFound();
-
-//         await _mqttClient.PublicarAsync(
-//             _mqttConfiguracao.TopicoCmdLocal,
-//             ComandoAnalogico.Ler(porta.EnderecoLogico!),
-//             cancellationToken
-//         );
-
-//         return Ok<ResponseResult>();
-//     }
-// }
+        return ResponseResult.Result(System.Net.HttpStatusCode.OK);
+    }
+}

@@ -18,7 +18,7 @@ namespace Toolbox.Automacao.Core.Setup
 
             services.AddTransient<ISincronizacao, Sincronizacao>();
 
-            services.AddTransient<IProvedorDataSincronizacao, ProvedorDataSincronizacao>();
+            services.AddTransient<IDadosSincronizacao, DadosSincronizacao>();
 
             services.AddTransient<ICriptografia, Criptografia>();
 

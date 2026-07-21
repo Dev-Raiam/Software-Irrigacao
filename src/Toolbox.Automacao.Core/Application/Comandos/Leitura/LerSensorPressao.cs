@@ -1,4 +1,7 @@
-﻿namespace Toolbox.Automacao.Core.Application.Comandos.Leitura
+﻿namespace Toolbox.Automacao.Core.Application.Comandos
 {
-    public class LerSensorPressao : CommandBase { }
+    public class LerSensorPressao : CommandBase
+    {
+        public Guid SensorId { get; init; }
+    }
 }

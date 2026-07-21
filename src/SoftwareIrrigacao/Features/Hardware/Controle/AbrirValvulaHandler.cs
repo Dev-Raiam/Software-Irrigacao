@@ -1,59 +1,37 @@
-//using SoftwareIrrigacao.Infrastructure.Data;
-//using SoftwareIrrigacao.Infrastructure.Mqtt;
-//using SoftwareIrrigacao.State;
-//using Microsoft.Extensions.Options;
-//using Org.BouncyCastle.Asn1;
-//using Toolbox.Automacao.Irrigacao.Comandos.Controle;
-//using Toolbox.Core.Api.Data;
-//using Toolbox.Core.Data;
-//using Toolbox.Core.Mediator;
-//using Toolbox.Core.Messages;
+using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
+using Toolbox.Automacao.Core.Application.Comandos;
+using Toolbox.Automacao.Core.Models.Comandos;
+using Toolbox.Automacao.Core.Services.Mqtt;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 
-//namespace SoftwareIrrigacao.Features.Hardware.Controle;
+namespace SoftwareIrrigacao.Features.Hardware.Controle;
 
-//public class AbrirValvulaHandler : CommandHandler, ICommandHandler<AbrirValvula>
-//{
-//    private readonly ArmazenamentoAutomacao _armazenamento;
-//    private readonly MqttClienteLocal _mqttClient;
-//    private readonly MqttConfiguracao _mqttConfiguracao;
-//    private readonly SoftwareIrrigacaoContext _context;
+public class AbrirValvulaHandler : ICommandHandler<AbrirValvula>
+{
+    private readonly IMqtt _mqtt;
 
-//    public AbrirValvulaHandler(
-//        ArmazenamentoAutomacao armazenamento,
-//        MqttClienteLocal mqttClient,
-//        IOptions<MqttConfiguracao> mqttConfiguracao,
-//        SoftwareIrrigacaoContext context
-//    )
-//    {
-//        _armazenamento = armazenamento;
-//        _mqttClient = mqttClient;
-//        _mqttConfiguracao = mqttConfiguracao.Value;
-//        _context = context;
-//    }
+    public AbrirValvulaHandler([FromKeyedServices("local")] IMqtt mqtt)
+    {
+        _mqtt = mqtt;
+    }
 
-//    public async Task<ResponseResult> Handle(
-//        AbrirValvula request,
-//        CancellationToken cancellationToken
-//    )
-//    {
-//        // var dispositivo = _armazenamento.Dispositivos.FirstOrDefault(d => d.Id == request.Id);
+    public async Task<ResponseResult> Handle(
+        AbrirValvula request,
+        CancellationToken cancellationToken
+    )
+    {
+        // Pegar a porta da interface de dados
+        // de sincronizacao ou seja o meu handler ja deverar ter feito
+        // a requisicao para buscar as infromacoes de qual é o dispositivo com id que vem no request
+        var comando = new ComandoControleDigital { Porta = "Q1", Valor = true};
+        var payload = JsonSerializer.Serialize(comando);
+        
+        // TODO: Implementar lógica de publicação no MQTT
 
-//        // if (dispositivo is null)
-//        //     return NotFound();
+        await _mqtt.PublishAsync("topic", payload);
 
-//        // var porta = _armazenamento
-//        //     .Portas.Where(p => p.DispositivoConectadoId == dispositivo.Id)
-//        //     .FirstOrDefault();
-
-//        // if (porta is null)
-//        //     return NotFound();
-
-//        // await _mqttClient.PublicarAsync(
-//        //     _mqttConfiguracao.TopicoCmdLocal,
-//        //     ComandoDigital.Acionar(porta.EnderecoLogico!),
-//        //     cancellationToken
-//        // );
-
-//        return Ok<ResponseResult>();
-//    }
-//}
+        return ResponseResult.Result(System.Net.HttpStatusCode.OK);
+    }
+}

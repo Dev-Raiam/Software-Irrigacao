@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.IO.Ports;
+using Toolbox.Automacao.Core.Application.Comandos;
+using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
@@ -16,6 +18,7 @@ public class MqttWorker : BackgroundService
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITekonDriver _driver;
+    private readonly IDadosSincronizacao _dadosSincronizacao;
     private readonly JsonSerializerSettings _jsonSettingsLocal;
     private readonly JsonSerializerSettings _jsonSettingsRemoto;
 
@@ -24,13 +27,15 @@ public class MqttWorker : BackgroundService
         [FromKeyedServices("remoto")] IMqtt mqttRemoto,
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
-        ITekonDriverFactory factory
+        ITekonDriverFactory factory,
+        IDadosSincronizacao dadosSincronizacao
     )
     {
         _mqttLocal = mqttLocal;
         _mqttRemoto = mqttRemoto;
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _dadosSincronizacao = dadosSincronizacao;
 
         var config = new TekonDriverConfig
         {
@@ -97,13 +102,21 @@ public class MqttWorker : BackgroundService
                 if (!ConexaoLocalAtiva)
                 {
                     await _mqttLocal.ConnectAsync();
-                    await _mqttLocal.SubscribeAsync("teste/local", qos: 0);
+                    await _mqttLocal.SubscribeAsync("topic", qos: 0);
                 }
 
                 if (!ConexaoRemotaAtiva)
                 {
                     await _mqttRemoto.ConnectAsync();
-                    await _mqttRemoto.SubscribeAsync("teste/remoto", qos: 0);
+                    
+                    var controlador = _dadosSincronizacao.ObterControlador();
+                    
+                    if(controlador != null) 
+                    {
+                        await _mqttRemoto.SubscribeAsync($"comando/{controlador.Id}", qos: 0);
+                    }
+
+                    await _mqttRemoto.SubscribeAsync($"comando/4fcb13a6-7e9d-4dd1-ab6f-2a87c9f36b76", qos: 0);
                 }
 
                 if (_mqttRemoto.IsConnected && !ConexaoRemotaAtiva)
@@ -142,7 +155,7 @@ public class MqttWorker : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            if (topic == "telemetria/resposta")
+            if (topic == "topic")
             {
                 //var command = new SalvarTelemetria { Dados = payload };
                 //await mediator.Execute(command, cancellationToken: default);
@@ -175,33 +188,9 @@ public class MqttWorker : BackgroundService
     {
         try
         {
-            if (topic == "teste/remoto")
-            {
-                var body = System.Text.Json.JsonSerializer.Deserialize<Body>(payload);
-                if (body == null)
-                    return;
-                await _driver.EscreverPortaDigital(
-                    body.modelo,
-                    body.slaveAddress,
-                    body.index,
-                    body.porta,
-                    body.valor
-                );
-            }
-            //using var scope = _serviceProvider.CreateScope();
-            //var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-            //var mensagem = JsonConvert.DeserializeObject(payload, _jsonSettingsRemoto)!;
-
-            //if (mensagem is Command command)
-            //{
-            //    await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
-            //}
-            //else if (mensagem is Event @event)
-            //{
-            //    Console.WriteLine($"Event [REMOTO]: {@event.GetType().Name}");
-            //    await mediator.Publish(@event, cancellationToken: default);
-            //}
+            using var scope = _serviceProvider.CreateScope();
+            var dispatcher = scope.ServiceProvider.GetRequiredService<CommandDispatcher>();
+            await dispatcher.DispatchAsync(payload);
         }
         catch (Exception ex)
         {

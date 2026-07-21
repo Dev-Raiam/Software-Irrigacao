@@ -1,0 +1,14 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace Toolbox.Automacao.Core.Application.Comandos
+{
+    public class CommandEnvelope
+    {
+        [JsonPropertyName("commandType")]
+        public string CommandType { get; set; } = string.Empty;
+
+        [JsonPropertyName("payload")]
+        public JsonElement Payload { get; set; }
+    }
+}
