@@ -29,7 +29,7 @@ public static class DependencyInjectionConfig
             {
                 var factory = provider.GetRequiredService<IMqttFactory>();
                 var config = provider.GetRequiredService<IOptions<MqttConfiguracao>>().Value;
-
+                //Dados Contante 
                 var mqttConfig = new MqttConfig
                 {
                     Host = config.Servidor,
@@ -47,6 +47,7 @@ public static class DependencyInjectionConfig
             "remoto",
             (provider, key) =>
             {
+                // Obter dados de conexão no Edpoint na api autenticado !!!
                 var factory = provider.GetRequiredService<IMqttFactory>();
 
                 var mqttConfig = new MqttConfig

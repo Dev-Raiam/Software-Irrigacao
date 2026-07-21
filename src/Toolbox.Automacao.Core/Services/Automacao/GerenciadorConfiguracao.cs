@@ -4,19 +4,23 @@ using Toolbox.Automacao.Core.Models;
 
 namespace Toolbox.Automacao.Core.Services;
 
-public record Credencial 
+public record Credencial
 {
     public string Chave { get; private set; } = null!;
     public string Segredo { get; private set; } = null!;
     public Guid ContextoId { get; private set; }
     public Guid PainelId { get; private set; }
 
-    public Credencial(string chave, string segredo, Guid contextoId, Guid painelId) 
+    public Credencial(string chave, string segredo, Guid contextoId, Guid painelId)
     {
-        if (string.IsNullOrWhiteSpace(chave)) throw new ArgumentNullException();
-        if (string.IsNullOrWhiteSpace(segredo)) throw new ArgumentNullException();
-        if (contextoId == Guid.Empty) throw new ArgumentNullException();
-        if (painelId == Guid.Empty) throw new ArgumentNullException();
+        if (string.IsNullOrWhiteSpace(chave))
+            throw new ArgumentNullException();
+        if (string.IsNullOrWhiteSpace(segredo))
+            throw new ArgumentNullException();
+        if (contextoId == Guid.Empty)
+            throw new ArgumentNullException();
+        if (painelId == Guid.Empty)
+            throw new ArgumentNullException();
 
         Chave = chave;
         Segredo = segredo;
@@ -24,6 +28,7 @@ public record Credencial
         PainelId = painelId;
     }
 };
+
 public record Integracao(string chave, string segredo, Guid contextoId);
 
 public interface IGerenciadorConfiguracao
@@ -56,7 +61,7 @@ internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
             new(ChaveConfiguracao.Integracao.Chave, chaveCriptografada!),
             new(ChaveConfiguracao.Integracao.Segredo, segredoCriptografado!),
             new(ChaveConfiguracao.Integracao.ContextoId, credenciais.ContextoId.ToString()),
-            new(ChaveConfiguracao.Padrao.PainelId, credenciais.PainelId.ToString())
+            new(ChaveConfiguracao.Padrao.PainelId, credenciais.PainelId.ToString()),
         ];
 
         foreach (var configuracao in configuracoes)
@@ -106,7 +111,7 @@ internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
 
         var configuracao = colecao.FindOne(x => x.Chave == ChaveConfiguracao.Padrao.PainelId);
 
-        var painelId = configuracao != null ? Guid.Parse(configuracao.Valor): Guid.Empty;
+        var painelId = configuracao != null ? Guid.Parse(configuracao.Valor) : Guid.Empty;
 
         return painelId;
     }

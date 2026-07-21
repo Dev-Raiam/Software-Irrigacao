@@ -1,8 +1,8 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using System.Net.Mime;
+using System.Text.Json;
 using Toolbox.Automacao.Core.Api;
 using Toolbox.Automacao.Core.Models;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Toolbox.Automacao.Core.Services
 {
@@ -29,7 +29,7 @@ namespace Toolbox.Automacao.Core.Services
             HttpContent content = new StringContent(
                 JsonSerializer.Serialize(integracao),
                 System.Text.Encoding.UTF8,
-                Application.Json
+                MediaTypeNames.Application.Json
             );
 
             var response = await PostAsync<Token>(
