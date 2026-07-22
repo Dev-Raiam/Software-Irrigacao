@@ -12,7 +12,7 @@ public class LerMonitorPosicaoHandler : ICommandHandler<LerMonitorPosicao>
 {
     private readonly IMqtt _mqtt;
 
-    public LerMonitorPosicaoHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public LerMonitorPosicaoHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

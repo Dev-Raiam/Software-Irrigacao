@@ -12,7 +12,7 @@ public class LerSensorDistanciaHandler : ICommandHandler<LerSensorDistancia>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorDistanciaHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public LerSensorDistanciaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

@@ -11,7 +11,7 @@ public class DefinirValvulaProporcionalHandler : ICommandHandler<DefinirValvulaP
 {
     private readonly IMqtt _mqtt;
 
-    public DefinirValvulaProporcionalHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public DefinirValvulaProporcionalHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

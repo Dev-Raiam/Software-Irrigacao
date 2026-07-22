@@ -12,7 +12,7 @@ public class AbrirValvulaHandler : ICommandHandler<AbrirValvula>
 {
     private readonly IMqtt _mqtt;
 
-    public AbrirValvulaHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public AbrirValvulaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

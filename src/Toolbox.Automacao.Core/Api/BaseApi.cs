@@ -6,21 +6,22 @@ namespace Toolbox.Automacao.Core.Api;
 public class BaseApi
 {
     private readonly ILogger<BaseApi> _logger;
+    private readonly HttpClient _httpClient;
 
-    protected BaseApi(ILogger<BaseApi> logger)
+    protected BaseApi(HttpClient httpClient, ILogger<BaseApi> logger)
     {
         _logger = logger;
+        _httpClient = httpClient;
     }
 
     protected async Task<Result<T>> GetAsync<T>(
-        HttpClient http,
         string url,
         CancellationToken cancellationToken
     )
     {
         try
         {
-            var response = await http.GetAsync(url, cancellationToken);
+            var response = await _httpClient.GetAsync(url, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -63,7 +64,6 @@ public class BaseApi
     }
 
     protected async Task<Result<T>> PostAsync<T>(
-        HttpClient http,
         string url,
         HttpContent content,
         CancellationToken cancellationToken
@@ -71,7 +71,7 @@ public class BaseApi
     {
         try
         {
-            var response = await http.PostAsync(url, content, cancellationToken);
+            var response = await _httpClient.PostAsync(url, content, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {

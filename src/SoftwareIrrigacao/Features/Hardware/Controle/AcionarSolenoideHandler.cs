@@ -12,7 +12,7 @@ public class AcionarSolenoideHandler : ICommandHandler<AcionarSolenoide>
 {
     private readonly IMqtt _mqtt;
 
-    public AcionarSolenoideHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public AcionarSolenoideHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

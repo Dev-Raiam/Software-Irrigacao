@@ -1,4 +1,3 @@
-﻿//namespace Toolbox.Automacao.Core.Models
-//{
-//    public record Credencial(string chave, string segredo, Guid contextoId);
-//}
+﻿//namespace Toolbox.Automacao.Core.Models;
+
+//public record Credentials(string chave, string segredo, Guid contextoId);

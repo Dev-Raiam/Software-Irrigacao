@@ -7,6 +7,7 @@ using Toolbox.Automacao.Core.Setup;
 using Toolbox.Core.Api.Configuration;
 using Toolbox.Modulo.Tekon;
 using Toolbox.Modulo.Tekon.Interfaces;
+using static Toolbox.Automacao.Core.Services.Mqtt.IMqtt;
 
 namespace SoftwareIrrigacao.Setup;
 
@@ -17,49 +18,47 @@ public static class DependencyInjectionConfig
         services.AddHttpContextAccessor();
 
         services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
-        services.AddSingleton<IModbusFactory, ModbusFactory>();
+        //services.AddSingleton<IModbusFactory, Modbus>();
         services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
-        services.AddSingleton<IMqttFactory, MqttFactory>();
+        //services.AddKeyedSingleton<IMqtt>(
+        //    "local",
+        //    (provider, key) =>
+        //    {
+        //        var factory = provider.GetRequiredService<IMqttFactory>();
+        //        var config = provider.GetRequiredService<IOptions<MqttConfiguracao>>().Value;
+        //        //Dados Contante
+        //        var mqttConfig = new Configuration
+        //        {
+        //            Host = config.Servidor,
+        //            Port = config.Porta,
+        //            ClientId = Guid.NewGuid().ToString(),
+        //            Username = config.Usuario,
+        //            Password = config.Senha,
+        //        };
 
-        services.AddKeyedSingleton<IMqtt>(
-            "local",
-            (provider, key) =>
-            {
-                var factory = provider.GetRequiredService<IMqttFactory>();
-                var config = provider.GetRequiredService<IOptions<MqttConfiguracao>>().Value;
-                //Dados Contante
-                var mqttConfig = new MqttConfig
-                {
-                    Host = config.Servidor,
-                    Port = config.Porta,
-                    ClientId = Guid.NewGuid().ToString(),
-                    Username = config.Usuario,
-                    Password = config.Senha,
-                };
+        //        return factory.Criar(mqttConfig);
+        //    }
+        //);
 
-                return factory.Criar(mqttConfig);
-            }
-        );
+        //services.AddKeyedSingleton<IMqtt>(
+        //    "remoto",
+        //    (provider, key) =>
+        //    {
+        //        // Obter dados de conexão no Edpoint na api autenticado !!!
+        //        var factory = provider.GetRequiredService<IMqttFactory>();
 
-        services.AddKeyedSingleton<IMqtt>(
-            "remoto",
-            (provider, key) =>
-            {
-                // Obter dados de conexão no Edpoint na api autenticado !!!
-                var factory = provider.GetRequiredService<IMqttFactory>();
+        //        var mqttConfig = new Configuration
+        //        {
+        //            Host = "broker.freemqtt.com",
+        //            Port = 1883,
+        //            ClientId = Guid.NewGuid().ToString(),
+        //            Username = "freemqtt",
+        //            Password = "public",
+        //        };
 
-                var mqttConfig = new MqttConfig
-                {
-                    Host = "broker.freemqtt.com",
-                    Port = 1883,
-                    ClientId = Guid.NewGuid().ToString(),
-                    Username = "freemqtt",
-                    Password = "public",
-                };
-
-                return factory.Criar(mqttConfig);
-            }
-        );
+        //        return factory.Criar(mqttConfig);
+        //    }
+        //);
 
         //services.AddHostedService<WorkerTeste>();
 

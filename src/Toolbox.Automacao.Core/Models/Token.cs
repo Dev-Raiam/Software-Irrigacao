@@ -4,46 +4,39 @@ namespace Toolbox.Automacao.Core.Models;
 
 public class Token
 {
-    public string? TokenAcesso { get; private set; }
-    public string? TokenAtualizacao { get; private set; }
-    public DateTime Emitido { get; private set; }
-    public DateTime Expira { get; private set; }
+    [JsonPropertyName("tokenAcesso")]
+    public string? AccessToken { get; private set; }
+    [JsonPropertyName("tokenAtualizacao")]
+    public string? RefreshToken { get; private set; }
+    [JsonPropertyName("emitido")]
+    public DateTime IssuedAt { get; private set; }
+    [JsonPropertyName("expira")]
+    public DateTime Expire { get; private set; }
 
     public Token()
     {
-        TokenAcesso = null;
-        TokenAtualizacao = null;
-        Emitido = DateTime.MinValue;
-        Expira = DateTime.MinValue;
+        AccessToken = null;
+        RefreshToken = null;
+        IssuedAt = DateTime.MinValue;
+        Expire = DateTime.MinValue;
     }
 
     [JsonConstructor]
     public Token(string? tokenAcesso, string? tokenAtualizacao, DateTime emitido, DateTime expira)
     {
-        TokenAcesso = tokenAcesso;
-        TokenAtualizacao = tokenAtualizacao;
-        Emitido = emitido;
-        Expira = expira;
+        AccessToken = tokenAcesso;
+        RefreshToken = tokenAtualizacao;
+        IssuedAt = emitido;
+        Expire = expira.AddSeconds(-15);
     }
 
-    public void Atualizar(
-        string tokenAcesso,
-        string tokenAtualizacao,
-        DateTime emitido,
-        DateTime expira
-    )
+    public void Update(Token token)
     {
-        TokenAcesso = tokenAcesso;
-        TokenAtualizacao = tokenAtualizacao;
-        Emitido = emitido;
-        Expira = expira;
+        AccessToken = token.AccessToken;
+        RefreshToken = token.RefreshToken;
+        IssuedAt = token.IssuedAt;
+        Expire = token.Expire;
     }
 
-    public Token DecrementarSegundosExpiracao()
-    {
-        Expira = Expira.AddSeconds(-15);
-        return this;
-    }
-
-    public bool Expirado => Expira <= DateTime.UtcNow;
+    public bool Expired => Expire <= DateTime.UtcNow;
 }

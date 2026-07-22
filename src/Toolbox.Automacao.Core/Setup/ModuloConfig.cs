@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Core.Services;
+using Toolbox.Automacao.Core.Services.Automacao;
 
 namespace Toolbox.Automacao.Core.Setup
 {
@@ -30,7 +30,7 @@ namespace Toolbox.Automacao.Core.Setup
                 .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
             services
-                .AddHttpClient<IServicoAutenticacao, ServicoAutenticacao>(
+                .AddHttpClient<IAuthenticationService, AuthenticationService>(
                     (provider, http) =>
                     {
                         var configuracao = provider
@@ -66,10 +66,9 @@ namespace Toolbox.Automacao.Core.Setup
                         }
 
                         http.BaseAddress = new Uri(configuracao.BaseUrl);
-                        ;
                     }
                 )
-                .AddHttpMessageHandler<AutenticacaoHandler>()
+                .AddHttpMessageHandler<AuthenticationHandler>()
                 .AddStandardResilienceHandler();
 
             services.RegisterServices();

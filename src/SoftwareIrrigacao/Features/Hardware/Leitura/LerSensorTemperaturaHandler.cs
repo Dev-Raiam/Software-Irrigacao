@@ -12,7 +12,7 @@ public class LerSensorTemperaturaHandler : ICommandHandler<LerSensorTemperatura>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorTemperaturaHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public LerSensorTemperaturaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

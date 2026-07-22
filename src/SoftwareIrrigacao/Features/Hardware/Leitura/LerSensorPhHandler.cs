@@ -12,7 +12,7 @@ public class LerSensorPhHandler : ICommandHandler<LerSensorPh>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorPhHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public LerSensorPhHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

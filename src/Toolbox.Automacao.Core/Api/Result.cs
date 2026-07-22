@@ -2,20 +2,20 @@ namespace Toolbox.Automacao.Core.Api;
 
 public class Result<T>
 {
-    public bool Sucesso { get; private set; }
-    public T? Dado { get; private set; }
+    public bool Success { get; private set; }
+    public T? Data { get; private set; }
     public string? Error { get; private set; }
 
-    private Result(bool sucesso, T? dado, string? error, Exception? exception)
+    private Result(bool success, T? data, string? error, Exception? exception)
     {
-        Sucesso = sucesso;
-        Dado = dado;
+        Success = success;
+        Data = data;
         Error = error;
     }
 
-    public static Result<T> Ok(T dado)
+    public static Result<T> Ok(T data)
     {
-        return new Result<T>(true, dado, null, null);
+        return new Result<T>(true, data, null, null);
     }
 
     public static Result<T> Fail(string error)

@@ -1,8 +1,9 @@
 using LiteDB;
-using Toolbox.Automacao.Core.Data;
 using Toolbox.Automacao.Core.Models;
+using Toolbox.Automacao.Core.Services.Automacao;
+using Toolbox.Automacao.Core.Services.Cryptography;
 
-namespace Toolbox.Automacao.Core.Services;
+namespace Toolbox.Automacao.Core.Data;
 
 public record Credencial
 {
@@ -29,12 +30,11 @@ public record Credencial
     }
 };
 
-public record Integracao(string chave, string segredo, Guid contextoId);
 
 public interface IGerenciadorConfiguracao
 {
     void AdicionarCredenciais(Credencial credenciais);
-    Integracao? ObterCredenciaisIntegracao();
+    Credentials? ObterCredenciaisIntegracao();
     Guid ObterCredencialPainel();
     bool ExisteCredenciaisIntegracao();
     bool ExisteCredencialPainel();
@@ -43,9 +43,9 @@ public interface IGerenciadorConfiguracao
 internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
 {
     private readonly ILiteDatabase _database;
-    private readonly ICriptografia _criptografia;
+    private readonly ICryptography _criptografia;
 
-    public GerenciadorConfiguracao(ILiteDatabase database, ICriptografia criptografia)
+    public GerenciadorConfiguracao(ILiteDatabase database, ICryptography criptografia)
     {
         _database = database;
         _criptografia = criptografia;
@@ -53,8 +53,8 @@ internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
 
     public void AdicionarCredenciais(Credencial credenciais)
     {
-        var chaveCriptografada = _criptografia.Criptografar(credenciais.Chave);
-        var segredoCriptografado = _criptografia.Criptografar(credenciais.Segredo);
+        var chaveCriptografada = _criptografia.Encrypt(credenciais.Chave);
+        var segredoCriptografado = _criptografia.Encrypt(credenciais.Segredo);
 
         Configuracao[] configuracoes =
         [
@@ -87,7 +87,7 @@ internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
         return colecao.Exists(x => x.Chave == ChaveConfiguracao.Padrao.PainelId);
     }
 
-    public Integracao? ObterCredenciaisIntegracao()
+    public Credentials? ObterCredenciaisIntegracao()
     {
         var colecao = _database.GetCollection<Configuracao>(Tabela.Configuracoes);
 
@@ -98,9 +98,9 @@ internal class GerenciadorConfiguracao : IGerenciadorConfiguracao
         if (chave == null || segredo == null || contextoId == null)
             return null;
 
-        return new Integracao(
-            _criptografia.Descriptografar(chave.Valor),
-            _criptografia.Descriptografar(segredo.Valor),
+        return new Credentials(
+            _criptografia.Decrypt(chave.Valor),
+            _criptografia.Decrypt(segredo.Valor),
             Guid.Parse(contextoId.Valor)
         );
     }

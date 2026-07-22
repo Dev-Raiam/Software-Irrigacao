@@ -12,7 +12,7 @@ public class LerSensorNivelHandler : ICommandHandler<LerSensorNivel>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorNivelHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public LerSensorNivelHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

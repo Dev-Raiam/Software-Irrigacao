@@ -12,7 +12,7 @@ public class DesligarInversorFrequenciaHandler : ICommandHandler<DesligarInverso
 {
     private readonly IMqtt _mqtt;
 
-    public DesligarInversorFrequenciaHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public DesligarInversorFrequenciaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

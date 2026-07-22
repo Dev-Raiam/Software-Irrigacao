@@ -12,7 +12,7 @@ public class DesligarSolenoideHandler : ICommandHandler<DesligarSolenoide>
 {
     private readonly IMqtt _mqtt;
 
-    public DesligarSolenoideHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public DesligarSolenoideHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

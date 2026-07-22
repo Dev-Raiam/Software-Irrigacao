@@ -12,7 +12,7 @@ public class AcionarInversorFrequenciaHandler : ICommandHandler<AcionarInversorF
 {
     private readonly IMqtt _mqtt;
 
-    public AcionarInversorFrequenciaHandler([FromKeyedServices("local")] IMqtt mqtt)
+    public AcionarInversorFrequenciaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

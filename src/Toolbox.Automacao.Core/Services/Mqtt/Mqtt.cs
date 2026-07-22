@@ -1,7 +1,7 @@
-using System.Text;
 using MQTTnet;
 using MQTTnet.Protocol;
-using Toolbox.Automacao.Core.Services.Mqtt.Exceptions;
+using System.Text;
+using static Toolbox.Automacao.Core.Services.Mqtt.IMqtt;
 
 namespace Toolbox.Automacao.Core.Services.Mqtt;
 
@@ -9,34 +9,56 @@ namespace Toolbox.Automacao.Core.Services.Mqtt;
 /// Facade para operações MQTT usando MQTTnet
 /// Simplifica a interação com brokers MQTT
 /// </summary>
-internal sealed class Mqtt : IMqtt
+public sealed class Mqtt : IMqtt
 {
-    private readonly MqttConfig _config;
+    public const string Local = "local";
+    public const string Remoto = "remoto";
+    private readonly MqttClientOptions _options;
+    private readonly string _host;
+    private readonly int _port;
     private readonly IMqttClient _mqttClient;
-    private readonly Dictionary<string, Action<string, string>> _messageHandlers;
-    private Action<string, string>? _globalHandler;
+    private Action<string, string>? _handler;
     private bool _disposed;
 
     public bool IsConnected => _mqttClient.IsConnected;
+    public Action<string, string>? Handler => _handler;
 
-    public Mqtt(MqttConfig config)
+    public Mqtt(Configuration config)
     {
-        _config = config;
+        _host = config.Host;
+        _port = config.Port;
+        var options = new MqttClientOptionsBuilder()
+            .WithClientId(config.ClientId)
+            .WithTcpServer(config.Host, config.Port)
+            .WithCleanSession(config.CleanSession)
+            .WithTimeout(TimeSpan.FromSeconds(config.ConnectionTimeoutSeconds));
+
+        if (!string.IsNullOrEmpty(config.Username))
+        {
+            options.WithCredentials(config.Username, config.Password);
+        }
+        
+        _options = options.Build();
+
         _mqttClient = new MqttClientFactory().CreateMqttClient();
-        _messageHandlers = new Dictionary<string, Action<string, string>>();
+
+        //_messageHandlers = new Dictionary<string, Action<string, string>>();
 
         _mqttClient.ApplicationMessageReceivedAsync += async e =>
         {
-            var topic = e.ApplicationMessage.Topic;
-            var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-
-            // Chama handler global primeiro (se definido)
-            _globalHandler?.Invoke(topic, payload);
-
-            // Chama handler específico do tópico (se existir)
-            if (_messageHandlers.TryGetValue(topic, out var handler))
+            if (_handler != null)
             {
-                handler?.Invoke(topic, payload);
+                var topic = e.ApplicationMessage.Topic;
+                var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+
+                // Chama handler global primeiro (se definido)
+                _handler?.Invoke(topic, payload);
+
+                //// Chama handler específico do tópico (se existir)
+                //if (_messageHandlers.TryGetValue(topic, out var handler))
+                //{
+                //    handler?.Invoke(topic, payload);
+                //}
             }
 
             await Task.CompletedTask;
@@ -51,37 +73,23 @@ internal sealed class Mqtt : IMqtt
         if (_mqttClient.IsConnected)
             return;
 
+        MqttClientConnectResult result;
         try
         {
-            var options = new MqttClientOptionsBuilder()
-                .WithClientId(_config.ClientId)
-                .WithTcpServer(_config.Host, _config.Port)
-                .WithCleanSession(_config.CleanSession)
-                .WithTimeout(TimeSpan.FromSeconds(_config.ConnectionTimeoutSeconds));
-
-            if (!string.IsNullOrEmpty(_config.Username))
-            {
-                options.WithCredentials(_config.Username, _config.Password);
-            }
-
-            var result = await _mqttClient.ConnectAsync(options.Build());
-
-            if (result.ResultCode != MqttClientConnectResultCode.Success)
-            {
-                throw new MqttConexaoException(
-                    $"Falha ao conectar ao broker MQTT: {result.ResultCode} - {result.ReasonString}"
-                );
-            }
-        }
-        catch (MqttConexaoException)
-        {
-            throw;
+            result = await _mqttClient.ConnectAsync(_options);
         }
         catch (Exception ex)
         {
-            throw new MqttConexaoException(
-                $"Erro ao conectar ao broker MQTT {_config.Host}:{_config.Port}: {ex.Message}",
+            throw new Exception(
+                $"Erro ao conectar ao broker MQTT {_host}:{_port}: {ex.Message}",
                 ex
+            );
+        }
+
+        if (result.ResultCode != MqttClientConnectResultCode.Success)
+        {
+            throw new Exception(
+                $"Falha ao conectar ao broker MQTT {_host}:{_port}: {result.ResultCode} - {result.ReasonString}"
             );
         }
     }
@@ -100,7 +108,7 @@ internal sealed class Mqtt : IMqtt
         }
         catch (Exception ex)
         {
-            throw new MqttConexaoException($"Erro ao desconectar do broker MQTT: {ex.Message}", ex);
+            throw new Exception($"Erro ao desconectar do broker MQTT {_host}:{_port}: {ex.Message}", ex);
         }
     }
 
@@ -109,11 +117,7 @@ internal sealed class Mqtt : IMqtt
     /// </summary>
     public async Task PublishAsync(string topic, string payload, bool retain = false, int qos = 0)
     {
-        if (!_mqttClient.IsConnected)
-            throw new MqttConexaoException(
-                "MQTT client is not connected. Call ConnectAsync() first."
-            );
-
+        await ConnectAsync();
         try
         {
             var message = new MqttApplicationMessageBuilder()
@@ -125,14 +129,10 @@ internal sealed class Mqtt : IMqtt
 
             await _mqttClient.PublishAsync(message);
         }
-        catch (MqttConexaoException)
-        {
-            throw;
-        }
         catch (Exception ex)
         {
-            throw new MqttPublicacaoException(
-                $"Erro ao publicar no tópico {topic}: {ex.Message}",
+            throw new Exception(
+                $"Erro ao publicar no tópico {topic} em {_host}:{_port}: {ex.Message}",
                 ex
             );
         }
@@ -143,11 +143,7 @@ internal sealed class Mqtt : IMqtt
     /// </summary>
     public async Task PublishAsync(string topic, byte[] payload, bool retain = false, int qos = 0)
     {
-        if (!_mqttClient.IsConnected)
-            throw new MqttConexaoException(
-                "MQTT client is not connected. Call ConnectAsync() first."
-            );
-
+        await ConnectAsync();
         try
         {
             var message = new MqttApplicationMessageBuilder()
@@ -159,14 +155,10 @@ internal sealed class Mqtt : IMqtt
 
             await _mqttClient.PublishAsync(message);
         }
-        catch (MqttConexaoException)
-        {
-            throw;
-        }
         catch (Exception ex)
         {
-            throw new MqttPublicacaoException(
-                $"Erro ao publicar no tópico {topic}: {ex.Message}",
+            throw new Exception(
+                $"Erro ao publicar no tópico {topic} em {_host}:{_port}: {ex.Message}",
                 ex
             );
         }
@@ -177,14 +169,11 @@ internal sealed class Mqtt : IMqtt
     /// </summary>
     public async Task SubscribeAsync(
         string topic,
-        int qos = 0,
-        Action<string, string>? messageHandler = null
+        int qos = 0
+        //Action<string, string>? messageHandler = null
     )
     {
-        if (!_mqttClient.IsConnected)
-            throw new MqttConexaoException(
-                "MQTT client is not connected. Call ConnectAsync() first."
-            );
+        await ConnectAsync();
 
         try
         {
@@ -195,18 +184,14 @@ internal sealed class Mqtt : IMqtt
 
             await _mqttClient.SubscribeAsync(options);
 
-            if (messageHandler != null)
-            {
-                _messageHandlers[topic] = messageHandler;
-            }
-        }
-        catch (MqttConexaoException)
-        {
-            throw;
+            //if (messageHandler != null)
+            //{
+            //    _messageHandlers[topic] = messageHandler;
+            //}
         }
         catch (Exception ex)
         {
-            throw new MqttAssinaturaException($"Erro ao assinar tópico {topic}: {ex.Message}", ex);
+            throw new Exception($"Erro ao assinar tópico {topic} em {_host}:{_port}: {ex.Message}", ex);
         }
     }
 
@@ -215,28 +200,21 @@ internal sealed class Mqtt : IMqtt
     /// </summary>
     public async Task UnsubscribeAsync(string topic)
     {
-        if (!_mqttClient.IsConnected)
-            throw new MqttConexaoException(
-                "MQTT client is not connected. Call ConnectAsync() first."
-            );
+        await ConnectAsync();
 
         try
         {
             await _mqttClient.UnsubscribeAsync(topic);
 
-            if (_messageHandlers.ContainsKey(topic))
-            {
-                _messageHandlers.Remove(topic);
-            }
-        }
-        catch (MqttConexaoException)
-        {
-            throw;
+            //if (_messageHandlers.ContainsKey(topic))
+            //{
+            //    _messageHandlers.Remove(topic);
+            //}
         }
         catch (Exception ex)
         {
-            throw new MqttAssinaturaException(
-                $"Erro ao desassinar tópico {topic}: {ex.Message}",
+            throw new Exception(
+                $"Erro ao desassinar tópico {topic} em {_host}:{_port}: {ex.Message}",
                 ex
             );
         }
@@ -245,9 +223,9 @@ internal sealed class Mqtt : IMqtt
     /// <summary>
     /// Sets a global handler that will be called for all received messages
     /// </summary>
-    public void SetGlobalHandler(Action<string, string>? handler)
+    public void SetHandler(Action<string, string>? handler)
     {
-        _globalHandler = handler;
+        _handler = handler;
     }
 
     public void Dispose()
@@ -255,15 +233,40 @@ internal sealed class Mqtt : IMqtt
         if (_disposed)
             return;
 
-        if (_mqttClient.IsConnected)
+        try
         {
-            _mqttClient.DisconnectAsync().GetAwaiter().GetResult();
+            if (_mqttClient.IsConnected)
+            {
+                _mqttClient.DisconnectAsync().GetAwaiter().GetResult();
+            }
         }
+        finally
+        {
+            _mqttClient.Dispose();
+            //_messageHandlers.Clear();
+            _handler = null;
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+    }
+}
 
-        _mqttClient.Dispose();
-        _messageHandlers.Clear();
-        _globalHandler = null;
-        _disposed = true;
-        GC.SuppressFinalize(this);
+public sealed class MqttManager
+{
+    private Mqtt _current;
+    public MqttManager(Configuration config)
+    {
+        _current = new Mqtt(config);
+    }
+
+    public IMqtt Current => _current;
+
+    public MqttManager Reload(Configuration config)
+    {
+        var handler = _current.Handler;
+        _current.Dispose();
+        _current = new Mqtt(config);
+        _current.SetHandler(handler);
+        return this;
     }
 }
