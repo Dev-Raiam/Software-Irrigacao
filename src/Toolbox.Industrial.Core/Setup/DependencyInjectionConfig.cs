@@ -135,7 +135,7 @@ namespace Toolbox.Industrial.Core.Setup
         )
         {
             services.AddSingleton<ILiteDatabase>(sp => new LiteDatabase(connectionString));
-            services.AddTransient<IEntityStore, LiteDbEntityStore>();
+            services.AddSingleton<IEntityStore, LiteDbEntityStore>();
             return services;
         }
     }

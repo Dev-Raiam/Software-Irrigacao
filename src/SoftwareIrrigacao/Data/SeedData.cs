@@ -12,6 +12,13 @@ namespace SoftwareIrrigacao.Data
                 .GetRequiredService<IServiceScopeFactory>()
                 .CreateScope();
 
+            var entityConfig = scope.ServiceProvider.GetRequiredService<EntityConfiguration>();
+            entityConfig.ApplyConfiguration = (IEntityStore store) =>
+            {
+                store.Configure<Configuracao>().Field(x => x.Value, "Dados");
+            };
+
+
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
             await AdicionarConfiguracoes(serviceProvider, store);
         }

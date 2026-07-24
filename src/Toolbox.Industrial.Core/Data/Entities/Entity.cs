@@ -11,7 +11,7 @@ namespace Toolbox.Industrial.Core.Data
             where T : Entity
         {
             return JsonNamingPolicy.SnakeCaseLower.ConvertName(
-                PortuguesPluralizer.Pluralize(nameof(T))
+                PortuguesPluralizer.Pluralize(typeof(T).Name)
             );
         }
 

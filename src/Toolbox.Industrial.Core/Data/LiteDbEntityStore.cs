@@ -16,7 +16,7 @@ internal class LiteDbEntityStore : IEntityStore
         }
     }
 
-    public EntityBuilder<TEntity> Builder<TEntity>()
+    public EntityBuilder<TEntity> Configure<TEntity>()
         where TEntity : Entity => BsonMapper.Global.Entity<TEntity>();
 
     public Task<bool> InsertAsync<TEntity>(TEntity entity)

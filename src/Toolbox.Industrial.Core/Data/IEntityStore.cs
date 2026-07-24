@@ -5,7 +5,7 @@ namespace Toolbox.Industrial.Core.Data;
 
 public interface IEntityStore
 {
-    EntityBuilder<TEntity> Builder<TEntity>()
+    EntityBuilder<TEntity> Configure<TEntity>()
         where TEntity : Entity;
 
     Task<bool> InsertAsync<TEntity>(TEntity entity)
