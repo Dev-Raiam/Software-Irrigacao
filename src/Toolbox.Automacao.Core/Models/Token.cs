@@ -2,14 +2,17 @@ using System.Text.Json.Serialization;
 
 namespace Toolbox.Automacao.Core.Models;
 
-public class Token
+public sealed record Token
 {
     [JsonPropertyName("tokenAcesso")]
     public string? AccessToken { get; private set; }
+
     [JsonPropertyName("tokenAtualizacao")]
     public string? RefreshToken { get; private set; }
+
     [JsonPropertyName("emitido")]
     public DateTime IssuedAt { get; private set; }
+
     [JsonPropertyName("expira")]
     public DateTime Expire { get; private set; }
 

@@ -1,13 +1,9 @@
 using System.Reflection;
-using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Core.Application.Comandos;
-using Toolbox.Automacao.Core.Services.Modbus;
-using Toolbox.Automacao.Core.Services.Mqtt;
-using Toolbox.Automacao.Core.Setup;
+using Toolbox.Automacao.Core.Messages;
+using Toolbox.Automacao.Core.Messages.Integration;
 using Toolbox.Core.Api.Configuration;
 using Toolbox.Modulo.Tekon;
 using Toolbox.Modulo.Tekon.Interfaces;
-using static Toolbox.Automacao.Core.Services.Mqtt.IMqtt;
 
 namespace SoftwareIrrigacao.Setup;
 

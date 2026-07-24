@@ -1,17 +1,11 @@
-﻿using static Toolbox.Automacao.Core.Services.Modbus.IModbusRTU;
+﻿using Toolbox.Automacao.Core.Services.ModbusRTU;
 
-namespace Toolbox.Automacao.Core.Services.Modbus
+namespace Toolbox.Automacao.Core.Services.Modbus;
+
+public static class Modbus
 {
-    public static class Modbus
+    public static IModbusRTU RtuMaster(Configuration config, string loggerInfo)
     {
-        public static IModbusRTU RtuMaster(Configuration config, string loggerInfo)
-        {
-            return new ModbusRTU(config, loggerInfo);    
-        }
-
-        //public static IModbusTcp TcpMaster(Configuration config, string loggerInfo)
-        //{
-        //    return new ModbusTcp(config, loggerInfo);    
-        //}
+        return new ModbusRTU.ModbusRTU(config, loggerInfo);
     }
 }

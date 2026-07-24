@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.DataProtection;
 
 namespace Toolbox.Automacao.Core.Services.Cryptography;
+
 public interface ICryptography
 {
     string Encrypt(string value);
@@ -13,7 +14,7 @@ internal sealed class Cryptography : ICryptography
 
     public Cryptography(IDataProtectionProvider provider)
     {
-        _protector = provider.CreateProtector("Automacao.Credenciais.v2");
+        _protector = provider.CreateProtector("DataProtection.v1");
     }
 
     public string Encrypt(string value) => _protector.Protect(value);

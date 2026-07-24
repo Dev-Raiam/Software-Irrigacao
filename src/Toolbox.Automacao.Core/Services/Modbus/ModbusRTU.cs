@@ -1,71 +1,41 @@
-﻿using NModbus;
+﻿using System.IO.Ports;
+using NModbus;
 using NModbus.Serial;
-using System.IO.Ports;
-using Toolbox.Automacao.Core.Services.Mqtt;
-using static Toolbox.Automacao.Core.Services.Modbus.IModbusRTU;
 
-namespace Toolbox.Automacao.Core.Services.Modbus;
+namespace Toolbox.Automacao.Core.Services.ModbusRTU;
 
-/// <summary>
-/// Interface Facade para simplificar operações Modbus
-/// </summary>
+public sealed record Configuration(
+    string Port,
+    int BaudRate,
+    int DataBits,
+    Parity Parity,
+    StopBits StopBits,
+    int ReadTimeout,
+    int WriteTimeout
+);
+
 public interface IModbusRTU : IDisposable
 {
-    /// <summary>
-    /// Opens the Modbus connection
-    /// </summary>
     void Connect();
-
-    /// <summary>
-    /// Reads holding registers from the Modbus device
-    /// </summary>
-    /// <param name="slaveAddress">Device address (slave address)</param>
-    /// <param name="startAddress">Starting register address</param>
-    /// <param name="numberOfPoints">Number of registers to read</param>
-    /// <returns>Array with register values</returns>
+    void Disconnect();
     Task<ushort[]> ReadHoldingRegistersAsync(
         byte slaveAddress,
         ushort startAddress,
         ushort numberOfPoints
     );
-
-    /// <summary>
-    /// Reads coils from the Modbus device
-    /// </summary>
-    /// <param name="slaveAddress">Device address (slave address)</param>
-    /// <param name="startAddress">Starting coil address</param>
-    /// <param name="numberOfPoints">Number of coils to read</param>
-    /// <returns>Array with coil values</returns>
     Task<bool[]> ReadCoilsAsync(byte slaveAddress, ushort startAddress, ushort numberOfPoints);
-
-    /// <summary>
-    /// Writes a single coil to the Modbus device
-    /// </summary>
-    /// <param name="slaveAddress">Device address (slave address)</param>
-    /// <param name="coilAddress">Coil address</param>
-    /// <param name="value">Value to write (true/false)</param>
     Task WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value);
-
-    /// <summary>
-    /// Closes the Modbus connection and releases resources
-    /// </summary>
-    void Disconnect();
-
-    public sealed record Configuration(string Port, int BaudRate, int DataBits, Parity Parity, StopBits StopBits, int ReadTimeout, int WriteTimeout);
-
 }
 
-/// <summary>
-/// Facade para operações Modbus usando NModbus
-/// Simplifica a interação com dispositivos Modbus RTU via porta serial
-/// </summary>
 internal sealed class ModbusRTU : IModbusRTU
 {
-    private readonly string _loggerInfo;
     private readonly SerialPort _serialPort;
     private readonly IModbusMaster _master;
+    private readonly string _loggerInfo;
     private bool _disposed = false;
+
     public string LoggerInfo => _loggerInfo;
+
     public ModbusRTU(Configuration config, string loggerInfo)
     {
         _loggerInfo = loggerInfo;
@@ -84,9 +54,6 @@ internal sealed class ModbusRTU : IModbusRTU
         _master = new ModbusFactory().CreateRtuMaster(new SerialPortAdapter(_serialPort));
     }
 
-    /// <summary>
-    /// Opens the Modbus RTU connection
-    /// </summary>
     public void Connect()
     {
         if (_serialPort.IsOpen)
@@ -105,9 +72,21 @@ internal sealed class ModbusRTU : IModbusRTU
         }
     }
 
-    /// <summary>
-    /// Reads holding registers from the Modbus device
-    /// </summary>
+    public void Disconnect()
+    {
+        try
+        {
+            _serialPort?.Close();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(
+                $"Erro ao desconectar da porta {_serialPort.PortName}, {_loggerInfo}: {ex.Message}",
+                ex
+            );
+        }
+    }
+
     public Task<ushort[]> ReadHoldingRegistersAsync(
         byte slaveAddress,
         ushort startAddress,
@@ -115,16 +94,9 @@ internal sealed class ModbusRTU : IModbusRTU
     )
     {
         Connect();
-        return _master.ReadHoldingRegistersAsync(
-            slaveAddress,
-            startAddress,
-            numberOfPoints
-        );
+        return _master.ReadHoldingRegistersAsync(slaveAddress, startAddress, numberOfPoints);
     }
 
-    /// <summary>
-    /// Reads coils from the Modbus device
-    /// </summary>
     public Task<bool[]> ReadCoilsAsync(
         byte slaveAddress,
         ushort startAddress,
@@ -135,21 +107,10 @@ internal sealed class ModbusRTU : IModbusRTU
         return _master.ReadCoilsAsync(slaveAddress, startAddress, numberOfPoints);
     }
 
-    /// <summary>
-    /// Writes a single coil to the Modbus device
-    /// </summary>
     public Task WriteCoilAsync(byte slaveAddress, ushort coilAddress, bool value)
     {
         Connect();
         return _master.WriteSingleCoilAsync(slaveAddress, coilAddress, value);
-    }
-
-    /// <summary>
-    /// Closes the Modbus connection and releases resources
-    /// </summary>
-    public void Disconnect()
-    {
-        _serialPort?.Close();
     }
 
     public void Dispose()
@@ -168,12 +129,14 @@ internal sealed class ModbusRTU : IModbusRTU
 public sealed class ModbusRTUManager
 {
     private ModbusRTU _current;
+
     public ModbusRTUManager(Configuration config, string loggerInfo)
     {
         _current = new ModbusRTU(config, loggerInfo);
     }
 
     public IModbusRTU Current => _current;
+
     public ModbusRTUManager Reload(Configuration config)
     {
         var loggerInfo = _current.LoggerInfo;

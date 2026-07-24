@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Core.Services.Automacao;
+using Toolbox.Automacao.Core.Services.Api;
 
 namespace Toolbox.Automacao.Core.Setup
 {
@@ -14,11 +14,11 @@ namespace Toolbox.Automacao.Core.Setup
             string connectionString
         )
         {
-            services.AddSingleton<ApiConfiguracao>();
-            services.AddSingleton<MqttConfiguracao>();
+            services.AddSingleton<Configuration>();
+            //services.AddSingleton<MqttConfiguracao>();
 
-            services.Configure<ApiConfiguracao>(configuration.GetSection("ApiConfiguracao"));
-            services.Configure<MqttConfiguracao>(configuration.GetSection("MqttConfiguracao"));
+            services.Configure<Configuration>(configuration.GetSection("ApiConfiguracao"));
+            //services.Configure<MqttConfiguracao>(configuration.GetSection("MqttConfiguracao"));
 
             var keysPath =
                 configuration["DataProtection:KeysPath"]
@@ -30,11 +30,11 @@ namespace Toolbox.Automacao.Core.Setup
                 .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
             services
-                .AddHttpClient<IAuthenticationService, AuthenticationService>(
+                .AddHttpClient<IApiClient, ApiClient>(
                     (provider, http) =>
                     {
                         var configuracao = provider
-                            .GetRequiredService<IOptions<ApiConfiguracao>>()
+                            .GetRequiredService<IOptions<Configuration>>()
                             .Value;
 
                         if (string.IsNullOrWhiteSpace(configuracao?.BaseUrl))
@@ -55,7 +55,7 @@ namespace Toolbox.Automacao.Core.Setup
                     (provider, http) =>
                     {
                         var configuracao = provider
-                            .GetRequiredService<IOptions<ApiConfiguracao>>()
+                            .GetRequiredService<IOptions<Configuration>>()
                             .Value;
 
                         if (string.IsNullOrWhiteSpace(configuracao?.BaseUrl))
@@ -68,7 +68,7 @@ namespace Toolbox.Automacao.Core.Setup
                         http.BaseAddress = new Uri(configuracao.BaseUrl);
                     }
                 )
-                .AddHttpMessageHandler<AuthenticationHandler>()
+                .AddHttpMessageHandler<AuthGuard>()
                 .AddStandardResilienceHandler();
 
             services.RegisterServices();

@@ -1,120 +1,98 @@
 using System.Text.Json.Serialization;
+using ConexaoControlador = Toolbox.Automacao.Core.Models.Controlador.Conexao;
+using ConexaoDispositivo = Toolbox.Automacao.Core.Models.Dispositivo.Conexao;
+using ConexaoInterface = Toolbox.Automacao.Core.Models.Interface.Conexao;
+using ConexaoModulo = Toolbox.Automacao.Core.Models.Modulo.Conexao;
+using ConexaoPorta = Toolbox.Automacao.Core.Models.Porta.Conexao;
 
 namespace Toolbox.Automacao.Core.Models;
 
-public sealed class Controlador
+public sealed record Controlador(
+    Guid Id,
+    bool Master,
+    string Estagio,
+    string Descricao,
+    string Marca,
+    string Modelo,
+    ConexaoControlador Conexoes,
+    IEnumerable<Modulo> Modulos,
+    IEnumerable<Interface> Interfaces,
+    IEnumerable<Dispositivo> Dispositivos
+)
 {
-    public Guid Id { get; init; }
-    public bool Master { get; init; }
-    public string Estagio { get; init; } = null!;
-    public string Descricao { get; init; } = null!;
-    public string Marca { get; init; } = null!;
-    public string Modelo { get; init; } = null!;
-    public Conexao Conexoes { get; init; } = null!;
-    public IEnumerable<Modulo> Modulos { get; init; } = null!;
-    public IEnumerable<Interface> Interfaces { get; init; } = null!;
-    public IEnumerable<Dispositivo> Dispositivos { get; init; } = null!;
-
-    public class Conexao
-    {
-        public string Host { get; init; } = null!;
-        public IEnumerable<Porta> Saidas { get; init; } = null!;
-        public IEnumerable<Porta> Entradas { get; init; } = null!;
-        public IEnumerable<Interface> Interfaces { get; init; } = null!;
-    }
+    public sealed record Conexao(
+        string Host,
+        IEnumerable<Porta> Saidas,
+        IEnumerable<Porta> Entradas,
+        IEnumerable<Interface> Interfaces
+    );
 }
 
-public sealed class Modulo
+public sealed record Modulo(
+    Guid Id,
+    string Descricao,
+    bool Master,
+    string Marca,
+    string Modelo,
+    string Estagio,
+    string Protocolo,
+    Parametros Parametros,
+    ConexaoModulo Conexoes
+)
 {
-    public Guid Id { get; init; }
-    public string Descricao { get; init; } = null!;
-    public bool Master { get; init; }
-    public string Marca { get; init; } = null!;
-    public string Modelo { get; init; } = null!;
-    public string Estagio { get; init; } = null!;
-    public string Protocolo { get; init; } = null!;
-    public Parametros Parametros { get; init; } = null!;
-    public Conexao Conexoes { get; init; } = null!;
-
-    public class Conexao
-    {
-        public Dispositivo.Conexao? Conectado { get; init; }
-        public IEnumerable<Porta> Saidas { get; init; } = null!;
-        public IEnumerable<Porta> Entradas { get; init; } = null!;
-        public IEnumerable<Interface> Interfaces { get; init; } = null!;
-    }
+    public sealed record Conexao(
+        Dispositivo.Conexao? Conectado,
+        IEnumerable<Porta> Saidas,
+        IEnumerable<Porta> Entradas,
+        IEnumerable<Interface> Interfaces
+    );
 }
 
-public sealed class Dispositivo
+public sealed record Dispositivo(
+    Guid Id,
+    bool Habilitado,
+    string Descricao,
+    string Tipo,
+    string Sinal,
+    string Categoria,
+    Parametros? Parametros,
+    ConexaoDispositivo Conectado
+)
 {
-    public Guid Id { get; init; }
-    public bool Habilitado { get; init; }
-    public string Descricao { get; init; } = null!;
-    public string Tipo { get; init; } = null!;
-    public string Sinal { get; init; } = null!;
-    public string Categoria { get; init; } = null!;
-    public Parametros? Parametros { get; init; }
-    public Conexao Conectado { get; init; } = null!;
-
-    public class Conexao
-    {
-        public Guid Id { get; init; }
-        public string Tipo { get; init; } = null!;
-        public Canal Canal { get; init; } = null!;
-    }
+    public sealed record Conexao(Guid Id, string Tipo, Canal Canal);
 }
 
-public sealed class Interface
+public sealed record Interface(
+    Guid Id,
+    string Tipo,
+    string Status,
+    string Nome,
+    string? Borne,
+    string? Endereco,
+    Parametros? Parametros,
+    IEnumerable<ConexaoInterface> Conectados
+)
 {
-    public Guid Id { get; init; }
-    public string Tipo { get; init; } = null!;
-    public string Status { get; init; } = null!;
-    public string Nome { get; init; } = null!;
-    public string? Borne { get; init; }
-    public string? Endereco { get; init; }
-    public Parametros? Parametros { get; init; }
-    public IEnumerable<Conexao> Conectados { get; init; } = null!;
-
-    public class Conexao
-    {
-        public Guid Id { get; init; }
-        public string Tipo { get; init; } = null!;
-    }
+    public sealed record Conexao(Guid Id, string Tipo);
 }
 
-public sealed class Porta
+public sealed record Porta(
+    Guid Id,
+    string Sinal,
+    string[] Faixa,
+    string Status,
+    string? Borne,
+    string? Endereco,
+    Parametros? Parametros,
+    ConexaoPorta? Conectado
+)
 {
-    public Guid Id { get; init; }
-    public string Sinal { get; init; } = null!;
-    public string[] Faixa { get; init; } = null!;
-    public string Status { get; init; } = null!;
-    public string? Borne { get; init; }
-    public string? Endereco { get; init; }
-    public Parametros? Parametros { get; init; }
-
-    // public Modbus? Modbus { get; init; }
-    public Conexao? Conectado { get; init; }
-
-    public class Conexao
-    {
-        public Guid Id { get; init; }
-        public string Tipo { get; init; } = null!;
-    }
+    public sealed record Conexao(Guid Id, string Tipo);
 }
 
-public sealed class Canal
-{
-    public Guid Id { get; init; }
-    public string Tipo { get; init; } = null!;
-}
+public sealed record Canal(Guid Id, string Tipo);
 
-// public class Modbus
-// {
-//     public int? Indice { get; init; }
-//     public int? Endereco { get; init; }
-// }'
-
-public sealed class Parametros
+public sealed record Parametros
 {
     [JsonIgnore]
     public bool PossuiParametros => Parametro?.Count > 0;

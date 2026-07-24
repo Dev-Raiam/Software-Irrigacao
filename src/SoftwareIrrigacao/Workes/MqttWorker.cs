@@ -1,8 +1,9 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.IO.Ports;
-using Toolbox.Automacao.Core.Application.Comandos;
 using Toolbox.Automacao.Core.Data;
+using Toolbox.Automacao.Core.Data.Entities;
+using Toolbox.Automacao.Core.Messages;
 using Toolbox.Automacao.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
@@ -18,7 +19,7 @@ public class MqttWorker : BackgroundService
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITekonDriver _driver;
-    private readonly IDadosSincronizacao _dadosSincronizacao;
+    private readonly IRepository _repository;
     private readonly JsonSerializerSettings _jsonSettingsLocal;
     private readonly JsonSerializerSettings _jsonSettingsRemoto;
 
@@ -28,7 +29,7 @@ public class MqttWorker : BackgroundService
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
         ITekonDriverFactory factory,
-        IDadosSincronizacao dadosSincronizacao
+        IRepository repository
     )
     {
 
@@ -36,7 +37,7 @@ public class MqttWorker : BackgroundService
         _mqttRemoto = mqttRemoto;
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _dadosSincronizacao = dadosSincronizacao;
+        _repository = repository;
 
         var config = new TekonDriverConfig
         {
@@ -88,6 +89,15 @@ public class MqttWorker : BackgroundService
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
 
+    private Toolbox.Automacao.Core.Models.Controlador? ObterControladorMaster(CancellationToken cancellationToken = default)
+    {
+        var configuracao = _repository.FirstOrDefault<Controlador>(c => c.Value.Master);
+
+        var controlador = configuracao == null ? null : configuracao.Value;
+
+        return controlador;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -110,7 +120,7 @@ public class MqttWorker : BackgroundService
                 {
                     await _mqttRemoto.Current.ConnectAsync();
                     
-                    var controlador = _dadosSincronizacao.ObterControlador();
+                    var controlador = ObterControladorMaster();
                     
                     if(controlador != null) 
                     {

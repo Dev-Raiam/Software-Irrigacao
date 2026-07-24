@@ -67,7 +67,6 @@ public static class ModuloConfig
         app.UseAuthorization();
 
         app.UseRateLimiter();
-
-        Credenciais.Endpoint(app);
+        app.AuthRegister();
     }
 }

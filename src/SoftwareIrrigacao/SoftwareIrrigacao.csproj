@@ -19,18 +19,22 @@
 
   <ItemGroup>
     <Compile Remove="Application\**" />
+    <Compile Remove="Domain\**" />
     <Compile Remove="Features\Telemetria\Dispositivos\**" />
     <Compile Remove="Features\Telemetria\Simus\**" />
     <Compile Remove="Logs\**" />
     <Content Remove="Application\**" />
+    <Content Remove="Domain\**" />
     <Content Remove="Features\Telemetria\Dispositivos\**" />
     <Content Remove="Features\Telemetria\Simus\**" />
     <Content Remove="Logs\**" />
     <EmbeddedResource Remove="Application\**" />
+    <EmbeddedResource Remove="Domain\**" />
     <EmbeddedResource Remove="Features\Telemetria\Dispositivos\**" />
     <EmbeddedResource Remove="Features\Telemetria\Simus\**" />
     <EmbeddedResource Remove="Logs\**" />
     <None Remove="Application\**" />
+    <None Remove="Domain\**" />
     <None Remove="Features\Telemetria\Dispositivos\**" />
     <None Remove="Features\Telemetria\Simus\**" />
     <None Remove="Logs\**" />
@@ -53,9 +57,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Toolbox.Automacao.Core\Toolbox.Automacao.Core.csproj" />
     <ProjectReference Include="..\Toolbox.Modulo.Tekon\Toolbox.Modulo.Tekon.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Domain\Entity\" />
   </ItemGroup>
 </Project>

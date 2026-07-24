@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Toolbox.Automacao.Core.Application.Comandos;
+using Toolbox.Automacao.Core.Messages.Integration.Controle;
 using Toolbox.Automacao.Core.Models.Comandos;
 using Toolbox.Automacao.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
