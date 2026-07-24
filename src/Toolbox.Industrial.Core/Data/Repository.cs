@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using LiteDB;
-using Toolbox.Automacao.Core.Data.Entities;
+using Toolbox.Industrial.Core.Data.Entities;
 
-namespace Toolbox.Automacao.Core.Data;
+namespace Toolbox.Industrial.Core.Data;
 
 public interface IRepository
 {

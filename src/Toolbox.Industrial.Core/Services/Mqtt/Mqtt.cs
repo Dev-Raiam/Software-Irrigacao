@@ -2,7 +2,7 @@ using System.Text;
 using MQTTnet;
 using MQTTnet.Protocol;
 
-namespace Toolbox.Automacao.Core.Services.Mqtt;
+namespace Toolbox.Industrial.Core.Services.Mqtt;
 
 public sealed class Mqtt : IMqtt
 {

@@ -1,5 +1,5 @@
-using Value = Toolbox.Automacao.Core.Models.Controlador;
+using Value = Toolbox.Industrial.Core.Models.Controlador;
 
-namespace Toolbox.Automacao.Core.Data.Entities;
+namespace Toolbox.Industrial.Core.Data.Entities;
 
 public class Controlador(Guid id, Value value) : Entity<Guid, Value>(id, value) { }

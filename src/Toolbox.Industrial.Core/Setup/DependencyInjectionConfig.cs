@@ -1,13 +1,13 @@
 ﻿using LiteDB;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Core.Data;
-using Toolbox.Automacao.Core.Models;
-using Toolbox.Automacao.Core.Services.Api;
-using Toolbox.Automacao.Core.Services.Cryptography;
-using Toolbox.Automacao.Core.Services.Mqtt;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Models;
+using Toolbox.Industrial.Core.Services.Api;
+using Toolbox.Industrial.Core.Services.Cryptography;
+using Toolbox.Industrial.Core.Services.Mqtt;
 
-namespace Toolbox.Automacao.Core.Setup
+namespace Toolbox.Industrial.Core.Setup
 {
     internal static class DependencyInjectionConfig
     {

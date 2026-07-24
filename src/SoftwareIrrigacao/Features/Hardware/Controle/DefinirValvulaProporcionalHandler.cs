@@ -1,7 +1,7 @@
 using System.Text.Json;
-using Toolbox.Automacao.Core.Messages.Integration;
-using Toolbox.Automacao.Core.Models.Comandos;
-using Toolbox.Automacao.Core.Services.Mqtt;
+using Toolbox.Industrial.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Models.Comandos;
+using Toolbox.Industrial.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 

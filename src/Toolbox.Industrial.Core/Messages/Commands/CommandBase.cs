@@ -1,6 +1,6 @@
 ﻿using Toolbox.Core.Messages;
 
-namespace Toolbox.Automacao.Core.Messages
+namespace Toolbox.Industrial.Core.Messages
 {
     public abstract class CommandBase : Command
     {

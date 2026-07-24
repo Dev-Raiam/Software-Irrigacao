@@ -1,9 +1,9 @@
 using System.Reflection;
-using Toolbox.Automacao.Core.Messages;
-using Toolbox.Automacao.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Messages;
+using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Core.Api.Configuration;
-using Toolbox.Modulo.Tekon;
-using Toolbox.Modulo.Tekon.Interfaces;
+using Toolbox.Industrial.Driver.Tekon;
+using Toolbox.Industrial.Driver.Tekon.Interfaces;
 
 namespace SoftwareIrrigacao.Setup;
 

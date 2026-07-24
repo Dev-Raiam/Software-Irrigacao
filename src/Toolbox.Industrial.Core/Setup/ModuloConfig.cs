@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Toolbox.Automacao.Core.Services.Api;
+using Toolbox.Industrial.Core.Services.Api;
 
-namespace Toolbox.Automacao.Core.Setup
+namespace Toolbox.Industrial.Core.Setup
 {
     public static class ModuloConfig
     {

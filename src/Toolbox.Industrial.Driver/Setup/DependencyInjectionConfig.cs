@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Toolbox.Automacao.Core.Services.Modbus;
-using Toolbox.Modulo.Tekon.Interfaces;
+using Toolbox.Industrial.Driver.Tekon;
+using Toolbox.Industrial.Driver.Tekon.Interfaces;
 
-namespace Toolbox.Modulo.Tekon.Setup
+namespace Toolbox.Industrial.Driver.Setup
 {
     internal static class DependencyInjectionConfig
     {
@@ -11,7 +11,6 @@ namespace Toolbox.Modulo.Tekon.Setup
             services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
             //services.AddSingleton<IModbusFactory, Modbus>();
             services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
-
         }
     }
 }

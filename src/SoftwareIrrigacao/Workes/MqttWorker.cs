@@ -1,14 +1,14 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.IO.Ports;
-using Toolbox.Automacao.Core.Data;
-using Toolbox.Automacao.Core.Data.Entities;
-using Toolbox.Automacao.Core.Messages;
-using Toolbox.Automacao.Core.Services.Mqtt;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Data.Entities;
+using Toolbox.Industrial.Core.Messages;
+using Toolbox.Industrial.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
-using Toolbox.Modulo.Tekon.Interfaces;
-using Toolbox.Modulo.Tekon.Models;
+using Toolbox.Industrial.Driver.Tekon.Interfaces;
+using Toolbox.Industrial.Driver.Tekon.Models;
 
 namespace SoftwareIrrigacao.Workes;
 
@@ -89,7 +89,7 @@ public class MqttWorker : BackgroundService
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
 
-    private Toolbox.Automacao.Core.Models.Controlador? ObterControladorMaster(CancellationToken cancellationToken = default)
+    private Toolbox.Industrial.Core.Models.Controlador? ObterControladorMaster(CancellationToken cancellationToken = default)
     {
         var configuracao = _repository.FirstOrDefault<Controlador>(c => c.Value.Master);
 

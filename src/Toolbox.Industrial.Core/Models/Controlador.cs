@@ -1,11 +1,11 @@
 using System.Text.Json.Serialization;
-using ConexaoControlador = Toolbox.Automacao.Core.Models.Controlador.Conexao;
-using ConexaoDispositivo = Toolbox.Automacao.Core.Models.Dispositivo.Conexao;
-using ConexaoInterface = Toolbox.Automacao.Core.Models.Interface.Conexao;
-using ConexaoModulo = Toolbox.Automacao.Core.Models.Modulo.Conexao;
-using ConexaoPorta = Toolbox.Automacao.Core.Models.Porta.Conexao;
+using ConexaoControlador = Toolbox.Industrial.Core.Models.Controlador.Conexao;
+using ConexaoDispositivo = Toolbox.Industrial.Core.Models.Dispositivo.Conexao;
+using ConexaoInterface = Toolbox.Industrial.Core.Models.Interface.Conexao;
+using ConexaoModulo = Toolbox.Industrial.Core.Models.Modulo.Conexao;
+using ConexaoPorta = Toolbox.Industrial.Core.Models.Porta.Conexao;
 
-namespace Toolbox.Automacao.Core.Models;
+namespace Toolbox.Industrial.Core.Models;
 
 public sealed record Controlador(
     Guid Id,

@@ -4,7 +4,7 @@ using SoftwareIrrigacao.Edpoints;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
 using System.Threading.RateLimiting;
-using Toolbox.Automacao.Core.Setup;
+using Toolbox.Industrial.Core.Setup;
 
 namespace SoftwareIrrigacao.Setup;
 

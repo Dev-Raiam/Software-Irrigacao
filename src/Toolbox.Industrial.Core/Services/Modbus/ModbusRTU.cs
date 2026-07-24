@@ -2,7 +2,7 @@
 using NModbus;
 using NModbus.Serial;
 
-namespace Toolbox.Automacao.Core.Services.ModbusRTU;
+namespace Toolbox.Industrial.Core.Services.ModbusRTU;
 
 public sealed record Configuration(
     string Port,

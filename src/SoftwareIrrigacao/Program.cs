@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
-using Toolbox.Automacao.Core.Data;
-using Toolbox.Automacao.Core.Data.Entities;
-using Toolbox.Automacao.Core.Services;
-using Toolbox.Modulo.Tekon;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Data.Entities;
+using Toolbox.Industrial.Core.Services;
+using Toolbox.Industrial.Driver.Tekon;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 

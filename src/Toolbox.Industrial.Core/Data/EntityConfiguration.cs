@@ -1,4 +1,4 @@
-﻿namespace Toolbox.Automacao.Core.Data;
+﻿namespace Toolbox.Industrial.Core.Data;
 
 public delegate void ApplyConfiguration(IRepository repository);
 

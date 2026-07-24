@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Toolbox.Automacao.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Core.Mediator;
 
-namespace Toolbox.Automacao.Core.Messages
+namespace Toolbox.Industrial.Core.Messages
 {
     public interface ICommandDispatcher
     {

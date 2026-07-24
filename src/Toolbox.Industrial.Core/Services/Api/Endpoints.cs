@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Toolbox.Automacao.Core.Messages.Commands;
+using Toolbox.Industrial.Core.Messages.Commands;
 using Toolbox.Core.Mediator;
 
 namespace SoftwareIrrigacao.Edpoints;

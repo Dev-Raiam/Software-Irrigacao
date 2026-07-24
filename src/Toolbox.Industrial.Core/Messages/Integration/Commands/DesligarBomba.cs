@@ -1,4 +1,4 @@
-﻿namespace Toolbox.Automacao.Core.Messages.Integration
+﻿namespace Toolbox.Industrial.Core.Messages.Integration
 {
     public class DesligarBomba : CommandBase
     {

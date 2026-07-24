@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Toolbox.Modulo.Tekon.Setup
+namespace Toolbox.Industrial.Driver.Setup
 {
     public static class ModuloConfig
     {

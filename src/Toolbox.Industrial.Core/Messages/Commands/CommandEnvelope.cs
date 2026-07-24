@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Toolbox.Automacao.Core.Messages
+namespace Toolbox.Industrial.Core.Messages
 {
     public class CommandEnvelope
     {

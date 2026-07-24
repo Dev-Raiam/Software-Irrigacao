@@ -1,9 +1,9 @@
 ﻿using System.IO.Ports;
 using System.Text.Json;
-using Toolbox.Modulo.Tekon;
-using Toolbox.Modulo.Tekon.Exceptions;
-using Toolbox.Modulo.Tekon.Interfaces;
-using Toolbox.Modulo.Tekon.Models;
+using Toolbox.Industrial.Driver.Tekon;
+using Toolbox.Industrial.Driver.Tekon.Exceptions;
+using Toolbox.Industrial.Driver.Tekon.Interfaces;
+using Toolbox.Industrial.Driver.Tekon.Models;
 
 namespace SoftwareIrrigacao.Features.Telemetria.Tekon
 {

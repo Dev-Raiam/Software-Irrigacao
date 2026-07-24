@@ -2,12 +2,12 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Toolbox.Automacao.Core.Data;
-using Toolbox.Automacao.Core.Data.Entities;
-using Toolbox.Automacao.Core.Models;
-using Toolbox.Automacao.Core.Services.Cryptography;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Data.Entities;
+using Toolbox.Industrial.Core.Models;
+using Toolbox.Industrial.Core.Services.Cryptography;
 
-namespace Toolbox.Automacao.Core.Services.Api;
+namespace Toolbox.Industrial.Core.Services.Api;
 
 internal sealed record Credentials(string chave, string segredo, Guid contextoId);
 

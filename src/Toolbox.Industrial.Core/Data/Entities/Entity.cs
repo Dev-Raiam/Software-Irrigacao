@@ -3,7 +3,7 @@ using LiteDB;
 using Toolbox.Core.Converters;
 using Toolbox.Core.Extensions;
 
-namespace Toolbox.Automacao.Core.Data.Entities
+namespace Toolbox.Industrial.Core.Data.Entities
 {
     public abstract class Entity
     {

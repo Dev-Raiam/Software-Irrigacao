@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Toolbox.Automacao.Core.Models;
+namespace Toolbox.Industrial.Core.Models;
 
 public sealed record Token
 {

@@ -1,6 +1,6 @@
-﻿using Toolbox.Automacao.Core.Services.ModbusRTU;
+﻿using Toolbox.Industrial.Core.Services.ModbusRTU;
 
-namespace Toolbox.Automacao.Core.Services.Modbus;
+namespace Toolbox.Industrial.Core.Services.Modbus;
 
 public static class Modbus
 {

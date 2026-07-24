@@ -55,7 +55,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Toolbox.Automacao.Core\Toolbox.Automacao.Core.csproj" />
-    <ProjectReference Include="..\Toolbox.Modulo.Tekon\Toolbox.Modulo.Tekon.csproj" />
+    <ProjectReference Include="..\Toolbox.Industrial.Core\Toolbox.Industrial.Core.csproj" />
+    <ProjectReference Include="..\Toolbox.Industrial.Driver\Toolbox.Industrial.Driver.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-namespace Toolbox.Automacao.Core.Messages;
+namespace Toolbox.Industrial.Core.Messages;
 
 public class ComandoLeitura
 {

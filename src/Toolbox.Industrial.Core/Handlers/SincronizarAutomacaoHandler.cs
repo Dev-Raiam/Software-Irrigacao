@@ -1,14 +1,14 @@
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using Toolbox.Automacao.Core.Data;
-using Toolbox.Automacao.Core.Data.Entities;
-using Toolbox.Automacao.Core.Messages.Integration;
-using Toolbox.Automacao.Core.Services.Api;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Data.Entities;
+using Toolbox.Industrial.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Services.Api;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
-namespace Toolbox.Automacao.Core.Handlers;
+namespace Toolbox.Industrial.Core.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
