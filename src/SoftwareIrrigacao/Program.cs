@@ -20,28 +20,28 @@ try
     var app = builder.Build();
     app.UseConfig();
 
-	//using (var scope = app.Services.CreateScope())
-	//{
-	//    //var teste = scope.ServiceProvider.GetRequiredService<EntityConfiguration>();
-	//    //teste.ApplyConfiguration = (Istore store) =>
-	//    //{
-	//    //    store.Entity<Configuracao>().Id(c => c.Id).Field(x => x.Value, "teste");
-	//    //};
-	//    //await teste.Ler();
+    //using (var scope = app.Services.CreateScope())
+    //{
+    //    //var teste = scope.ServiceProvider.GetRequiredService<EntityConfiguration>();
+    //    //teste.ApplyConfiguration = (Istore store) =>
+    //    //{
+    //    //    store.Entity<Configuracao>().Id(c => c.Id).Field(x => x.Value, "teste");
+    //    //};
+    //    //await teste.Ler();
 
-	//    var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
+    //    var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
 
-	//    var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
+    //    var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
 
-	//    var painelId = configuracao.ObterCredencialPainel();
+    //    var painelId = configuracao.ObterCredencialPainel();
 
-	//    if (painelId != Guid.Empty)
-	//        await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
-	//}
+    //    if (painelId != Guid.Empty)
+    //        await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
+    //}
 
-	await SeedData.EnsureSeedData(app.Services);
+    await SeedData.EnsureSeedData(app.Services);
 
-	await app.RunAsync();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {

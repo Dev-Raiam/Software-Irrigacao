@@ -33,19 +33,21 @@ namespace Toolbox.Industrial.Core.Setup
 
             #region HttpClient
 
-            //services
-            //    .AddHttpClient<IApiClient, ApiClient>(
-            //        (provider, http) =>
-            //        {
-            //            var store = provider.GetRequiredService<IEntityStore>();
-            //            var uri = store.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)?.Value;
-            //            if (uri != null)
-            //            {
-            //                http.BaseAddress = new Uri(uri);
-            //            }
-            //        }
-            //    )
-            //    .AddStandardResilienceHandler();
+            services
+                .AddHttpClient<IApiClient, ApiClient>(
+                    (provider, http) =>
+                    {
+                        var store = provider.GetRequiredService<IEntityStore>();
+                        var uri = store
+                            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
+                            ?.Value;
+                        if (uri != null)
+                        {
+                            http.BaseAddress = new Uri(uri);
+                        }
+                    }
+                )
+                .AddStandardResilienceHandler();
 
             services
                 .AddHttpClient(
@@ -66,7 +68,7 @@ namespace Toolbox.Industrial.Core.Setup
                 .AddHttpMessageHandler<AuthGuard>()
                 .AddStandardResilienceHandler();
 
-            services.AddTransient<IApiClient, ApiClient>();
+            // services.AddTransient<IApiClient, ApiClient>();
 
             #endregion HttpClient
 
@@ -133,7 +135,7 @@ namespace Toolbox.Industrial.Core.Setup
         )
         {
             services.AddSingleton<ILiteDatabase>(sp => new LiteDatabase(connectionString));
-            services.AddSingleton<IEntityStore, LiteDbEntityStore>();
+            services.AddTransient<IEntityStore, LiteDbEntityStore>();
             return services;
         }
     }

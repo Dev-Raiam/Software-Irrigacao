@@ -35,10 +35,7 @@ public class ApiClient : IApiClient
     private readonly HttpClient _httpClient;
     private readonly ILogger<ApiClient> _logger;
 
-    protected ApiClient(
-        [FromKeyedServices(HttpClientNames.Automacao)] HttpClient httpClient,
-        ILogger<ApiClient> logger
-    )
+    public ApiClient(HttpClient httpClient, ILogger<ApiClient> logger)
     {
         _logger = logger;
         _httpClient = httpClient;

@@ -8,9 +8,9 @@ using Toolbox.Industrial.Core.Security.Cryptography;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
-internal sealed record Credentials(string chave, string segredo, Guid contextoId);
+public sealed record Credentials(string chave, string segredo, Guid contextoId);
 
-internal class AuthGuard : DelegatingHandler
+public class AuthGuard : DelegatingHandler
 {
     private readonly Token _token;
     private readonly IApiClient _client;
@@ -38,7 +38,9 @@ internal class AuthGuard : DelegatingHandler
 
     public async Task<Credentials?> GetCredentials()
     {
-        var chave = await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave);
+        var chave = await _store.FirstOrDefaultAsync<Configuracao>(x =>
+            x.Id == Entity.Keys.Auth.Chave
+        );
         var segredo = await _store.FirstOrDefaultAsync<Configuracao>(x =>
             x.Id == Entity.Keys.Auth.Segredo
         );
