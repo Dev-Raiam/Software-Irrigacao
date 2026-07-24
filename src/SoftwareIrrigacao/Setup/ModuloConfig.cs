@@ -43,7 +43,7 @@ public static class ModuloConfig
 
         services
             .AddIndustrialCore(builder.Configuration)
-            .AddLiteDbEntityStore(@"Filename=Automacao.db;Connection=Shared");
+            .AddLiteDbEntityStore(@"Filename=Irrigacao.db;Connection=Shared");
 
         //services.AddModuloTekon();
 
