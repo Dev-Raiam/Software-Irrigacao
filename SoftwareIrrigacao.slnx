@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/SoftwareIrrigacao/SoftwareIrrigacao.csproj" />
-    <Project Path="src/Toolbox.Automacao.Core/Toolbox.Automacao.Core.csproj" />
-    <Project Path="src/Toolbox.Modulo.Tekon/Toolbox.Modulo.Tekon.csproj" />
+    <Project Path="src/Toolbox.Industrial.Core/Toolbox.Industrial.Core.csproj" />
+    <Project Path="src/Toolbox.Industrial.Driver/Toolbox.Industrial.Driver.csproj" />
   </Folder>
 </Solution>

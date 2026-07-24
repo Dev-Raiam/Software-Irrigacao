@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Toolbox.Automacao.Core\Toolbox.Automacao.Core.csproj" />
+    <ProjectReference Include="..\Toolbox.Industrial.Core\Toolbox.Industrial.Core.csproj" />
   </ItemGroup>
 
 </Project>
