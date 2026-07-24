@@ -37,11 +37,13 @@ public static class ModuloConfig
 
         var pathDbConfig = builder.Configuration.GetSection("PathDatabase:Path").Value;
 
-        var connectionString = !string.IsNullOrWhiteSpace(pathDbConfig)
-            ? $"Data Source={pathDbConfig}"
-            : "Data Source=Irrigacao.db";
+        // var connectionString = !string.IsNullOrWhiteSpace(pathDbConfig)
+        //     ? $"Data Source={pathDbConfig}"
+        //     : "Data Source=Irrigacao.db";
 
-        services.AddIndustrialCore(builder.Configuration).AddLiteDbEntityStore(connectionString);
+        services
+            .AddIndustrialCore(builder.Configuration)
+            .AddLiteDbEntityStore(@"Filename=Automacao.db;Connection=Shared");
 
         //services.AddModuloTekon();
 
