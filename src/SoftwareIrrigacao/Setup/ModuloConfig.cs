@@ -1,8 +1,8 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.RateLimiting;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
-using System.Threading.RateLimiting;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Setup;
@@ -41,8 +41,7 @@ public static class ModuloConfig
             ? $"Data Source={pathDbConfig}"
             : "Data Source=Irrigacao.db";
 
-        services.AddIndustrialCore(builder.Configuration)
-            .AddLiteDbEntityStore(connectionString);
+        services.AddIndustrialCore(builder.Configuration).AddLiteDbEntityStore(connectionString);
 
         //services.AddModuloTekon();
 

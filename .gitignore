@@ -16,7 +16,6 @@ Logs/
 
 # User settings
 *.user
-appsettings.Development.json
 
 # Secrets
 **/key
