@@ -27,7 +27,7 @@ public static class Endpoints
                     return Results.Json(response, statusCode: (int)response.HttpStatusCode);
                 }
             )
-            .RequireAuthorization()
+            //.RequireAuthorization()
             .RequireRateLimiting("limite-tentativas");
     }
 }

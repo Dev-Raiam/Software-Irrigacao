@@ -67,8 +67,8 @@ public static class ModuloConfig
     public static void UseConfig(this WebApplication app)
     {
         app.UseExceptionHandler();
-        app.UseAuthentication();
-        app.UseAuthorization();
+        //app.UseAuthentication();
+        //app.UseAuthorization();
 
         app.UseRateLimiter();
         app.AuthRegister();
