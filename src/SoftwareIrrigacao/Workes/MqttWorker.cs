@@ -1,6 +1,6 @@
+using System.IO.Ports;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.IO.Ports;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
@@ -32,7 +32,6 @@ public class MqttWorker : BackgroundService
         IEntityStore store
     )
     {
-
         _mqttLocal = mqttLocal;
         _mqttRemoto = mqttRemoto;
         _logger = logger;
@@ -89,7 +88,9 @@ public class MqttWorker : BackgroundService
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
 
-    private async Task<Toolbox.Industrial.Core.Communication.Api.Contracts.Controlador?> ObterControladorMaster(CancellationToken cancellationToken = default)
+    private async Task<Toolbox.Industrial.Core.Communication.Api.Contracts.Controlador?> ObterControladorMaster(
+        CancellationToken cancellationToken = default
+    )
     {
         var configuracao = await _store.FirstOrDefaultAsync<Controlador>(c => c.Value.Master);
 
@@ -119,15 +120,21 @@ public class MqttWorker : BackgroundService
                 if (!ConexaoRemotaAtiva)
                 {
                     await _mqttRemoto.Current.ConnectAsync();
-                    
+
                     var controlador = ObterControladorMaster();
-                    
-                    if(controlador != null) 
+
+                    if (controlador != null)
                     {
-                        await _mqttRemoto.Current.SubscribeAsync($"comando/{controlador.Id}", qos: 0);
+                        await _mqttRemoto.Current.SubscribeAsync(
+                            $"comando/{controlador.Id}",
+                            qos: 0
+                        );
                     }
 
-                    await _mqttRemoto.Current.SubscribeAsync($"comando/4fcb13a6-7e9d-4dd1-ab6f-2a87c9f36b76", qos: 0);
+                    await _mqttRemoto.Current.SubscribeAsync(
+                        $"comando/4fcb13a6-7e9d-4dd1-ab6f-2a87c9f36b76",
+                        qos: 0
+                    );
                 }
 
                 if (_mqttRemoto.Current.IsConnected && !ConexaoRemotaAtiva)

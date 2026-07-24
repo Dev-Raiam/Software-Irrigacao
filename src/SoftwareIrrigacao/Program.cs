@@ -15,7 +15,7 @@ try
     builder.Services.AddSerilogConfiguration(builder);
     builder.Services.AddConfiguration(builder);
     builder.Services.AddRegisterServices();
-    builder.Services.AddJwtConfiguration();
+    //builder.Services.AddJwtConfiguration();
 
     var app = builder.Build();
     app.UseConfig();
