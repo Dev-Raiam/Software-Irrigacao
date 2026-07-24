@@ -1,4 +1,4 @@
-﻿using Toolbox.Industrial.Core.Services.Modbus;
+﻿using Toolbox.Industrial.Core.Communication.Modbus;
 using Toolbox.Industrial.Driver.Tekon.Interfaces;
 using Toolbox.Industrial.Driver.Tekon.Models;
 using static Toolbox.Industrial.Core.Services.Modbus.IModbusRTU;

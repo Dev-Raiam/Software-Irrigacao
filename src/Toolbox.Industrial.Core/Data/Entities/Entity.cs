@@ -3,7 +3,7 @@ using LiteDB;
 using Toolbox.Core.Converters;
 using Toolbox.Core.Extensions;
 
-namespace Toolbox.Industrial.Core.Data.Entities
+namespace Toolbox.Industrial.Core.Data
 {
     public abstract class Entity
     {
@@ -27,6 +27,17 @@ namespace Toolbox.Industrial.Core.Data.Entities
                 public static Guid Chave = "Autenticacao.Chave".GetId();
                 public static Guid Segredo = "Autenticacao.Segredo".GetId();
                 public static Guid ContextoId = "Autenticacao.ContextoId".GetId();
+            }
+
+            public static class Mqtt
+            {
+                public static Guid Local = "Mqtt.Local".GetId();
+                public static Guid Remoto = "Mqtt.Remoto".GetId();
+            }
+
+            public static class Api
+            {
+                public static Guid BaseAddress = "Api.BaseAddress".GetId();
             }
 
             public static class Topic

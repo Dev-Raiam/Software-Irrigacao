@@ -1,14 +1,14 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.IO.Ports;
-using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Data.Entities;
-using Toolbox.Industrial.Core.Messages;
-using Toolbox.Industrial.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Communication.Mqtt;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Driver.Tekon.Interfaces;
 using Toolbox.Industrial.Driver.Tekon.Models;
+using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 
 namespace SoftwareIrrigacao.Workes;
 
@@ -19,7 +19,7 @@ public class MqttWorker : BackgroundService
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITekonDriver _driver;
-    private readonly IRepository _repository;
+    private readonly IEntityStore _store;
     private readonly JsonSerializerSettings _jsonSettingsLocal;
     private readonly JsonSerializerSettings _jsonSettingsRemoto;
 
@@ -29,7 +29,7 @@ public class MqttWorker : BackgroundService
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
         ITekonDriverFactory factory,
-        IRepository repository
+        IEntityStore store
     )
     {
 
@@ -37,7 +37,7 @@ public class MqttWorker : BackgroundService
         _mqttRemoto = mqttRemoto;
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _repository = repository;
+        _store = store;
 
         var config = new TekonDriverConfig
         {
@@ -89,9 +89,9 @@ public class MqttWorker : BackgroundService
     private bool ConexaoLocalAtiva = false;
     private bool ConexaoRemotaAtiva = false;
 
-    private Toolbox.Industrial.Core.Models.Controlador? ObterControladorMaster(CancellationToken cancellationToken = default)
+    private async Task<Toolbox.Industrial.Core.Communication.Api.Contracts.Controlador?> ObterControladorMaster(CancellationToken cancellationToken = default)
     {
-        var configuracao = _repository.FirstOrDefault<Controlador>(c => c.Value.Master);
+        var configuracao = await _store.FirstOrDefaultAsync<Controlador>(c => c.Value.Master);
 
         var controlador = configuracao == null ? null : configuracao.Value;
 

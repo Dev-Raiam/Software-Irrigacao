@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Toolbox.Industrial.Core.Messages.Commands;
 using Toolbox.Core.Mediator;
+using Toolbox.Industrial.Core.Messages.Commands;
 
-namespace SoftwareIrrigacao.Edpoints;
+namespace Toolbox.Industrial.Core.Communication.Api;
 
 public static class Endpoints
 {

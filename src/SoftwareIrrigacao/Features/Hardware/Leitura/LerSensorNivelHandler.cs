@@ -2,9 +2,9 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Models.Comandos;
-using Toolbox.Industrial.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Communication.Mqtt;
 
 namespace SoftwareIrrigacao.Features.Hardware.Leitura;
 

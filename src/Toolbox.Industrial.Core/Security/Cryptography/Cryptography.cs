@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 
-namespace Toolbox.Industrial.Core.Services.Cryptography;
+namespace Toolbox.Industrial.Core.Security.Cryptography;
 
 public interface ICryptography
 {

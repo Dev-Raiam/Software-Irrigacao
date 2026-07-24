@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Toolbox.Industrial.Core.Services.Api;
+namespace Toolbox.Industrial.Core.Communication.Api;
 
 public sealed record Configuration(string BaseUrl);
 

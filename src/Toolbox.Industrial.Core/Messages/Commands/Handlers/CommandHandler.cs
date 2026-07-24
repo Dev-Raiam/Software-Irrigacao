@@ -3,7 +3,7 @@ using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
-namespace Toolbox.Industrial.Core
+namespace Toolbox.Industrial.Core.Messages.Commands.Handlers
 {
     public delegate bool BusinessRule();
 

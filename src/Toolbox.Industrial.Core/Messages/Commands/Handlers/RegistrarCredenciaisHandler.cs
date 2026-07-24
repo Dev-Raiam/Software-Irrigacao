@@ -1,27 +1,25 @@
-using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Data.Entities;
-using Toolbox.Industrial.Core.Messages.Commands;
-using Toolbox.Industrial.Core.Messages.Integration;
-using Toolbox.Industrial.Core.Services.Cryptography;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Security.Cryptography;
 
-namespace Toolbox.Industrial.Core.Handlers;
+namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<RegistrarCredenciais>
 {
     private readonly IMediator _mediator;
-    private readonly IRepository _repository;
+    private readonly IEntityStore _store;
     private readonly ICryptography _cryptography;
 
     public RegistrarCredenciaisHandler(
         IMediator mediator,
-        IRepository repository,
+        IEntityStore store,
         ICryptography cryptography
     )
     {
         _mediator = mediator;
-        _repository = repository;
+        _store = store;
         _cryptography = cryptography;
     }
 
@@ -42,7 +40,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         ];
         foreach (var configuracao in configuracoes)
         {
-            _repository.Upsert(configuracao);
+            await _store.UpsertAsync(configuracao);
         }
 
         await _mediator.Execute(

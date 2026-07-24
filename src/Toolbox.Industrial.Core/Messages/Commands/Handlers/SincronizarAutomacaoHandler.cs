@@ -1,30 +1,29 @@
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Data.Entities;
-using Toolbox.Industrial.Core.Messages.Integration;
-using Toolbox.Industrial.Core.Services.Api;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages.Integration;
 
-namespace Toolbox.Industrial.Core.Handlers;
+namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
     private readonly IApiClient _apiClient;
-    private readonly IRepository _repository;
+    private readonly IEntityStore _store;
     private readonly ILogger<SincronizarAutomacaoHandler> _logger;
 
     public SincronizarAutomacaoHandler(
         IApiClient apiClient,
-        IRepository repository,
+        IEntityStore store,
         ILogger<SincronizarAutomacaoHandler> logger
     )
     {
         _logger = logger;
         _apiClient = apiClient;
-        _repository = repository;
+        _store = store;
     }
 
     public async Task<ResponseResult> Handle(
@@ -34,7 +33,9 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     {
         if (
             !Guid.TryParse(
-                _repository.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.PainelId)?.Value,
+                (
+                    await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+                )?.Value,
                 out var painelId
             )
             || painelId == Guid.Empty
@@ -53,24 +54,24 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         return NoContent();
     }
 
-    private bool CredenciaisRegistradas()
+    private async Task<bool> CredenciaisRegistradasAsync()
     {
-        var chave = _repository
-            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
-            ?.Value;
+        var chave = (
+            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
+        )?.Value;
 
-        var segredo = _repository
-            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
-            ?.Value;
+        var segredo = (
+            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
+        )?.Value;
 
-        var contextoId = _repository
-            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
-            ?.Value;
+        var contextoId = (
+            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
+        )?.Value;
 
         return chave != null && segredo != null && contextoId != null;
     }
 
-    private async Task<Result<List<Models.Controlador>>> ObterControladores(
+    private async Task<Result<List<Communication.Api.Contracts.Controlador>>> ObterControladores(
         Guid painelId,
         CancellationToken cancellationToken
     )
@@ -84,7 +85,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             new MediaTypeWithQualityHeaderValue(CustomMediaTypes.AutomacaoV1)
         );
 
-        var response = await _apiClient.SendAsync<List<Models.Controlador>>(
+        var response = await _apiClient.SendAsync<List<Communication.Api.Contracts.Controlador>>(
             request,
             cancellationToken
         );
@@ -98,7 +99,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         {
             _logger.LogInformation("Sincronização Iniciada...");
 
-            if (!CredenciaisRegistradas())
+            if (!await CredenciaisRegistradasAsync())
             {
                 _logger.LogWarning(
                     "Sincronização cancelada: credenciais de integracao não configuradas"
@@ -112,7 +113,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             {
                 foreach (var controlador in result.Data)
                 {
-                    _repository.Upsert(new Controlador(controlador.Id, controlador));
+                    await _store.UpsertAsync(new Controlador(controlador.Id, controlador));
                 }
 
                 var quantidadeControladores = result.Data.Count;

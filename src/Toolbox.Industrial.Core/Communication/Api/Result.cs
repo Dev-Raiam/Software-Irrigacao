@@ -1,4 +1,4 @@
-namespace Toolbox.Industrial.Core.Services.Api;
+namespace Toolbox.Industrial.Core.Communication.Api;
 
 public class Result<T>
 {

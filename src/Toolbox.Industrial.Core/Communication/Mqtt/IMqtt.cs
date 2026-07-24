@@ -1,4 +1,4 @@
-namespace Toolbox.Industrial.Core.Services.Mqtt;
+namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public interface IMqtt : IDisposable
 {

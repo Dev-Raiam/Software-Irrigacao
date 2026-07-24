@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Core.Messages.Integration;
-using Toolbox.Industrial.Core.Services.Mqtt;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Communication.Mqtt;
 
 namespace SoftwareIrrigacao.Features.Hardware.Controle;
 

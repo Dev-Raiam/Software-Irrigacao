@@ -2,12 +2,11 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Data.Entities;
-using Toolbox.Industrial.Core.Models;
-using Toolbox.Industrial.Core.Services.Cryptography;
+using Toolbox.Industrial.Core.Security.Cryptography;
 
-namespace Toolbox.Industrial.Core.Services.Api;
+namespace Toolbox.Industrial.Core.Communication.Api;
 
 internal sealed record Credentials(string chave, string segredo, Guid contextoId);
 
@@ -16,7 +15,7 @@ internal class AuthGuard : DelegatingHandler
     private readonly Token _token;
     private readonly IApiClient _client;
     private readonly HttpClient _httpClient;
-    private readonly IRepository _repository;
+    private readonly IEntityStore _store;
     private readonly ICryptography _cryptography;
     private readonly ILogger<AuthGuard> _logger;
 
@@ -24,7 +23,7 @@ internal class AuthGuard : DelegatingHandler
         Token token,
         IApiClient client,
         HttpClient httpClient,
-        IRepository repository,
+        IEntityStore store,
         ICryptography cryptography,
         ILogger<AuthGuard> logger
     )
@@ -33,17 +32,17 @@ internal class AuthGuard : DelegatingHandler
         _client = client;
         _logger = logger;
         _httpClient = httpClient;
-        _repository = repository;
+        _store = store;
         _cryptography = cryptography;
     }
 
-    public Credentials? GetCredentials()
+    public async Task<Credentials?> GetCredentials()
     {
-        var chave = _repository.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave);
-        var segredo = _repository.FirstOrDefault<Configuracao>(x =>
+        var chave = await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave);
+        var segredo = await _store.FirstOrDefaultAsync<Configuracao>(x =>
             x.Id == Entity.Keys.Auth.Segredo
         );
-        var contextoId = _repository.FirstOrDefault<Configuracao>(x =>
+        var contextoId = await _store.FirstOrDefaultAsync<Configuracao>(x =>
             x.Id == Entity.Keys.Auth.ContextoId
         );
 
@@ -85,7 +84,7 @@ internal class AuthGuard : DelegatingHandler
     {
         if (_token.Expired)
         {
-            var credentials = GetCredentials();
+            var credentials = await GetCredentials();
 
             if (credentials == null)
             {
