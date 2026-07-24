@@ -1,4 +1,3 @@
-using System.IO.Ports;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Toolbox.Core.Mediator;
@@ -6,8 +5,6 @@ using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages;
-using Toolbox.Industrial.Driver.Tekon.Interfaces;
-using Toolbox.Industrial.Driver.Tekon.Models;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 
 namespace SoftwareIrrigacao.Workes;
@@ -18,7 +15,6 @@ public class MqttWorker : BackgroundService
     private readonly MqttManager _mqttRemoto;
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ITekonDriver _driver;
     private readonly IEntityStore _store;
     private readonly JsonSerializerSettings _jsonSettingsLocal;
     private readonly JsonSerializerSettings _jsonSettingsRemoto;
@@ -28,7 +24,6 @@ public class MqttWorker : BackgroundService
         [FromKeyedServices(Mqtt.Remoto)] MqttManager mqttRemoto,
         ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
-        ITekonDriverFactory factory,
         IEntityStore store
     )
     {
@@ -37,18 +32,6 @@ public class MqttWorker : BackgroundService
         _logger = logger;
         _serviceProvider = serviceProvider;
         _store = store;
-
-        var config = new TekonDriverConfig
-        {
-            Porta = "COM6",
-            BaudRate = 19200,
-            DataBits = 8,
-            Parity = Parity.None,
-            StopBits = StopBits.Two,
-            ReadTimeout = 1000,
-            WriteTimeout = 1000,
-        };
-        _driver = factory.CriarDriver(config);
 
         _jsonSettingsLocal = new JsonSerializerSettings
         {
@@ -173,13 +156,6 @@ public class MqttWorker : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            if (topic == "topic")
-            {
-                //var command = new SalvarTelemetria { Dados = payload };
-                //await mediator.Execute(command, cancellationToken: default);
-                return;
-            }
-
             var mensagem = JsonConvert.DeserializeObject(payload, _jsonSettingsLocal)!;
 
             if (mensagem is Command command)
@@ -228,6 +204,4 @@ public class MqttWorker : BackgroundService
 
         await base.StopAsync(cancellationToken);
     }
-
-    public record Body(string modelo, byte slaveAddress, byte index, string porta, bool valor);
 }
