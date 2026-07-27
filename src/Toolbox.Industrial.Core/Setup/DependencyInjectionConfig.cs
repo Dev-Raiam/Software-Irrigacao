@@ -45,6 +45,7 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddTransient<AuthGuard>();
             services
                 .AddDataProtection()
+                // Application Discriminator (isolamento entre aplicações)
                 .SetApplicationName("Automacao")
                 .PersistKeysToFileSystem(
                     new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Keys"))
