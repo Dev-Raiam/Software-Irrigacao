@@ -14,6 +14,7 @@ internal sealed class Cryptography : ICryptography
 
     public Cryptography(IDataProtectionProvider provider)
     {
+        //[Chave real] + [Purpose (propósito / escopo criptográfico)] → derivação criptográfica
         _protector = provider.CreateProtector("DataProtection.v1");
     }
 
