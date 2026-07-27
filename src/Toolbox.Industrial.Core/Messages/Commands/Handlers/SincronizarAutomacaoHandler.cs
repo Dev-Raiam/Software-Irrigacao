@@ -82,7 +82,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         );
 
         request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(CustomMediaTypes.AutomacaoV1)
+            new MediaTypeWithQualityHeaderValue(MediaTypes.Industrial.V1)
         );
 
         var response = await _apiClient.SendAsync<List<Communication.Api.Contracts.Controlador>>(

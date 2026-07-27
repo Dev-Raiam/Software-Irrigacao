@@ -36,6 +36,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             new(Entity.Keys.Auth.Chave, chave!),
             new(Entity.Keys.Auth.Segredo, segredo!),
             new(Entity.Keys.Auth.ContextoId, request.ContextoId.ToString()),
+            new(Entity.Keys.ContaId, request.ContaId.ToString()),
             new(Entity.Keys.PainelId, request.PainelId.ToString()),
         ];
         foreach (var configuracao in configuracoes)

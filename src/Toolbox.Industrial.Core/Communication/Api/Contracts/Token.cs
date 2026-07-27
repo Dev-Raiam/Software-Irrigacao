@@ -4,42 +4,35 @@ namespace Toolbox.Industrial.Core.Communication.Api.Contracts;
 
 public sealed record Token
 {
-    [JsonPropertyName("tokenAcesso")]
-    public string? AccessToken { get; private set; }
-
-    [JsonPropertyName("tokenAtualizacao")]
-    public string? RefreshToken { get; private set; }
-
-    [JsonPropertyName("emitido")]
-    public DateTime IssuedAt { get; private set; }
-
-    [JsonPropertyName("expira")]
-    public DateTime Expire { get; private set; }
+    public string? TokenAcesso { get; private set; }
+    public string? TokenAtualizacao { get; private set; }
+    public DateTime Emitido { get; private set; }
+    public DateTime Expira { get; private set; }
+    public bool Expirado => Expira <= DateTime.UtcNow;
 
     public Token()
     {
-        AccessToken = null;
-        RefreshToken = null;
-        IssuedAt = DateTime.MinValue;
-        Expire = DateTime.MinValue;
+        TokenAcesso = null;
+        TokenAtualizacao = null;
+        Emitido = DateTime.MinValue;
+        Expira = DateTime.MinValue;
     }
 
     [JsonConstructor]
     public Token(string? tokenAcesso, string? tokenAtualizacao, DateTime emitido, DateTime expira)
     {
-        AccessToken = tokenAcesso;
-        RefreshToken = tokenAtualizacao;
-        IssuedAt = emitido;
-        Expire = expira.AddSeconds(-15);
+        TokenAcesso = tokenAcesso;
+        TokenAtualizacao = tokenAtualizacao;
+        Emitido = emitido;
+        Expira = expira.AddSeconds(-15);
     }
 
     public void Update(Token token)
     {
-        AccessToken = token.AccessToken;
-        RefreshToken = token.RefreshToken;
-        IssuedAt = token.IssuedAt;
-        Expire = token.Expire;
+        TokenAcesso = token.TokenAcesso;
+        TokenAtualizacao = token.TokenAtualizacao;
+        Emitido = token.Emitido;
+        Expira = token.Expira;
     }
 
-    public bool Expired => Expire <= DateTime.UtcNow;
 }

@@ -1,6 +1,5 @@
-using System.Net.Http.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Json;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
@@ -8,30 +7,30 @@ public sealed record Configuration(string BaseUrl);
 
 public interface IApiClient
 {
-    HttpClient HttpClient { get; }
+    //HttpClient HttpClient { get; }
 
     Task<Result<T>> GetAsync<T>(
         string url,
-        CancellationToken cancellationToken,
-        HttpClient? httpClient = null
+        CancellationToken cancellationToken
     );
 
     Task<Result<T>> PostAsync<T>(
         string url,
         HttpContent content,
-        CancellationToken cancellationToken,
-        HttpClient? httpClient = null
+        CancellationToken cancellationToken
     );
 
     Task<Result<T>> SendAsync<T>(
         HttpRequestMessage request,
-        CancellationToken cancellationToken,
-        HttpClient? httpClient = null
+        CancellationToken cancellationToken
     );
 }
 
 public class ApiClient : IApiClient
 {
+    public const string Anonymous = "anonymous";
+    public static string? BaseAddress;
+
     private readonly HttpClient _httpClient;
     private readonly ILogger<ApiClient> _logger;
 
@@ -41,19 +40,14 @@ public class ApiClient : IApiClient
         _httpClient = httpClient;
     }
 
-    public HttpClient HttpClient => _httpClient;
-
     public async Task<Result<T>> GetAsync<T>(
         string url,
-        CancellationToken cancellationToken,
-        HttpClient? httpClient = null
+        CancellationToken cancellationToken
     )
     {
         try
         {
-            httpClient ??= _httpClient;
-
-            var response = await httpClient.GetAsync(url, cancellationToken);
+            var response = await _httpClient.GetAsync(url, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -76,36 +70,34 @@ public class ApiClient : IApiClient
         catch (TaskCanceledException ex)
         {
             _logger.LogWarning(ex, "Timeout ao chamar {Url}", url);
-            return Result<T>.Fail($"Timeout {ex.Message}");
+            return Result<T>.Fail($"Timeout {ex.Message}", ex);
         }
         catch (HttpRequestException ex)
         {
             _logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", url);
-            return Result<T>.Fail($"Erro de conexão {ex.Message}");
+            return Result<T>.Fail($"Erro de conexão {ex.Message}", ex);
         }
         catch (System.Text.Json.JsonException ex)
         {
             _logger.LogError(ex, "Erro ao converter JSON de {Url}", url);
-            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
+            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}", ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado ao chamar {Url}", url);
-            return Result<T>.Fail($"Erro inesperado {ex.Message}");
+            return Result<T>.Fail($"Erro inesperado {ex.Message}", ex);
         }
     }
 
     public async Task<Result<T>> PostAsync<T>(
         string url,
         HttpContent content,
-        CancellationToken cancellationToken,
-        HttpClient? httpClient = null
+        CancellationToken cancellationToken
     )
     {
         try
         {
-            httpClient ??= _httpClient;
-            var response = await httpClient.PostAsync(url, content, cancellationToken);
+            var response = await _httpClient.PostAsync(url, content, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -128,36 +120,33 @@ public class ApiClient : IApiClient
         catch (TaskCanceledException ex)
         {
             _logger.LogWarning(ex, "Timeout ao chamar {Url}", url);
-            return Result<T>.Fail($"Timeout {ex.Message}");
+            return Result<T>.Fail($"Timeout {ex.Message}", ex);
         }
         catch (HttpRequestException ex)
         {
             _logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", url);
-            return Result<T>.Fail($"Erro de conexão {ex.Message}");
+            return Result<T>.Fail($"Erro de conexão {ex.Message}", ex);
         }
         catch (System.Text.Json.JsonException ex)
         {
             _logger.LogError(ex, "Erro ao converter JSON de {Url}", url);
-            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
+            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}", ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado ao chamar {Url}", url);
-            return Result<T>.Fail($"Erro inesperado {ex.Message}");
+            return Result<T>.Fail($"Erro inesperado {ex.Message}", ex);
         }
     }
 
     public async Task<Result<T>> SendAsync<T>(
         HttpRequestMessage request,
-        CancellationToken cancellationToken,
-        HttpClient? httpClient = null
+        CancellationToken cancellationToken
     )
     {
         try
         {
-            httpClient ??= _httpClient;
-
-            var response = await httpClient.SendAsync(request, cancellationToken);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -180,22 +169,22 @@ public class ApiClient : IApiClient
         catch (TaskCanceledException ex)
         {
             _logger.LogWarning(ex, "Timeout ao chamar {Url}", request.RequestUri);
-            return Result<T>.Fail($"Timeout {ex.Message}");
+            return Result<T>.Fail($"Timeout {ex.Message}", ex);
         }
         catch (HttpRequestException ex)
         {
             _logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", request.RequestUri);
-            return Result<T>.Fail($"Erro de conexão {ex.Message}");
+            return Result<T>.Fail($"Erro de conexão {ex.Message}", ex);
         }
         catch (System.Text.Json.JsonException ex)
         {
             _logger.LogError(ex, "Erro ao converter JSON de {Url}", request.RequestUri);
-            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}");
+            return Result<T>.Fail($"Erro ao converter JSON {ex.Message}", ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado ao chamar {Url}", request.RequestUri);
-            return Result<T>.Fail($"Erro inesperado {ex.Message}");
+            return Result<T>.Fail($"Erro inesperado {ex.Message}", ex);
         }
     }
 }

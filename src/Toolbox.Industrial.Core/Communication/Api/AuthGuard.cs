@@ -1,7 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
@@ -14,25 +15,25 @@ public class AuthGuard : DelegatingHandler
 {
     private readonly Token _token;
     private readonly IApiClient _client;
-    private readonly HttpClient _httpClient;
     private readonly IEntityStore _store;
+    //private readonly HttpClient _httpClient;
     private readonly ICryptography _cryptography;
     private readonly ILogger<AuthGuard> _logger;
 
     public AuthGuard(
         Token token,
-        IApiClient client,
-        HttpClient httpClient,
         IEntityStore store,
+        //HttpClient httpClient,
         ICryptography cryptography,
-        ILogger<AuthGuard> logger
+        ILogger<AuthGuard> logger,
+        [FromKeyedServices(ApiClient.Anonymous)] IApiClient client
     )
     {
         _token = token;
+        _store = store;
         _client = client;
         _logger = logger;
-        _httpClient = httpClient;
-        _store = store;
+        //_httpClient = httpClient;
         _cryptography = cryptography;
     }
 
@@ -72,8 +73,8 @@ public class AuthGuard : DelegatingHandler
         var response = await _client.PostAsync<Token>(
             "/autenticacao/v1/autenticar-cliente",
             content,
-            cancellationToken,
-            _httpClient
+            cancellationToken
+            //_httpClient
         );
 
         return response;
@@ -84,7 +85,7 @@ public class AuthGuard : DelegatingHandler
         CancellationToken cancellationToken
     )
     {
-        if (_token.Expired)
+        if (_token.Expirado)
         {
             var credentials = await GetCredentials();
 
@@ -104,11 +105,11 @@ public class AuthGuard : DelegatingHandler
             _token.Update(response.Data);
         }
 
-        if (!string.IsNullOrEmpty(_token.AccessToken))
+        if (!string.IsNullOrEmpty(_token.TokenAcesso))
         {
             request.Headers.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
-                _token.AccessToken
+                _token.TokenAcesso
             );
         }
 

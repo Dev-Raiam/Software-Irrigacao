@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
@@ -14,6 +15,23 @@ namespace Toolbox.Industrial.Core.Setup
 {
     public static class DependencyInjectionConfig
     {
+        private static void ConfigureClient(IServiceProvider provider, HttpClient http)
+        {
+            if (ApiClient.BaseAddress == null)
+            {
+                var store = provider.GetRequiredService<IEntityStore>();
+                ApiClient.BaseAddress = store
+                    .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
+                    ?.Value;
+            }
+
+            if (ApiClient.BaseAddress != null)
+            {
+                http.BaseAddress = new Uri(ApiClient.BaseAddress);
+            }
+        }
+
+
         public static IServiceCollection AddIndustrialCore(
             this IServiceCollection services,
             IConfiguration configuration
@@ -21,6 +39,7 @@ namespace Toolbox.Industrial.Core.Setup
         {
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
+            services.AddSingleton<ICryptography, Cryptography>();
             services.AddTransient<AuthGuard>();
             services
                 .AddDataProtection()
@@ -29,46 +48,22 @@ namespace Toolbox.Industrial.Core.Setup
                     new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Keys"))
                 );
 
-            services.AddSingleton<ICryptography, Cryptography>();
-
             #region HttpClient
 
             services
-                .AddHttpClient<IApiClient, ApiClient>(
-                    (provider, http) =>
-                    {
-                        var store = provider.GetRequiredService<IEntityStore>();
-                        var uri = store
-                            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
-                            ?.Value;
-                        if (uri != null)
-                        {
-                            http.BaseAddress = new Uri(uri);
-                        }
-                    }
-                )
-                .AddStandardResilienceHandler();
-
-            services
-                .AddHttpClient(
-                    HttpClientNames.Automacao,
-                    (provider, http) =>
-                    {
-                        var store = provider.GetRequiredService<IEntityStore>();
-                        var uri = store
-                            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
-                            ?.Value;
-
-                        if (uri != null)
-                        {
-                            http.BaseAddress = new Uri(uri);
-                        }
-                    }
-                )
+                .AddHttpClient<IApiClient, ApiClient>(ConfigureClient)
                 .AddHttpMessageHandler<AuthGuard>()
                 .AddStandardResilienceHandler();
 
-            // services.AddTransient<IApiClient, ApiClient>();
+            services.AddKeyedTransient<IApiClient, ApiClient>(
+                ApiClient.Anonymous,
+                (provider, key) =>
+                {
+                    var httpClient = new HttpClient();
+                    ConfigureClient(provider, httpClient);
+                    return new ApiClient(httpClient, provider.GetRequiredService<ILogger<ApiClient>>());
+                }
+            );
 
             #endregion HttpClient
 

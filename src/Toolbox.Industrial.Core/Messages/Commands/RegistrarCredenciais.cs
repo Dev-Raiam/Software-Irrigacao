@@ -14,6 +14,9 @@ namespace Toolbox.Industrial.Core.Messages.Commands
         [Required(ErrorMessage = "ContextoId é obrigatório")]
         public Guid ContextoId { get; init; }
 
+        [Required(ErrorMessage = "ContaId é obrigatório")]
+        public Guid ContaId { get; init; }
+
         [Required(ErrorMessage = "PainelId é obrigatório")]
         public Guid PainelId { get; init; }
     }
