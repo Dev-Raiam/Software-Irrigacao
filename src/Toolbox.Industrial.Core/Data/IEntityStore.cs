@@ -8,6 +8,11 @@ public interface IEntityStore
     EntityBuilder<TEntity> Configure<TEntity>()
         where TEntity : Entity;
 
+    ILiteQueryable<BsonDocument> Query(string collection);
+
+    ILiteQueryable<TEntity> Query<TEntity>()
+        where TEntity : Entity;
+
     Task<bool> InsertAsync<TEntity>(TEntity entity)
         where TEntity : Entity;
 
@@ -17,14 +22,16 @@ public interface IEntityStore
     Task<bool> UpsertAsync<TEntity>(TEntity entity)
         where TEntity : Entity;
 
+    Task<int> DeleteAllAsync<TEntity>()
+        where TEntity : Entity;
+
     Task<bool> DeleteAsync<TEntity>(TEntity entity)
         where TEntity : Entity;
 
     Task<int> DeleteManyAsync<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : Entity;
 
-    Task<int> DeleteAllAsync<TEntity>()
-        where TEntity : Entity;
+    Task<bool> DeleteAllCollectionsAsync();
 
     TEntity FirstOrDefault<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : Entity;

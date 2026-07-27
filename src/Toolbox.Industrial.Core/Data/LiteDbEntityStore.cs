@@ -22,6 +22,13 @@ internal class LiteDbEntityStore : IEntityStore
     public EntityBuilder<TEntity> Configure<TEntity>()
         where TEntity : Entity => BsonMapper.Global.Entity<TEntity>();
 
+    public ILiteQueryable<BsonDocument> Query(string collection) =>
+        _database.GetCollection(collection).Query();
+
+    public ILiteQueryable<TEntity> Query<TEntity>() 
+        where TEntity : Entity =>
+        _database.GetCollection<TEntity>(Entity.GetCollection<TEntity>()).Query();
+
     public Task<bool> InsertAsync<TEntity>(TEntity entity)
         where TEntity : Entity =>
         Task.FromResult(
@@ -53,6 +60,19 @@ internal class LiteDbEntityStore : IEntityStore
         Task.FromResult(
             _database.GetCollection<TEntity>(Entity.GetCollection<TEntity>()).DeleteMany(predicate)
         );
+
+    public Task<bool> DeleteAllCollectionsAsync()
+    {
+        var result = false;
+        foreach (var collection in _database.GetCollection("$cols").Query().Where(doc => doc["name"].AsString.StartsWith("$") == false).ToList())
+        {
+            result = result || _database.GetCollection(collection["name"].AsString).DeleteAll() > 0;
+        }
+        Task.Delay(1000);
+        return Task.FromResult(
+            result
+        );
+    }
 
     public Task<int> DeleteAllAsync<TEntity>()
         where TEntity : Entity =>

@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -36,20 +36,20 @@ public static class Endpoints
 
         app.MapGet(
                 "/configuracao/logs",
-                async (
-                    [FromServices] IEntityStore store,
-                    CancellationToken cancellationToken
-                ) =>
+                async ([FromServices] IEntityStore store, CancellationToken cancellationToken) =>
                 {
                     var config = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)?.Value?.ToString();
+                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
+                        ?.Value?.ToString();
 
                     if (config == null)
                     {
                         return Results.Ok(new SerilogConfig());
                     }
 
-                    return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<SerilogConfig>(config));
+                    return Results.Ok(
+                        System.Text.Json.JsonSerializer.Deserialize<SerilogConfig>(config)
+                    );
                 }
             )
             //.RequireAuthorization()
@@ -65,8 +65,9 @@ public static class Endpoints
                 ) =>
                 {
                     var json = System.Text.Json.JsonSerializer.Serialize(cfg);
-                    var config = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config);
+                    var config = store.FirstOrDefault<Configuracao>(x =>
+                        x.Id == Entity.Keys.Serilog.Config
+                    );
 
                     if (config == null)
                     {
@@ -78,7 +79,13 @@ public static class Endpoints
                     }
                     await store.UpsertAsync(config);
                     lifetime.StopApplication();
-                    return Results.Ok(new string[] { "Configuração realizada com sucesso.", "Aplicação será encerrada." });
+                    return Results.Ok(
+                        new string[]
+                        {
+                            "Configuração realizada com sucesso.",
+                            "Aplicação será encerrada.",
+                        }
+                    );
                 }
             )
             //.RequireAuthorization()
@@ -102,25 +109,47 @@ public static class Endpoints
                 "/system/reboot",
                 async () =>
                 {
+                    var result = Results.NoContent();
                     _ = Task.Run(async () =>
                     {
                         await Task.Delay(1000);
-
-                        var process = Process.Start(
-                            new ProcessStartInfo
-                            {
-                                FileName = "systemctl",
-                                ArgumentList = { "reboot" },
-                                RedirectStandardOutput = true,
-                                RedirectStandardError = true,
-                                UseShellExecute = false,
-                            }
-                        );
-
-                        await process!.WaitForExitAsync();
+                        Process? process = null;
+                        if (OperatingSystem.IsWindows())
+                        {
+                            process = Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = "shutdown",
+                                    ArgumentList =
+                                    {
+                                        "/r", // Restart
+                                        "/t",
+                                        "0", // Sem atraso
+                                    },
+                                    UseShellExecute = false,
+                                }
+                            );
+                        }
+                        else if (OperatingSystem.IsLinux())
+                        {
+                            process = Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = "systemctl",
+                                    ArgumentList = { "reboot" },
+                                    RedirectStandardOutput = true,
+                                    RedirectStandardError = true,
+                                    UseShellExecute = false,
+                                }
+                            );
+                        }
+                        if (process != null)
+                        {
+                            await process!.WaitForExitAsync();
+                            result = Results.Accepted("O dispositivo será reiniciado.");
+                        }
                     });
-
-                    return Results.Accepted("O dispositivo será reiniciado.");
+                    return result;
                 }
             )
             //.RequireAuthorization()
@@ -130,23 +159,45 @@ public static class Endpoints
                 "/system/shutdown",
                 async () =>
                 {
+                    var result = Results.NoContent();
                     _ = Task.Run(async () =>
                     {
                         await Task.Delay(1000);
-
-                        var process = Process.Start(
-                            new ProcessStartInfo
-                            {
-                                FileName = "systemctl",
-                                ArgumentList = { "poweroff" },
-                                UseShellExecute = false,
-                            }
-                        );
-
-                        await process!.WaitForExitAsync();
+                        Process? process = null;
+                        if (OperatingSystem.IsWindows())
+                        {
+                            process = Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = "shutdown",
+                                    ArgumentList =
+                                    {
+                                        "/s", // Shutdown
+                                        "/t",
+                                        "0",
+                                    },
+                                    UseShellExecute = false,
+                                }
+                            );
+                        }
+                        else if (OperatingSystem.IsLinux())
+                        {
+                            process = Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = "systemctl",
+                                    ArgumentList = { "poweroff" },
+                                    UseShellExecute = false,
+                                }
+                            );
+                        }
+                        if (process != null)
+                        {
+                            await process!.WaitForExitAsync();
+                            result = Results.Accepted("O dispositivo será desligado.");
+                        }
                     });
-
-                    return Results.Accepted("O dispositivo será desligado.");
+                    return result;
                 }
             )
             //.RequireAuthorization()

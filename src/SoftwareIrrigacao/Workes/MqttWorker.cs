@@ -11,6 +11,7 @@ namespace SoftwareIrrigacao.Workes;
 
 public class MqttWorker : BackgroundService
 {
+    private bool _disposed = false;
     private readonly MqttManager _mqttLocal;
     private readonly MqttManager _mqttRemoto;
     private readonly ILogger<MqttWorker> _logger;
@@ -84,7 +85,7 @@ public class MqttWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (!_disposed && !stoppingToken.IsCancellationRequested)
         {
             try
             {
@@ -194,14 +195,15 @@ public class MqttWorker : BackgroundService
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
+        _disposed = true;
+        await Task.Delay(1000);
         _logger.LogInformation("Encerrando Serviço MQTT...");
-
         await _mqttLocal.Current.DisconnectAsync();
         _mqttLocal.Current.Dispose();
 
         await _mqttRemoto.Current.DisconnectAsync();
         _mqttRemoto.Current.Dispose();
-
         await base.StopAsync(cancellationToken);
+
     }
 }

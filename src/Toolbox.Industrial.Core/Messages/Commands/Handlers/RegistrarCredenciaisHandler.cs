@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Data;
@@ -11,15 +12,18 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
     private readonly IMediator _mediator;
     private readonly IEntityStore _store;
     private readonly ICryptography _cryptography;
+    private readonly IHostApplicationLifetime _lifetime;
 
     public RegistrarCredenciaisHandler(
         IMediator mediator,
         IEntityStore store,
-        ICryptography cryptography
+        ICryptography cryptography,
+        IHostApplicationLifetime lifetime
     )
     {
-        _mediator = mediator;
         _store = store;
+        _mediator = mediator;
+        _lifetime = lifetime;
         _cryptography = cryptography;
     }
 
@@ -28,6 +32,36 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         CancellationToken cancellationToken
     )
     {
+        Guid.TryParse(
+            (
+                await _store.FirstOrDefaultAsync<Configuracao>(x =>
+                    x.Id == Entity.Keys.Auth.ContextoId
+                )
+            )?.Value.ToString(),
+            out var contextoId
+        );
+        Guid.TryParse(
+            (
+                await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+            )?.Value.ToString(),
+            out var painelId
+        );
+
+        Guid.TryParse(
+            (
+                await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId)
+            )?.Value.ToString(),
+            out var contaId
+        );
+
+        var restart = false;
+        if (contextoId != request.ContextoId ||
+            contaId != request.ContaId ||
+            painelId != request.PainelId)
+        {
+            restart = await _store.DeleteAllCollectionsAsync();
+        }
+
         var chave = _cryptography.Encrypt(request.Chave);
         var segredo = _cryptography.Encrypt(request.Segredo);
 
@@ -48,6 +82,10 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             new SincronizarAutomacao { PainelId = request.PainelId },
             cancellationToken: cancellationToken
         );
+        if (restart)
+        {
+            _lifetime.StopApplication();
+        }
 
         return NoContent();
     }

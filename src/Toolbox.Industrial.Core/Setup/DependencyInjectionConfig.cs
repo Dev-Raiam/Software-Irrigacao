@@ -174,57 +174,10 @@ namespace Toolbox.Industrial.Core.Setup
                             new Configuracao(id: Entity.Keys.Serilog.Config, value: cfg)
                         );
                     }
-                    var stream = new MemoryStream(Encoding.UTF8.GetBytes(cfg));
 
+                    var stream = new MemoryStream(Encoding.UTF8.GetBytes(cfg));
                     var configuration = new ConfigurationBuilder().AddJsonStream(stream).Build();
                     config.ReadFrom.Configuration(configuration);
-
-                    //config = cfg.Serilog.MinimumLevel.Default switch
-                    //{
-                    //    LogEventLevel.Verbose => config.MinimumLevel.Verbose(),
-                    //    LogEventLevel.Debug => config.MinimumLevel.Debug(),
-                    //    LogEventLevel.Warning => config.MinimumLevel.Warning(),
-                    //    LogEventLevel.Error => config.MinimumLevel.Error(),
-                    //    LogEventLevel.Fatal => config.MinimumLevel.Fatal(),
-                    //    _ => config.MinimumLevel.Information()
-                    //};
-                    //foreach (var item in cfg.Serilog.MinimumLevel.Override)
-                    //{
-                    //    config = config.MinimumLevel.Override(item.Key, item.Value);
-                    //}
-                    //foreach (var enrich in cfg.Serilog.Enrich)
-                    //{
-                    //    switch (enrich)
-                    //    {
-                    //        case "FromLogContext":
-                    //            config = config.Enrich.FromLogContext();
-                    //            break;
-                    //        //case "WithMachineName":
-                    //        //    config = config.Enrich.WithMachineName();
-                    //        //    break;
-                    //    }
-                    //}
-
-                    ////LogEventLevel? restricted = null;
-                    ////var restrictedLevel = cfg.Serilog.WriteTo.FirstOrDefault(x => x.Name == "LiteDB")?.Args["restrictedToMinimumLevel"]?.ToString();
-                    ////{
-                    ////    restricted = restrictedLevel switch
-                    ////    {
-                    ////        "Verbose" => LogEventLevel.Verbose,
-                    ////        "Debug" => LogEventLevel.Debug,
-                    ////        "Information" => LogEventLevel.Information,
-                    ////        "Warning" => LogEventLevel.Warning,
-                    ////        "Error" => LogEventLevel.Error,
-                    ////        "Fatal" => LogEventLevel.Fatal,
-                    ////        _ => null
-                    ////    };
-                    ////};
-
-                    //config = config.WriteTo.LiteDB(
-                    //    databaseUrl: connectionString,
-                    //    logCollectionName: "logs",
-                    //    restrictedToMinimumLevel: restricted
-                    //);
                 }
             );
             return services;

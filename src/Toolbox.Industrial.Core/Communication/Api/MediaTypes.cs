@@ -1,10 +1,5 @@
 ﻿namespace Toolbox.Industrial.Core.Communication.Api
 {
-    internal static class CustomMediaTypes
-    {
-        public const string AutomacaoV1 = "application/vnd.data.industrial.v1+json";
-    }
-
     public interface MediaTypes
     {
         public const string Default = "application/json";

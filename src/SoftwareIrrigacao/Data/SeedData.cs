@@ -66,7 +66,7 @@ namespace SoftwareIrrigacao.Data
                 await store.UpsertAsync(
                     new Configuracao(
                         id: id,
-                        value: config//System.Text.Json.JsonSerializer.Serialize(config)
+                        value: config
                     )
                 );
             }
