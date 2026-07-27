@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Builder;
+using Namotion.Reflection;
 using Serilog;
-using Serilog.Settings.Configuration;
 
 namespace SoftwareIrrigacao.Setup;
 
@@ -11,17 +11,13 @@ public static class SerilogConfig
         WebApplicationBuilder builder
     )
     {
-        var logPath = Environment.GetEnvironmentVariable("LOG_PATH") ?? "logs";
-
         builder.Host.UseSerilog(
             (context, config) =>
             {
+                // Ler as configurações do serilog pelo appSettings.json
                 config.ReadFrom.Configuration(context.Configuration);
 
-                if (!builder.Environment.IsDevelopment())
-                {
-                    config.WriteTo.File($"{logPath}/log-.txt");
-                }
+                //config.WriteTo.LiteDB("Irrigacao.db", logCollectionName: "logs");
             }
         );
     }

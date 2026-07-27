@@ -11,6 +11,7 @@ namespace SoftwareIrrigacao.Setup;
 
 public static class ModuloConfig
 {
+    public static string ConnectionString = @"Filename=Irrigacao.db;Connection=Shared";
     public static void AddConfiguration(
         this IServiceCollection services,
         WebApplicationBuilder builder
@@ -35,7 +36,7 @@ public static class ModuloConfig
 
         services.AddHostedService<MqttWorker>();
 
-        var pathDbConfig = builder.Configuration.GetSection("PathDatabase:Path").Value;
+        //var pathDbConfig = builder.Configuration.GetSection("PathDatabase:Path").Value;
 
         // var connectionString = !string.IsNullOrWhiteSpace(pathDbConfig)
         //     ? $"Data Source={pathDbConfig}"
@@ -43,7 +44,7 @@ public static class ModuloConfig
 
         services
             .AddIndustrialCore(builder.Configuration)
-            .AddLiteDbEntityStore(@"Filename=Irrigacao.db;Connection=Shared");
+            .AddLiteDbEntityStore(ConnectionString);
 
         //services.AddModuloTekon();
 

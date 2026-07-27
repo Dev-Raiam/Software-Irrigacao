@@ -2,7 +2,7 @@
 {
     internal static class CustomMediaTypes
     {
-        public const string AutomacaoV1 = "application/vnd.data.automacao.v1+json";
+        public const string AutomacaoV1 = "application/vnd.data.industrial.v1+json";
     }
 
     public interface MediaTypes
@@ -46,7 +46,7 @@
 
         public interface Industrial
         {
-            public const string V1 = "application/vnd.data.automacao.v1+json";
+            public const string V1 = "application/vnd.data.industrial.v1+json";
         }
     }
 }
