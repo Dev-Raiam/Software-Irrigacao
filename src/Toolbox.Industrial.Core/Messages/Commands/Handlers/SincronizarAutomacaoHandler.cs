@@ -37,7 +37,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     await _store.FirstOrDefaultAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.PainelId
                     )
-                )?.Value,
+                )?.Value.ToString(),
                 out var painelId
             )
             || painelId == Guid.Empty

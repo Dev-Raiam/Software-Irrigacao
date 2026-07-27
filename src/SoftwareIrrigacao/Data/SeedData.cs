@@ -30,9 +30,6 @@ namespace SoftwareIrrigacao.Data
             IEntityStore store
         )
         {
-            await store.InsertAsync(new Log(LogType.Info, "Dados de seed inicializados.", new Exception("Teste"), new {Nome = "teste", Aprovado = true }));
-            await store.InsertAsync(new Log(LogType.Info, "Dados de seed inicializados.", new Exception("Teste2")));
-
             var id = Entity.Keys.Api.BaseAddress;
             if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Value == null)
             {
