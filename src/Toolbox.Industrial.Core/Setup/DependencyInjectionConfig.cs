@@ -1,12 +1,11 @@
-﻿using System.Text;
-using LiteDB;
+﻿using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Events;
+using System.Text;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
@@ -134,16 +133,16 @@ namespace Toolbox.Industrial.Core.Setup
                     if (cfg == null)
                     {
                         cfg = System.Text.Json.JsonSerializer.Serialize(
-                            new SerilogConfig
+                            new Configuration
                             {
-                                Serilog = new SerilogConfig.serilog
+                                Serilog = new Configuration.SerilogConfig
                                 {
                                     Using = new string[]
                                     {
                                         "Serilog.Sinks.Console",
                                         "Serilog.Sinks.LiteDB",
                                     },
-                                    MinimumLevel = new MinimumLevelConfig
+                                    MinimumLevel = new Configuration.SerilogConfig.MinimumLevelConfig
                                     {
                                         Default = "Information",
                                         Override = new Dictionary<string, string>
@@ -153,9 +152,9 @@ namespace Toolbox.Industrial.Core.Setup
                                         },
                                     },
                                     Enrich = new string[] { "FromLogContext", "WithMachineName" },
-                                    WriteTo = new WriteToConfig[]
+                                    WriteTo = new []
                                     {
-                                        new WriteToConfig
+                                        new Configuration.SerilogConfig.WriteToConfig
                                         {
                                             Name = "LiteDB",
                                             Args = new Dictionary<string, object>
@@ -228,6 +227,31 @@ namespace Toolbox.Industrial.Core.Setup
                 }
             );
             return services;
+        }
+    }
+
+    internal class Configuration
+    {
+        public SerilogConfig Serilog { get; set; } = null!;
+
+        public class SerilogConfig
+        {
+            public string[] Using { get; set; } = [];
+            public string[] Enrich { get; set; } = [];
+            public WriteToConfig[] WriteTo { get; set; } = [];
+            public MinimumLevelConfig MinimumLevel { get; set; } = new();
+
+            internal class MinimumLevelConfig
+            {
+                public string Default { get; set; } = "Information";
+                public Dictionary<string, string> Override { get; set; } = new();
+            }
+
+            internal class WriteToConfig
+            {
+                public string Name { get; set; } = string.Empty;
+                public Dictionary<string, object> Args { get; set; } = new();
+            }
         }
     }
 }

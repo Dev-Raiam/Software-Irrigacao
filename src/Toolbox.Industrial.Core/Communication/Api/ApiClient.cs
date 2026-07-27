@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
@@ -9,10 +9,7 @@ public interface IApiClient
 {
     //HttpClient HttpClient { get; }
 
-    Task<Result<T>> GetAsync<T>(
-        string url,
-        CancellationToken cancellationToken
-    );
+    Task<Result<T>> GetAsync<T>(string url, CancellationToken cancellationToken);
 
     Task<Result<T>> PostAsync<T>(
         string url,
@@ -20,10 +17,7 @@ public interface IApiClient
         CancellationToken cancellationToken
     );
 
-    Task<Result<T>> SendAsync<T>(
-        HttpRequestMessage request,
-        CancellationToken cancellationToken
-    );
+    Task<Result<T>> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken);
 }
 
 public class ApiClient : IApiClient
@@ -40,10 +34,7 @@ public class ApiClient : IApiClient
         _httpClient = httpClient;
     }
 
-    public async Task<Result<T>> GetAsync<T>(
-        string url,
-        CancellationToken cancellationToken
-    )
+    public async Task<Result<T>> GetAsync<T>(string url, CancellationToken cancellationToken)
     {
         try
         {

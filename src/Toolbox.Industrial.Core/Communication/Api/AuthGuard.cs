@@ -1,8 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
@@ -16,6 +16,7 @@ public class AuthGuard : DelegatingHandler
     private readonly Token _token;
     private readonly IApiClient _client;
     private readonly IEntityStore _store;
+
     //private readonly HttpClient _httpClient;
     private readonly ICryptography _cryptography;
     private readonly ILogger<AuthGuard> _logger;
@@ -39,15 +40,15 @@ public class AuthGuard : DelegatingHandler
 
     public async Task<Credentials?> GetCredentials()
     {
-        var chave = (await _store.FirstOrDefaultAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.Auth.Chave
-        ))?.Value.ToString();
-        var segredo = (await _store.FirstOrDefaultAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.Auth.Segredo
-        ))?.Value.ToString();
-        var contextoId = (await _store.FirstOrDefaultAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.Auth.ContextoId
-        ))?.Value.ToString();
+        var chave = (
+            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
+        )?.Value.ToString();
+        var segredo = (
+            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
+        )?.Value.ToString();
+        var contextoId = (
+            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
+        )?.Value.ToString();
 
         if (chave == null || segredo == null || contextoId == null)
             return null;
@@ -74,7 +75,7 @@ public class AuthGuard : DelegatingHandler
             "/autenticacao/v1/autenticar-cliente",
             content,
             cancellationToken
-            //_httpClient
+        //_httpClient
         );
 
         return response;

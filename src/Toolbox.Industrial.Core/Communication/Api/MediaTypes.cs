@@ -12,7 +12,6 @@
 
         public interface V1
         {
-
             public interface Aggregate
             {
                 public const string Full = "application/vnd.data.aggregate.full.v1+json";
