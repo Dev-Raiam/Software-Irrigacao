@@ -15,11 +15,13 @@ namespace SoftwareIrrigacao.Data
             var entityConfig = scope.ServiceProvider.GetRequiredService<EntityConfiguration>();
             entityConfig.ApplyConfiguration = (IEntityStore store) =>
             {
-                store.Configure<Configuracao>().Field(x => x.Value, "Dados");
+                //store.Configure<Configuracao>().Field(x => x.Value, "Dados");
+                
             };
 
 
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
+
             await AdicionarConfiguracoes(serviceProvider, store);
         }
 
@@ -28,6 +30,9 @@ namespace SoftwareIrrigacao.Data
             IEntityStore store
         )
         {
+            await store.InsertAsync(new Log(LogType.Info, "Dados de seed inicializados.", new Exception("Teste"), new {Nome = "teste", Aprovado = true }));
+            await store.InsertAsync(new Log(LogType.Info, "Dados de seed inicializados.", new Exception("Teste2")));
+
             var id = Entity.Keys.Api.BaseAddress;
             if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Value == null)
             {
@@ -44,7 +49,7 @@ namespace SoftwareIrrigacao.Data
                 await store.UpsertAsync(
                     new Configuracao(
                         id: id,
-                        value: System.Text.Json.JsonSerializer.Serialize(config)
+                        value: config//System.Text.Json.JsonSerializer.Serialize(config)
                     )
                 );
             }
@@ -62,7 +67,7 @@ namespace SoftwareIrrigacao.Data
                 await store.UpsertAsync(
                     new Configuracao(
                         id: id,
-                        value: System.Text.Json.JsonSerializer.Serialize(config)
+                        value: config//System.Text.Json.JsonSerializer.Serialize(config)
                     )
                 );
             }

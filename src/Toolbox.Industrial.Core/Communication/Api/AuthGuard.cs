@@ -39,23 +39,23 @@ public class AuthGuard : DelegatingHandler
 
     public async Task<Credentials?> GetCredentials()
     {
-        var chave = await _store.FirstOrDefaultAsync<Configuracao>(x =>
+        var chave = (await _store.FirstOrDefaultAsync<Configuracao>(x =>
             x.Id == Entity.Keys.Auth.Chave
-        );
-        var segredo = await _store.FirstOrDefaultAsync<Configuracao>(x =>
+        ))?.Value.ToString();
+        var segredo = (await _store.FirstOrDefaultAsync<Configuracao>(x =>
             x.Id == Entity.Keys.Auth.Segredo
-        );
-        var contextoId = await _store.FirstOrDefaultAsync<Configuracao>(x =>
+        ))?.Value.ToString();
+        var contextoId = (await _store.FirstOrDefaultAsync<Configuracao>(x =>
             x.Id == Entity.Keys.Auth.ContextoId
-        );
+        ))?.Value.ToString();
 
         if (chave == null || segredo == null || contextoId == null)
             return null;
 
         return new Credentials(
-            _cryptography.Decrypt(chave.Value),
-            _cryptography.Decrypt(segredo.Value),
-            Guid.Parse(contextoId.Value)
+            _cryptography.Decrypt(chave),
+            _cryptography.Decrypt(segredo),
+            Guid.Parse(contextoId)
         );
     }
 

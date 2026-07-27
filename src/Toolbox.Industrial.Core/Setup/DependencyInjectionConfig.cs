@@ -8,7 +8,6 @@ using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 
 namespace Toolbox.Industrial.Core.Setup
@@ -22,7 +21,7 @@ namespace Toolbox.Industrial.Core.Setup
                 var store = provider.GetRequiredService<IEntityStore>();
                 ApiClient.BaseAddress = store
                     .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
-                    ?.Value;
+                    ?.Value.ToString();
             }
 
             if (ApiClient.BaseAddress != null)
@@ -84,14 +83,11 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
-                    var json = store
+                    var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local)
                         ?.Value;
 
-                    var config =
-                        json != null ? JsonSerializer.Deserialize<MqttConfiguration>(json) : null;
-
-                    return new MqttManager(config ?? new MqttConfiguration());
+                    return new MqttManager((MqttConfiguration?)config ?? new MqttConfiguration());
                 }
             );
 
@@ -99,23 +95,12 @@ namespace Toolbox.Industrial.Core.Setup
                 Mqtt.Remoto,
                 (provider, key) =>
                 {
-                    //var config = provider.GetRequiredKeyedService<IOptions<Configuration>>(key).Value;
-                    //var config = new MqttConfiguration
-                    //{
-                    //    Host = "broker.freemqtt.com",
-                    //    Port = 1883,
-                    //    ClientId = Guid.NewGuid().ToString(),
-                    //    Username = "freemqtt",
-                    //    Password = "public",
-                    //};
                     var store = provider.GetRequiredService<IEntityStore>();
-                    ///TODO: await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local);
-                    var json = store
+                    var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
                         ?.Value;
-                    var config =
-                        json != null ? JsonSerializer.Deserialize<MqttConfiguration>(json) : null;
-                    return new MqttManager(config ?? new MqttConfiguration());
+
+                    return new MqttManager((MqttConfiguration?)config ?? new MqttConfiguration());
                 }
             );
 

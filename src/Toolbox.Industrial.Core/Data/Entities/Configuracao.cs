@@ -2,4 +2,4 @@ using LiteDB;
 
 namespace Toolbox.Industrial.Core.Data;
 
-public class Configuracao(Guid id, string value) : Entity<Guid, string>(id, value) { }
+public class Configuracao(Guid id, object value) : Entity<Guid, object>(id, value) { }

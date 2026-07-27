@@ -6,6 +6,7 @@ using Toolbox.Core.Extensions;
 
 namespace Toolbox.Industrial.Core.Data
 {
+   
     public abstract class Entity
     {
 
@@ -212,8 +213,6 @@ namespace Toolbox.Industrial.Core.Data
 
     public abstract class Entity<TKey, TValue> : Entity
     {
-        protected static string CollectionName = string.Empty;
-
         protected Entity() { }
 
         public Entity(TKey id, TValue value)

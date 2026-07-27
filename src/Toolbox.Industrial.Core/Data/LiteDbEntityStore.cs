@@ -10,6 +10,9 @@ internal class LiteDbEntityStore : IEntityStore
     public LiteDbEntityStore(ILiteDatabase database, EntityConfiguration configuration)
     {
         _database = database;
+        //Aplicar configurações para as entidades padrão
+        //Configure<Configuracao>().Field(x => x.Value, "Configuracao");
+        //Configure<Controlador>().Field(x => x.Value, "Controlador");
         if (configuration.ApplyConfiguration != null)
         {
             configuration.ApplyConfiguration(this);
