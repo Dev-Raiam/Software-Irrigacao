@@ -44,7 +44,7 @@ public static class ModuloConfig
 
         services
             .AddIndustrialCore(builder.Configuration)
-            .AddLiteDbEntityStore(ConnectionString);
+            .AddLiteDbEntityStore(builder, ConnectionString);
 
         //services.AddModuloTekon();
 

@@ -16,8 +16,6 @@ try
 {
     Log.Information("Aplicação inicializando...");
     var builder = WebApplication.CreateBuilder(args);
-
-    builder.Services.AddSerilogConfiguration(builder);
     builder.Services.AddConfiguration(builder);
     builder.Services.AddRegisterServices();
     //builder.Services.AddJwtConfiguration();

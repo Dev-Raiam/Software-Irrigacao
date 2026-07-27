@@ -1,8 +1,12 @@
-﻿using LiteDB;
+﻿using System.Text;
+using LiteDB;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Events;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
@@ -29,7 +33,6 @@ namespace Toolbox.Industrial.Core.Setup
                 http.BaseAddress = new Uri(ApiClient.BaseAddress);
             }
         }
-
 
         public static IServiceCollection AddIndustrialCore(
             this IServiceCollection services,
@@ -60,7 +63,10 @@ namespace Toolbox.Industrial.Core.Setup
                 {
                     var httpClient = new HttpClient();
                     ConfigureClient(provider, httpClient);
-                    return new ApiClient(httpClient, provider.GetRequiredService<ILogger<ApiClient>>());
+                    return new ApiClient(
+                        httpClient,
+                        provider.GetRequiredService<ILogger<ApiClient>>()
+                    );
                 }
             );
 
@@ -111,11 +117,116 @@ namespace Toolbox.Industrial.Core.Setup
 
         public static IServiceCollection AddLiteDbEntityStore(
             this IServiceCollection services,
+            WebApplicationBuilder builder,
             string connectionString
         )
         {
             services.AddSingleton<ILiteDatabase>(sp => new LiteDatabase(connectionString));
             services.AddSingleton<IEntityStore, LiteDbEntityStore>();
+            builder.Host.UseSerilog(
+                async (context, provider, config) =>
+                {
+                    var store = provider.GetRequiredService<IEntityStore>();
+                    var cfg = store
+                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
+                        ?.Value.ToString();
+
+                    if (cfg == null)
+                    {
+                        cfg = System.Text.Json.JsonSerializer.Serialize(
+                            new SerilogConfig
+                            {
+                                Serilog = new SerilogConfig.serilog
+                                {
+                                    Using = new string[]
+                                    {
+                                        "Serilog.Sinks.Console",
+                                        "Serilog.Sinks.LiteDB",
+                                    },
+                                    MinimumLevel = new MinimumLevelConfig
+                                    {
+                                        Default = "Information",
+                                        Override = new Dictionary<string, string>
+                                        {
+                                            ["Microsoft"] = "Warning",
+                                            ["System"] = "Warning",
+                                        },
+                                    },
+                                    Enrich = new string[] { "FromLogContext", "WithMachineName" },
+                                    WriteTo = new WriteToConfig[]
+                                    {
+                                        new WriteToConfig
+                                        {
+                                            Name = "LiteDB",
+                                            Args = new Dictionary<string, object>
+                                            {
+                                                ["databaseUrl"] = connectionString,
+                                                ["logCollectionName"] = "logs",
+                                                ["restrictedToMinimumLevel"] = "Information",
+                                            },
+                                        },
+                                    },
+                                },
+                            }
+                        );
+
+                        await store.UpsertAsync(
+                            new Configuracao(id: Entity.Keys.Serilog.Config, value: cfg)
+                        );
+                    }
+                    var stream = new MemoryStream(Encoding.UTF8.GetBytes(cfg));
+
+                    var configuration = new ConfigurationBuilder().AddJsonStream(stream).Build();
+                    config.ReadFrom.Configuration(configuration);
+
+                    //config = cfg.Serilog.MinimumLevel.Default switch
+                    //{
+                    //    LogEventLevel.Verbose => config.MinimumLevel.Verbose(),
+                    //    LogEventLevel.Debug => config.MinimumLevel.Debug(),
+                    //    LogEventLevel.Warning => config.MinimumLevel.Warning(),
+                    //    LogEventLevel.Error => config.MinimumLevel.Error(),
+                    //    LogEventLevel.Fatal => config.MinimumLevel.Fatal(),
+                    //    _ => config.MinimumLevel.Information()
+                    //};
+                    //foreach (var item in cfg.Serilog.MinimumLevel.Override)
+                    //{
+                    //    config = config.MinimumLevel.Override(item.Key, item.Value);
+                    //}
+                    //foreach (var enrich in cfg.Serilog.Enrich)
+                    //{
+                    //    switch (enrich)
+                    //    {
+                    //        case "FromLogContext":
+                    //            config = config.Enrich.FromLogContext();
+                    //            break;
+                    //        //case "WithMachineName":
+                    //        //    config = config.Enrich.WithMachineName();
+                    //        //    break;
+                    //    }
+                    //}
+
+                    ////LogEventLevel? restricted = null;
+                    ////var restrictedLevel = cfg.Serilog.WriteTo.FirstOrDefault(x => x.Name == "LiteDB")?.Args["restrictedToMinimumLevel"]?.ToString();
+                    ////{
+                    ////    restricted = restrictedLevel switch
+                    ////    {
+                    ////        "Verbose" => LogEventLevel.Verbose,
+                    ////        "Debug" => LogEventLevel.Debug,
+                    ////        "Information" => LogEventLevel.Information,
+                    ////        "Warning" => LogEventLevel.Warning,
+                    ////        "Error" => LogEventLevel.Error,
+                    ////        "Fatal" => LogEventLevel.Fatal,
+                    ////        _ => null
+                    ////    };
+                    ////};
+
+                    //config = config.WriteTo.LiteDB(
+                    //    databaseUrl: connectionString,
+                    //    logCollectionName: "logs",
+                    //    restrictedToMinimumLevel: restricted
+                    //);
+                }
+            );
             return services;
         }
     }

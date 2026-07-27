@@ -165,6 +165,14 @@ namespace Toolbox.Industrial.Core.Data
             /// </summary>
             public static Guid PainelId = "Padrao.PainelId".GetId();
 
+            public static class Serilog
+            {
+                /// <summary>
+                /// 7f2dfe01-7141-4ce8-643d-07a86cfafef5
+                /// </summary>
+                public static Guid Config = "SeriLog.Config".GetId();
+            }
+
             public static class Auth
             {
                 /// <summary>

@@ -1,4 +1,6 @@
-﻿using Toolbox.Industrial.Core.Data;
+﻿using Serilog;
+using SoftwareIrrigacao.Setup;
+using Toolbox.Industrial.Core.Data;
 using static Toolbox.Industrial.Core.Data.Entity;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 
