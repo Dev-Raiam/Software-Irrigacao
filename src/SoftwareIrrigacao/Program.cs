@@ -5,7 +5,12 @@ using SoftwareIrrigacao.Setup;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.LiteDB(ModuloConfig.ConnectionString, logCollectionName: "logs")
+    .CreateBootstrapLogger();
+
+//Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 try
 {

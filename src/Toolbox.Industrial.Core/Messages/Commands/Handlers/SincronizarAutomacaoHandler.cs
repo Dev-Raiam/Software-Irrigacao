@@ -34,7 +34,9 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         if (
             !Guid.TryParse(
                 (
-                    await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+                    await _store.FirstOrDefaultAsync<Configuracao>(x =>
+                        x.Id == Entity.Keys.PainelId
+                    )
                 )?.Value,
                 out var painelId
             )
@@ -81,9 +83,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             $"automacao/v1/paineis/{painelId}/controladores?status=todos"
         );
 
-        request.Headers.Accept.Add(
-            new MediaTypeWithQualityHeaderValue(MediaTypes.Industrial.V1)
-        );
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypes.Industrial.V1));
 
         var response = await _apiClient.SendAsync<List<Communication.Api.Contracts.Controlador>>(
             request,
