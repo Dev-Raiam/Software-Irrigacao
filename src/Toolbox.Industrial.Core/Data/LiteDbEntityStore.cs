@@ -25,7 +25,7 @@ internal class LiteDbEntityStore : IEntityStore
     public ILiteQueryable<BsonDocument> Query(string collection) =>
         _database.GetCollection(collection).Query();
 
-    public ILiteQueryable<TEntity> Query<TEntity>() 
+    public ILiteQueryable<TEntity> Query<TEntity>()
         where TEntity : Entity =>
         _database.GetCollection<TEntity>(Entity.GetCollection<TEntity>()).Query();
 
@@ -64,14 +64,18 @@ internal class LiteDbEntityStore : IEntityStore
     public Task<bool> DeleteAllDataCollectionsAsync()
     {
         var result = false;
-        foreach (var collection in _database.GetCollection("$cols").Query().Where(doc => (doc["name"].AsString).StartsWith("$") == false).ToList())
+        foreach (
+            var collection in _database
+                .GetCollection("$cols")
+                .Query()
+                .Where(doc => (doc["name"].AsString).StartsWith("$") == false)
+                .ToList()
+        )
         {
             result = result || _database.GetCollection(collection["name"].AsString).DeleteAll() > 0;
         }
         Task.Delay(1000);
-        return Task.FromResult(
-            result
-        );
+        return Task.FromResult(result);
     }
 
     public Task<int> DeleteAllAsync<TEntity>()

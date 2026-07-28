@@ -95,9 +95,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         {
             if (!await CredenciaisRegistradasAsync())
             {
-                _logger.LogWarning(
-                    "Sincronização cancelada por ausência de configuração."
-                );
+                _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
                 return;
             }
 
@@ -112,7 +110,11 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             }
             else
             {
-                _logger.LogWarning(exception: result.Exception, "Falha ao obter controladores: {Error}", result.Error);
+                _logger.LogWarning(
+                    exception: result.Exception,
+                    "Falha ao obter controladores: {Error}",
+                    result.Error
+                );
             }
         }
     }

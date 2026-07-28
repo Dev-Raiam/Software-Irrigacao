@@ -1,4 +1,7 @@
-﻿using LiteDB;
+﻿using System.Reflection;
+using System.Text;
+using System.Threading.RateLimiting;
+using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -6,9 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using System.Reflection;
-using System.Text;
-using System.Threading.RateLimiting;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -137,7 +137,7 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddJwtConfiguration(configuration);
             //            typeof(SincronizarAutomacao).GetTypeInfo().Assembly
 
-            services.AddMediator([typeof(DependencyInjectionConfig).Assembly, ..assemblies]);
+            services.AddMediator([typeof(DependencyInjectionConfig).Assembly, .. assemblies]);
             return services;
         }
 
@@ -169,17 +169,18 @@ namespace Toolbox.Industrial.Core.Setup
                                         "Serilog.Sinks.Console",
                                         "Serilog.Sinks.LiteDB",
                                     },
-                                    MinimumLevel = new Configuration.SerilogConfig.MinimumLevelConfig
-                                    {
-                                        Default = "Information",
-                                        Override = new Dictionary<string, string>
+                                    MinimumLevel =
+                                        new Configuration.SerilogConfig.MinimumLevelConfig
                                         {
-                                            ["Microsoft"] = "Warning",
-                                            ["System"] = "Warning",
+                                            Default = "Information",
+                                            Override = new Dictionary<string, string>
+                                            {
+                                                ["Microsoft"] = "Warning",
+                                                ["System"] = "Warning",
+                                            },
                                         },
-                                    },
                                     Enrich = new string[] { "FromLogContext", "WithMachineName" },
-                                    WriteTo = new []
+                                    WriteTo = new[]
                                     {
                                         new Configuration.SerilogConfig.WriteToConfig
                                         {
@@ -209,7 +210,10 @@ namespace Toolbox.Industrial.Core.Setup
             return services;
         }
 
-        private static IServiceCollection AddMediator(this IServiceCollection services, params Assembly[] assemblies)
+        private static IServiceCollection AddMediator(
+            this IServiceCollection services,
+            params Assembly[] assemblies
+        )
         {
             services.RegisterHandlers(
                 assemblies,
@@ -219,7 +223,8 @@ namespace Toolbox.Industrial.Core.Setup
                 typeof(IQueryHandler<,>),
                 typeof(IEventHandler<>),
                 typeof(IIntegrationHandler<>),
-                typeof(INotificationHandler<>));
+                typeof(INotificationHandler<>)
+            );
 
             services.AddScoped<IMediator, MediatorImp>();
             return services;
@@ -227,8 +232,9 @@ namespace Toolbox.Industrial.Core.Setup
 
         private static void RegisterHandlers(
             this IServiceCollection services,
-           Assembly[] assemblies,
-            params Type[] handlerTypes)
+            Assembly[] assemblies,
+            params Type[] handlerTypes
+        )
         {
             var implementationTypes = assemblies
                 .SelectMany(a => a.GetTypes())
@@ -237,12 +243,15 @@ namespace Toolbox.Industrial.Core.Setup
 
             foreach (var implementationType in implementationTypes)
             {
-                var interfaces = implementationType.GetInterfaces()
+                var interfaces = implementationType
+                    .GetInterfaces()
                     .Where(i =>
                         handlerTypes.Any(handlerType =>
                             handlerType.IsGenericTypeDefinition
                                 ? (i.IsGenericType && i.GetGenericTypeDefinition() == handlerType)
-                                : handlerType.IsAssignableFrom(i)));
+                                : handlerType.IsAssignableFrom(i)
+                        )
+                    );
 
                 foreach (var @interface in interfaces)
                 {

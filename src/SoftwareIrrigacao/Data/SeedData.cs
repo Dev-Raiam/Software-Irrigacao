@@ -15,12 +15,9 @@ namespace SoftwareIrrigacao.Data
                 .CreateScope();
 
             var entityConfig = scope.ServiceProvider.GetRequiredService<EntityConfiguration>();
-            entityConfig.ApplyConfiguration = (IEntityStore store) =>
-            {
+            entityConfig.ApplyConfiguration = (IEntityStore store) => {
                 //store.Configure<Configuracao>().Field(x => x.Value, "Dados");
-                
             };
-
 
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
 
@@ -48,7 +45,7 @@ namespace SoftwareIrrigacao.Data
                 await store.UpsertAsync(
                     new Configuracao(
                         id: id,
-                        value: config//System.Text.Json.JsonSerializer.Serialize(config)
+                        value: config //System.Text.Json.JsonSerializer.Serialize(config)
                     )
                 );
             }
@@ -63,12 +60,7 @@ namespace SoftwareIrrigacao.Data
                     Password = "public",
                 };
 
-                await store.UpsertAsync(
-                    new Configuracao(
-                        id: id,
-                        value: config
-                    )
-                );
+                await store.UpsertAsync(new Configuracao(id: id, value: config));
             }
         }
     }

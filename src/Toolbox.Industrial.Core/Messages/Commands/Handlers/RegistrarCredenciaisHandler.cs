@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System.Net.Mime;
 using System.Text.Json;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -20,6 +20,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
     private readonly ICryptography _cryptography;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ILogger<RegistrarCredenciaisHandler> _logger;
+
     public RegistrarCredenciaisHandler(
         AuthGuard auth,
         IMediator mediator,
@@ -37,7 +38,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         _cryptography = cryptography;
     }
 
-
     public async Task<ResponseResult> Handle(
         RegistrarCredenciais request,
         CancellationToken cancellationToken
@@ -45,21 +45,22 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
     {
         #region Validar requisição
 
-        if (string.IsNullOrWhiteSpace(request.Segredo) ||
-            string.IsNullOrWhiteSpace(request.Chave) ||
-            request.ContextoId == Guid.Empty ||
-            request.PainelId == Guid.Empty ||
-            request.ContaId == Guid.Empty)
+        if (
+            string.IsNullOrWhiteSpace(request.Segredo)
+            || string.IsNullOrWhiteSpace(request.Chave)
+            || request.ContextoId == Guid.Empty
+            || request.PainelId == Guid.Empty
+            || request.ContaId == Guid.Empty
+        )
         {
-            _logger.LogError("Falha ao configurar credenciais: {Error}", "Dados inválidos na requisição");
+            _logger.LogError(
+                "Falha ao configurar credenciais: {Error}",
+                "Dados inválidos na requisição"
+            );
             return BadRequest().AddError(nameof(request), "Dados inválidos");
         }
 
-        var credentials = new Credentials(
-            request.Chave,
-            request.Segredo,
-            request.ContextoId
-        );
+        var credentials = new Credentials(request.Chave, request.Segredo, request.ContextoId);
 
         var response = await _auth.Authenticate(credentials, cancellationToken);
 
@@ -83,11 +84,13 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             out var contextoId
         );
 
-        if (contextoId != Guid.Empty) 
+        if (contextoId != Guid.Empty)
         {
             Guid.TryParse(
                 (
-                    await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+                    await _store.FirstOrDefaultAsync<Configuracao>(x =>
+                        x.Id == Entity.Keys.PainelId
+                    )
                 )?.Value.ToString(),
                 out var painelId
             );
@@ -99,13 +102,16 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
                 out var contaId
             );
 
-
-            if (contextoId != request.ContextoId ||
-                painelId != request.PainelId ||
-                contaId != request.ContaId)
+            if (
+                contextoId != request.ContextoId
+                || painelId != request.PainelId
+                || contaId != request.ContaId
+            )
             {
                 restart = await _store.DeleteAllDataCollectionsAsync();
-                _logger.LogWarning("Configuração foi redefinida e todos os dados armazenados anteriormente foram descartados.");
+                _logger.LogWarning(
+                    "Configuração foi redefinida e todos os dados armazenados anteriormente foram descartados."
+                );
             }
         }
 
@@ -138,7 +144,9 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         if (restart)
         {
-            _logger.LogWarning("A aplicação será finalizada para completar o ciclo de reconfiguração.");
+            _logger.LogWarning(
+                "A aplicação será finalizada para completar o ciclo de reconfiguração."
+            );
             _lifetime.StopApplication();
         }
 

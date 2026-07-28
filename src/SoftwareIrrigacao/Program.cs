@@ -18,7 +18,6 @@ try
     builder.Services.AddApiConfiguration(builder);
     builder.Services.RegisterServices();
 
-
     var app = builder.Build();
     app.UseConfig();
 
