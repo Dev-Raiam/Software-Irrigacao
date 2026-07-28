@@ -99,7 +99,7 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers
             return defaultResponse();
         }
 
-        public bool IsValid(Command command)
+        public bool IsValid(Toolbox.Core.Messages.Command command)
         {
             var validationResult = command.Validate();
             if (validationResult.IsValid)
@@ -111,7 +111,7 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers
             return false;
         }
 
-        public bool NotIsValid(Command command) => IsValid(command) == false;
+        public bool NotIsValid(Toolbox.Core.Messages.Command command) => IsValid(command) == false;
 
         public CommandHandler AddError(string propertyName, params object[] errorMessages)
         {

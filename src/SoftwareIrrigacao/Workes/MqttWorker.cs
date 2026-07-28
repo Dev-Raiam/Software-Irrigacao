@@ -159,7 +159,7 @@ public class MqttWorker : BackgroundService
 
             var mensagem = JsonConvert.DeserializeObject(payload, _jsonSettingsLocal)!;
 
-            if (mensagem is Command command)
+            if (mensagem is Toolbox.Core.Messages.Command command)
             {
                 await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
             }

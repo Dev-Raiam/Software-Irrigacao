@@ -1,9 +1,10 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Net;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -13,8 +14,13 @@ namespace Toolbox.Industrial.Core.Communication.Api;
 
 public static class Endpoints
 {
-    public static void AuthRegister(this IEndpointRouteBuilder app)
+    public static string RateLimitingPolicy = "limite-tentativas";
+
+    public static void RegisterEndpoints(this WebApplication app)
     {
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseRateLimiter();
         app.MapPost(
                 "/configuracao/credenciais",
                 async (
@@ -31,8 +37,8 @@ public static class Endpoints
                     return Results.Json(response, statusCode: (int)response.HttpStatusCode);
                 }
             )
-            //.RequireAuthorization()
-            .RequireRateLimiting("limite-tentativas");
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
 
         app.MapGet(
                 "/configuracao/logs",
@@ -52,8 +58,8 @@ public static class Endpoints
                     );
                 }
             )
-            //.RequireAuthorization()
-            .RequireRateLimiting("limite-tentativas");
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
 
         app.MapPost(
                 "/configuracao/logs",
@@ -79,17 +85,17 @@ public static class Endpoints
                     }
                     await store.UpsertAsync(config);
                     lifetime.StopApplication();
-                    return Results.Ok(
-                        new string[]
+                    return Results.Accepted(
+                        value: new string[]
                         {
                             "Configuração realizada com sucesso.",
-                            "Aplicação será encerrada.",
+                            "Aplicação será reiniciada.",
                         }
                     );
                 }
             )
-            //.RequireAuthorization()
-            .RequireRateLimiting("limite-tentativas");
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
 
         app.MapPost(
                 "/system/restart",
@@ -99,11 +105,11 @@ public static class Endpoints
                 ) =>
                 {
                     lifetime.StopApplication();
-                    return Results.Ok("Aplicação será encerrada.");
+                    return Results.Accepted(value: "Aplicação será reiniciada.");
                 }
             )
-            //.RequireAuthorization()
-            .RequireRateLimiting("limite-tentativas");
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
 
         app.MapPost(
                 "/system/reboot",
@@ -123,12 +129,14 @@ public static class Endpoints
                                     ArgumentList =
                                     {
                                         "/r", // Restart
+                                        "/f", //Força o encerramento dos aplicativos.
                                         "/t",
-                                        "0", // Sem atraso
+                                        "0", // Sem atraso <segundos>
                                     },
                                     UseShellExecute = false,
                                 }
                             );
+
                         }
                         else if (OperatingSystem.IsLinux())
                         {
@@ -152,8 +160,8 @@ public static class Endpoints
                     return result;
                 }
             )
-            //.RequireAuthorization()
-            .RequireRateLimiting("limite-tentativas");
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
 
         app.MapPost(
                 "/system/shutdown",
@@ -173,8 +181,9 @@ public static class Endpoints
                                     ArgumentList =
                                     {
                                         "/s", // Shutdown
+                                        "/f", //Força o encerramento dos aplicativos.
                                         "/t",
-                                        "0",
+                                        "0", // Sem atraso <segundos>
                                     },
                                     UseShellExecute = false,
                                 }
@@ -200,7 +209,7 @@ public static class Endpoints
                     return result;
                 }
             )
-            //.RequireAuthorization()
-            .RequireRateLimiting("limite-tentativas");
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
     }
 }

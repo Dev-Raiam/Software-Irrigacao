@@ -1,7 +1,8 @@
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Toolbox.Industrial.Core.Messages.Integration;
+using System.Text.Json;
 using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Messages.Integration;
 
 namespace Toolbox.Industrial.Core.Messages
 {
@@ -50,7 +51,7 @@ namespace Toolbox.Industrial.Core.Messages
         }
 
         private void RegisterCommand<T>()
-            where T : CommandBase
+            where T : Command
         {
             _commandTypes[typeof(T).Name] = typeof(T);
         }
@@ -70,7 +71,7 @@ namespace Toolbox.Industrial.Core.Messages
                         $"Tipo de comando desconhecido: {envelope.CommandType}"
                     );
 
-                var command = (CommandBase?)
+                var command = (Command?)
                     JsonSerializer.Deserialize(envelope.Payload.GetRawText(), commandType);
 
                 if (command == null)

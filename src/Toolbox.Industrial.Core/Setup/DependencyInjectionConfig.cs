@@ -1,16 +1,24 @@
 ﻿using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using System.Reflection;
 using System.Text;
+using System.Threading.RateLimiting;
+using Toolbox.Core.Mediator;
+using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using IMediator = Toolbox.Core.Mediator.IMediator;
+using MediatorImp = Toolbox.Core.Mediator.Mediator;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 
 namespace Toolbox.Industrial.Core.Setup
@@ -35,7 +43,8 @@ namespace Toolbox.Industrial.Core.Setup
 
         public static IServiceCollection AddIndustrialCore(
             this IServiceCollection services,
-            IConfiguration configuration
+            IConfiguration configuration,
+            params Assembly[] assemblies
         )
         {
             services.AddSingleton<Token>();
@@ -112,6 +121,23 @@ namespace Toolbox.Industrial.Core.Setup
 
             #endregion Mqtt
 
+            services.AddRateLimiter(options =>
+            {
+                options.AddConcurrencyLimiter(
+                    Endpoints.RateLimitingPolicy,
+                    options =>
+                    {
+                        options.PermitLimit = 2;
+                        options.QueueLimit = 2;
+                        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    }
+                );
+            });
+
+            services.AddJwtConfiguration(configuration);
+            //            typeof(SincronizarAutomacao).GetTypeInfo().Assembly
+
+            services.AddMediator([typeof(DependencyInjectionConfig).Assembly, ..assemblies]);
             return services;
         }
 
@@ -181,6 +207,48 @@ namespace Toolbox.Industrial.Core.Setup
                 }
             );
             return services;
+        }
+
+        private static IServiceCollection AddMediator(this IServiceCollection services, params Assembly[] assemblies)
+        {
+            services.RegisterHandlers(
+                assemblies,
+                typeof(ICommandHandler<>),
+                typeof(ICommandHandler<,>),
+                typeof(IQueryHandler<>),
+                typeof(IQueryHandler<,>),
+                typeof(IEventHandler<>),
+                typeof(IIntegrationHandler<>),
+                typeof(INotificationHandler<>));
+
+            services.AddScoped<IMediator, MediatorImp>();
+            return services;
+        }
+
+        private static void RegisterHandlers(
+            this IServiceCollection services,
+           Assembly[] assemblies,
+            params Type[] handlerTypes)
+        {
+            var implementationTypes = assemblies
+                .SelectMany(a => a.GetTypes())
+                .Where(t => t is { IsClass: true, IsAbstract: false })
+                .ToList();
+
+            foreach (var implementationType in implementationTypes)
+            {
+                var interfaces = implementationType.GetInterfaces()
+                    .Where(i =>
+                        handlerTypes.Any(handlerType =>
+                            handlerType.IsGenericTypeDefinition
+                                ? (i.IsGenericType && i.GetGenericTypeDefinition() == handlerType)
+                                : handlerType.IsAssignableFrom(i)));
+
+                foreach (var @interface in interfaces)
+                {
+                    services.AddScoped(@interface, implementationType);
+                }
+            }
         }
     }
 

@@ -61,10 +61,10 @@ internal class LiteDbEntityStore : IEntityStore
             _database.GetCollection<TEntity>(Entity.GetCollection<TEntity>()).DeleteMany(predicate)
         );
 
-    public Task<bool> DeleteAllCollectionsAsync()
+    public Task<bool> DeleteAllDataCollectionsAsync()
     {
         var result = false;
-        foreach (var collection in _database.GetCollection("$cols").Query().Where(doc => doc["name"].AsString.StartsWith("$") == false).ToList())
+        foreach (var collection in _database.GetCollection("$cols").Query().Where(doc => (doc["name"].AsString).StartsWith("$") == false).ToList())
         {
             result = result || _database.GetCollection(collection["name"].AsString).DeleteAll() > 0;
         }

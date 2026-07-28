@@ -1,6 +1,8 @@
-﻿namespace Toolbox.Industrial.Core.Messages.Integration
+﻿using Toolbox.Core.Messages;
+
+namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class LerSensorDistancia : CommandBase
+    public class LerSensorDistancia : Command
     {
         public Guid SensorId { get; init; }
     }

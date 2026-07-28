@@ -4,10 +4,9 @@ using SoftwareIrrigacao.Data;
 using SoftwareIrrigacao.Setup;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.LiteDB(ModuloConfig.ConnectionString, logCollectionName: "logs")
+    .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
     .CreateBootstrapLogger();
 
 //Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -16,9 +15,9 @@ try
 {
     Log.Information("Aplicação inicializando...");
     var builder = WebApplication.CreateBuilder(args);
-    builder.Services.AddConfiguration(builder);
-    builder.Services.AddRegisterServices();
-    //builder.Services.AddJwtConfiguration();
+    builder.Services.AddApiConfiguration(builder);
+    builder.Services.RegisterServices();
+
 
     var app = builder.Build();
     app.UseConfig();

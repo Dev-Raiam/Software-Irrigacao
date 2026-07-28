@@ -31,7 +31,7 @@ public interface IEntityStore
     Task<int> DeleteManyAsync<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : Entity;
 
-    Task<bool> DeleteAllCollectionsAsync();
+    Task<bool> DeleteAllDataCollectionsAsync();
 
     TEntity FirstOrDefault<TEntity>(Expression<Func<TEntity, bool>> predicate)
         where TEntity : Entity;

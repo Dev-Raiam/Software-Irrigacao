@@ -14,6 +14,9 @@
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.7.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+    <PackageReference Include="NetDevPack.Security.Jwt.AspNetCore" Version="9.0.4" />
+    <PackageReference Include="NetDevPack.Security.JwtExtensions" Version="9.0.1" />
     <PackageReference Include="MQTTnet" Version="5.2.0.1603" />
     <PackageReference Include="NModbus" Version="3.0.83" />
     <PackageReference Include="NModbus.Serial" Version="3.0.83" />

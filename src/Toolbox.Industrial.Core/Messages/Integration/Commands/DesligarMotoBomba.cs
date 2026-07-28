@@ -1,6 +1,8 @@
-﻿namespace Toolbox.Industrial.Core.Messages.Integration
+﻿using Toolbox.Core.Messages;
+
+namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class DesligarMotoBomba : CommandBase
+    public class DesligarMotoBomba : Command
     {
         public Guid MotoBombaId { get; init; }
     }

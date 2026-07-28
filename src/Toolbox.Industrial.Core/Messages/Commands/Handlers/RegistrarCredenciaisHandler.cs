@@ -1,6 +1,11 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.Net.Mime;
+using System.Text.Json;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security.Cryptography;
@@ -9,29 +14,66 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<RegistrarCredenciais>
 {
+    private readonly AuthGuard _auth;
     private readonly IMediator _mediator;
     private readonly IEntityStore _store;
     private readonly ICryptography _cryptography;
     private readonly IHostApplicationLifetime _lifetime;
-
+    private readonly ILogger<RegistrarCredenciaisHandler> _logger;
     public RegistrarCredenciaisHandler(
+        AuthGuard auth,
         IMediator mediator,
         IEntityStore store,
         ICryptography cryptography,
-        IHostApplicationLifetime lifetime
+        IHostApplicationLifetime lifetime,
+        ILogger<RegistrarCredenciaisHandler> logger
     )
     {
+        _auth = auth;
         _store = store;
+        _logger = logger;
         _mediator = mediator;
         _lifetime = lifetime;
         _cryptography = cryptography;
     }
+
 
     public async Task<ResponseResult> Handle(
         RegistrarCredenciais request,
         CancellationToken cancellationToken
     )
     {
+        #region Validar requisição
+
+        if (string.IsNullOrWhiteSpace(request.Segredo) ||
+            string.IsNullOrWhiteSpace(request.Chave) ||
+            request.ContextoId == Guid.Empty ||
+            request.PainelId == Guid.Empty ||
+            request.ContaId == Guid.Empty)
+        {
+            _logger.LogError("Falha ao configurar credenciais: {Error}", "Dados inválidos na requisição");
+            return BadRequest().AddError(nameof(request), "Dados inválidos");
+        }
+
+        var credentials = new Credentials(
+            request.Chave,
+            request.Segredo,
+            request.ContextoId
+        );
+
+        var response = await _auth.Authenticate(credentials, cancellationToken);
+
+        if (!response.Success || response.Data == null)
+        {
+            _logger.LogError("Falha na validação das credenciais: {Error}", response.Error);
+            return BadRequest().AddError(nameof(request), "Dados inválidos");
+        }
+
+        #endregion Validar requisição
+
+        #region Verificar reconfiguração
+
+        var restart = false;
         Guid.TryParse(
             (
                 await _store.FirstOrDefaultAsync<Configuracao>(x =>
@@ -40,31 +82,39 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             )?.Value.ToString(),
             out var contextoId
         );
-        Guid.TryParse(
-            (
-                await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
-            )?.Value.ToString(),
-            out var painelId
-        );
 
-        Guid.TryParse(
-            (
-                await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId)
-            )?.Value.ToString(),
-            out var contaId
-        );
-
-        var restart = false;
-        if (contextoId != request.ContextoId ||
-            contaId != request.ContaId ||
-            painelId != request.PainelId)
+        if (contextoId != Guid.Empty) 
         {
-            restart = await _store.DeleteAllCollectionsAsync();
+            Guid.TryParse(
+                (
+                    await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+                )?.Value.ToString(),
+                out var painelId
+            );
+
+            Guid.TryParse(
+                (
+                    await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId)
+                )?.Value.ToString(),
+                out var contaId
+            );
+
+
+            if (contextoId != request.ContextoId ||
+                painelId != request.PainelId ||
+                contaId != request.ContaId)
+            {
+                restart = await _store.DeleteAllDataCollectionsAsync();
+                _logger.LogWarning("Configuração foi redefinida e todos os dados armazenados anteriormente foram descartados.");
+            }
         }
+
+        #endregion Verificar reconfiguração
+
+        #region Salvar configurações
 
         var chave = _cryptography.Encrypt(request.Chave);
         var segredo = _cryptography.Encrypt(request.Segredo);
-
         Configuracao[] configuracoes =
         [
             new(Entity.Keys.Auth.Chave, chave!),
@@ -78,12 +128,17 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             await _store.UpsertAsync(configuracao);
         }
 
+        #endregion Salvar configurações
+
+        //Disparar sincronia
         await _mediator.Execute(
             new SincronizarAutomacao { PainelId = request.PainelId },
             cancellationToken: cancellationToken
         );
+
         if (restart)
         {
+            _logger.LogWarning("A aplicação será finalizada para completar o ciclo de reconfiguração.");
             _lifetime.StopApplication();
         }
 

@@ -9,9 +9,9 @@ using Toolbox.Industrial.Core.Security.Cryptography;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
-public sealed record Credentials(string chave, string segredo, Guid contextoId);
+internal sealed record Credentials(string chave, string segredo, Guid contextoId);
 
-public class AuthGuard : DelegatingHandler
+internal class AuthGuard : DelegatingHandler
 {
     private readonly Token _token;
     private readonly IApiClient _client;
@@ -60,7 +60,7 @@ public class AuthGuard : DelegatingHandler
         );
     }
 
-    private async Task<Result<Token>> Authenticate(
+    public async Task<Result<Token>> Authenticate(
         Credentials credentials,
         CancellationToken cancellationToken
     )
@@ -75,7 +75,6 @@ public class AuthGuard : DelegatingHandler
             "/autenticacao/v1/autenticar-cliente",
             content,
             cancellationToken
-        //_httpClient
         );
 
         return response;

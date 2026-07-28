@@ -66,7 +66,7 @@ internal sealed class ModbusRTU : IModbusRTU
         catch (Exception ex)
         {
             throw new Exception(
-                $"Erro ao conectar na porta {_serialPort.PortName}, {_loggerInfo}: {ex.Message}",
+                $"Erro ao abrir porta {_serialPort.PortName}, {_loggerInfo}: {ex.Message}",
                 ex
             );
         }
@@ -81,7 +81,7 @@ internal sealed class ModbusRTU : IModbusRTU
         catch (Exception ex)
         {
             throw new Exception(
-                $"Erro ao desconectar da porta {_serialPort.PortName}, {_loggerInfo}: {ex.Message}",
+                $"Erro ao fechar porta {_serialPort.PortName}, {_loggerInfo}: {ex.Message}",
                 ex
             );
         }

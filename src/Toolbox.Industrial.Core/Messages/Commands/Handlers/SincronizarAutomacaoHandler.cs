@@ -11,19 +11,19 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
-    private readonly IApiClient _apiClient;
     private readonly IEntityStore _store;
+    private readonly IApiClient _apiClient;
     private readonly ILogger<SincronizarAutomacaoHandler> _logger;
 
     public SincronizarAutomacaoHandler(
-        IApiClient apiClient,
         IEntityStore store,
+        IApiClient apiClient,
         ILogger<SincronizarAutomacaoHandler> logger
     )
     {
+        _store = store;
         _logger = logger;
         _apiClient = apiClient;
-        _store = store;
     }
 
     public async Task<ResponseResult> Handle(
@@ -43,15 +43,11 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             || painelId == Guid.Empty
         )
         {
-            _logger.LogWarning("Sincronização cancelada: PainelId não configurado");
+            _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
             return BadRequest();
         }
 
-        _logger.LogInformation("Iniciando sincronização para PainelId: {PainelId}", painelId);
-
         await Sincronizar(painelId, cancellationToken);
-
-        _logger.LogInformation("Sincronização concluída para PainelId: {PainelId}", painelId);
 
         return NoContent();
     }
@@ -97,12 +93,10 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     {
         using (LogContext.PushProperty("PainelId", painelId))
         {
-            _logger.LogInformation("Sincronização Iniciada...");
-
             if (!await CredenciaisRegistradasAsync())
             {
                 _logger.LogWarning(
-                    "Sincronização cancelada: credenciais de integracao não configuradas"
+                    "Sincronização cancelada por ausência de configuração."
                 );
                 return;
             }
@@ -115,16 +109,10 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                 {
                     await _store.UpsertAsync(new Controlador(controlador.Id, controlador));
                 }
-
-                var quantidadeControladores = result.Data.Count;
-                _logger.LogInformation(
-                    "Sincronização concluída: {QuantidadeControladores} controladores",
-                    quantidadeControladores
-                );
             }
             else
             {
-                _logger.LogWarning("Falha ao obter controladores: {Error}", result.Error);
+                _logger.LogWarning(exception: result.Exception, "Falha ao obter controladores: {Error}", result.Error);
             }
         }
     }

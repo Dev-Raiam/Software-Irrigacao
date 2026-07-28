@@ -1,18 +1,20 @@
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.RateLimiting;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
+using System.Reflection;
+using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Communication.Api;
-using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Setup;
 
 namespace SoftwareIrrigacao.Setup;
 
-public static class ModuloConfig
+public static class ApiConfig
 {
-    public static string ConnectionString = @"Filename=Irrigacao.db;Connection=Shared";
-    public static void AddConfiguration(
+    /// <summary>
+    /// Password = 9ee58e75-0741-47dd-4ea6-cf2559eac5a3
+    /// </summary>
+    internal static string ConnectionString = $"Filename=Irrigacao.db;Password={"Irrigacao.db".GetId()};Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared";
+    public static void AddApiConfiguration(
         this IServiceCollection services,
         WebApplicationBuilder builder
     )
@@ -35,32 +37,11 @@ public static class ModuloConfig
         });
 
         services.AddHostedService<MqttWorker>();
-
-        //var pathDbConfig = builder.Configuration.GetSection("PathDatabase:Path").Value;
-
-        // var connectionString = !string.IsNullOrWhiteSpace(pathDbConfig)
-        //     ? $"Data Source={pathDbConfig}"
-        //     : "Data Source=Irrigacao.db";
-
         services
-            .AddIndustrialCore(builder.Configuration)
+            .AddIndustrialCore(builder.Configuration, Assembly.GetExecutingAssembly())
             .AddLiteDbEntityStore(builder, ConnectionString);
 
         //services.AddModuloTekon();
-
-        services.AddRateLimiter(options =>
-        {
-            options.AddConcurrencyLimiter(
-                "limite-tentativas",
-                options =>
-                {
-                    options.PermitLimit = 2;
-                    options.QueueLimit = 2;
-                    options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                }
-            );
-        });
-
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
     }
@@ -68,10 +49,6 @@ public static class ModuloConfig
     public static void UseConfig(this WebApplication app)
     {
         app.UseExceptionHandler();
-        //app.UseAuthentication();
-        //app.UseAuthorization();
-
-        app.UseRateLimiter();
-        app.AuthRegister();
+        app.RegisterEndpoints();
     }
 }

@@ -1,6 +1,8 @@
-﻿namespace Toolbox.Industrial.Core.Messages.Integration
+﻿using Toolbox.Core.Messages;
+
+namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class AcionarSolenoide : CommandBase
+    public class AcionarSolenoide : Command
     {
         public Guid SolenoideId { get; init; }
     }
