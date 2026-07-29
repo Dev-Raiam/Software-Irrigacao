@@ -13,11 +13,9 @@ public class Configuracao : Entity<Guid, object>
     }
 
     [BsonField("Tipo")]
-    [JsonPropertyOrder(2)]
     public Tipo Type { get; protected set; } = default!;
 
     [BsonField("Configuracao")]
-    [JsonPropertyOrder(100)]
     public override object Valor { get; protected set; } = default!;
 
     public enum Tipo : int 

@@ -37,13 +37,6 @@ try
     await app.EnsureSeedData(
         (provider, store) =>
         {
-            var controlador = store.FirstOrDefault<Controlador>(x => x.Id == Guid.Parse("4af7b186-41a4-4289-ace3-2a87ab6076fc")).Valor;
-            var dispositivo = controlador.Dispositivos.First();
-            var teste = dispositivo.Parametros!.Parametro["fabricante"];
-            if (dispositivo.Parametros!.Parametro["fabricante"] is Dictionary<string, object> fabricante)
-            {
-                var id = fabricante!["id"];
-            }
             //exemplos de uso
             var entityConfig = provider.GetRequiredService<EntityConfiguration>();
             entityConfig.ApplyConfiguration = (IEntityStore store) =>

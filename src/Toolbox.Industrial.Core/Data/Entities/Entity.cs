@@ -1,8 +1,6 @@
 ﻿using LiteDB;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Toolbox.Core.Converters;
 using Toolbox.Core.Extensions;
 
 namespace Toolbox.Industrial.Core.Data
@@ -244,17 +242,14 @@ namespace Toolbox.Industrial.Core.Data
         }
 
         [BsonId]
-        [JsonPropertyOrder(0)]
         public TKey Id { get; init; } = default!;
 
 #pragma warning disable CS8603 // Possible null reference return.
         internal override object BsonId => Id;
 #pragma warning restore CS8603 // Possible null reference return.
 
-        [JsonPropertyOrder(1)]
         public virtual DateTime UltimaAtualizacao { get; protected set; }
 
-        [JsonPropertyOrder(100)]
         public virtual TValue Valor { get; protected set; } = default!;
 
         public virtual void Atualizar(TValue valor)
