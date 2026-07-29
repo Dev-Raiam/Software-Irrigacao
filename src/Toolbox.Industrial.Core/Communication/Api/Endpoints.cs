@@ -46,7 +46,7 @@ public static class Endpoints
                 {
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
-                        ?.Value?.ToString();
+                        ?.Valor?.ToString();
 
                     if (config == null)
                     {
@@ -77,11 +77,11 @@ public static class Endpoints
 
                     if (config == null)
                     {
-                        config = new Configuracao(id: Entity.Keys.Serilog.Config, value: json);
+                        config = new Configuracao(id: Entity.Keys.Serilog.Config, configuracao: json);
                     }
                     else
                     {
-                        config.Update(json);
+                        config.Atualizar(json);
                     }
                     await store.UpsertAsync(config);
                     lifetime.StopApplication();

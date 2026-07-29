@@ -76,9 +76,9 @@ public class MqttWorker : BackgroundService
         CancellationToken cancellationToken = default
     )
     {
-        var configuracao = await _store.FirstOrDefaultAsync<Controlador>(c => c.Value.Master);
+        var configuracao = await _store.FirstOrDefaultAsync<Controlador>(c => c.Valor.Master);
 
-        var controlador = configuracao == null ? null : configuracao.Value;
+        var controlador = configuracao == null ? null : configuracao.Valor;
 
         return controlador;
     }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NetDevPack.Security.Jwt.Core;
 using NetDevPack.Security.JwtExtensions;
+using Toolbox.Industrial.Core.Communication.Api;
 
 namespace Toolbox.Industrial.Core.Setup;
 
@@ -16,8 +17,7 @@ internal static class JwtConfig
     private static TokenValidationParameters _validationParameters = null!;
 
     public static IServiceCollection AddJwtConfiguration(
-        this IServiceCollection services,
-        IConfiguration configuration
+        this IServiceCollection services
     )
     {
         services
@@ -26,66 +26,80 @@ internal static class JwtConfig
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(x =>
+            .AddJwtBearer(options =>
             {
-                _validationParameters = x.TokenValidationParameters;
-                x.RequireHttpsMetadata = true;
-                x.SaveToken = true; //cache
-                x.SetJwksOptions(new JwkOptions(configuration["Authentication:Jwt:JwksUrl"]!));
-                x.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
-                x.TokenValidationParameters.ValidateIssuer = true;
-                x.TokenValidationParameters.ValidateAudience = false;
-                x.TokenValidationParameters.ValidateLifetime = true;
-                x.TokenValidationParameters.ValidateIssuerSigningKey = true;
-                x.UseSecurityTokenValidators = true;
-                x.TokenValidationParameters.RequireSignedTokens = true;
-                x.TokenValidationParameters.SignatureValidator = delegate(
+                _validationParameters = options.TokenValidationParameters;
+                options.SaveToken = true; //cache
+                options.MapInboundClaims = false;
+                options.RequireHttpsMetadata = true;
+                options.SetJwksOptions(new JwkOptions(ApiClient.JwtJwksUrl!));
+                options.UseSecurityTokenValidators = true;
+                options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
+                options.TokenValidationParameters.ValidateIssuer = true;
+                options.TokenValidationParameters.ValidateAudience = false;
+                options.TokenValidationParameters.ValidateLifetime = true;
+                options.TokenValidationParameters.RequireSignedTokens = true;
+                options.TokenValidationParameters.RequireExpirationTime = true;
+                options.TokenValidationParameters.ValidateIssuerSigningKey = false; //tem que pegar a chave de segurança.
+                options.TokenValidationParameters.ValidTypes = ["JWT"];
+                options.TokenValidationParameters.ValidIssuer = null;
+                options.TokenValidationParameters.ValidIssuers = ApiClient.JwtIssuers?.Split(
+                    ';',
+                    StringSplitOptions.RemoveEmptyEntries
+                );
+                //Remover isso para deixar a validação padrao.
+                options.TokenValidationParameters.SignatureValidator = delegate(
                     string token,
                     TokenValidationParameters parameters
                 )
                 {
                     return new JwtSecurityToken(token);
                 };
-
-                var issuers = configuration["Authentication:Jwt:Issuers"];
-                if (string.IsNullOrWhiteSpace(issuers) == false)
-                {
-                    x.TokenValidationParameters.ValidIssuer = null;
-                    x.TokenValidationParameters.ValidIssuers = issuers.Split(
-                        ';',
-                        StringSplitOptions.RemoveEmptyEntries
-                    );
-                }
-                x.Events = new JwtBearerEvents
+                options.Events = new JwtBearerEvents
                 {
                     OnTokenValidated = context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<
                             ILogger<JwtBearerEvents>
                         >();
-                        var jwksOptions = context
+                        var options = context
                             .HttpContext.RequestServices.GetRequiredService<IOptions<JwtOptions>>()
                             .Value;
-                        var token = ((JwtSecurityToken)context.SecurityToken).RawData;
-                        var tokenHandler = new JwtSecurityTokenHandler();
-                        tokenHandler.ValidateToken(
-                            token,
-                            _validationParameters,
-                            out SecurityToken securityToken
-                        );
+                        var jwt = (JwtSecurityToken)context.SecurityToken;
                         if (
-                            securityToken is not JwtSecurityToken jwtSecurityToken
-                            || !jwtSecurityToken.Header.Alg.Equals(
-                                jwksOptions?.Jws.Alg,
-                                StringComparison.InvariantCultureIgnoreCase
+                            !string.Equals(
+                                jwt.Header.Alg,
+                                options.Jws.Alg,
+                                StringComparison.Ordinal
                             )
                         )
                         {
-                            throw new SecurityTokenInvalidSignatureException(
-                                "Assinatura do token inválida"
-                            );
+                            context.Fail("Algoritmo inválido.");
                         }
                         return Task.CompletedTask;
+                        //var jwksOptions = context
+                        //    .HttpContext.RequestServices.GetRequiredService<IOptions<JwtOptions>>()
+                        //    .Value;
+                        //var token = ((JwtSecurityToken)context.SecurityToken).RawData;
+                        //var tokenHandler = new JwtSecurityTokenHandler();
+                        //tokenHandler.ValidateToken(
+                        //    token,
+                        //    _validationParameters,
+                        //    out SecurityToken securityToken
+                        //);
+                        //if (
+                        //    securityToken is not JwtSecurityToken jwtSecurityToken
+                        //    || !jwtSecurityToken.Header.Alg.Equals(
+                        //        jwksOptions?.Jws.Alg,
+                        //        StringComparison.InvariantCultureIgnoreCase
+                        //    )
+                        //)
+                        //{
+                        //    throw new SecurityTokenInvalidSignatureException(
+                        //        "Assinatura do token inválida"
+                        //    );
+                        //}
+                        //return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = context =>
                     {

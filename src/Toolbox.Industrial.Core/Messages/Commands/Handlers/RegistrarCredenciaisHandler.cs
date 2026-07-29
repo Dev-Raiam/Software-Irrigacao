@@ -80,7 +80,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
                 await _store.FirstOrDefaultAsync<Configuracao>(x =>
                     x.Id == Entity.Keys.Auth.ContextoId
                 )
-            )?.Value.ToString(),
+            )?.Valor.ToString(),
             out var contextoId
         );
 
@@ -91,14 +91,14 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
                     await _store.FirstOrDefaultAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.PainelId
                     )
-                )?.Value.ToString(),
+                )?.Valor.ToString(),
                 out var painelId
             );
 
             Guid.TryParse(
                 (
                     await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId)
-                )?.Value.ToString(),
+                )?.Valor.ToString(),
                 out var contaId
             );
 
@@ -134,6 +134,8 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             await _store.UpsertAsync(configuracao);
         }
 
+        _auth.Token.Update(response.Data);
+        
         #endregion Salvar configurações
 
         //Disparar sincronia

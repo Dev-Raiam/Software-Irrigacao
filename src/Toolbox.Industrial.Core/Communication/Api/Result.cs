@@ -15,7 +15,7 @@ public class Result<T>
         Exception = exception;
     }
 
-    public static Result<T> Ok(T data)
+    public static Result<T> Ok(T? data = default)
     {
         return new Result<T>(true, data, null, null);
     }
@@ -24,9 +24,4 @@ public class Result<T>
     {
         return new Result<T>(false, default, error, exception);
     }
-
-    //public static Result<T> Fail(string error, Exception exception)
-    //{
-    //    return new Result<T>(false, default, error, exception);
-    //}
 }

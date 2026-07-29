@@ -20,6 +20,8 @@ internal class AuthGuard : DelegatingHandler
     //private readonly HttpClient _httpClient;
     private readonly ICryptography _cryptography;
     private readonly ILogger<AuthGuard> _logger;
+    
+    public Token Token => _token;
 
     public AuthGuard(
         Token token,
@@ -42,13 +44,13 @@ internal class AuthGuard : DelegatingHandler
     {
         var chave = (
             await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
-        )?.Value.ToString();
+        )?.Valor.ToString();
         var segredo = (
             await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
-        )?.Value.ToString();
+        )?.Valor.ToString();
         var contextoId = (
             await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
-        )?.Value.ToString();
+        )?.Valor.ToString();
 
         if (chave == null || segredo == null || contextoId == null)
             return null;
@@ -65,15 +67,19 @@ internal class AuthGuard : DelegatingHandler
         CancellationToken cancellationToken
     )
     {
-        HttpContent content = new StringContent(
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            "/autenticacao/v1/autenticar-cliente"
+        );
+
+        request.Content = new StringContent(
             JsonSerializer.Serialize(credentials),
             System.Text.Encoding.UTF8,
             MediaTypeNames.Application.Json
         );
 
-        var response = await _client.PostAsync<Token>(
-            "/autenticacao/v1/autenticar-cliente",
-            content,
+        var response = await _client.SendAsync<Token>(
+            request,
             cancellationToken
         );
 

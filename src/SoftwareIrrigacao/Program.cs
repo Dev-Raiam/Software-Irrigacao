@@ -1,7 +1,8 @@
+using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Serilog;
-using SoftwareIrrigacao.Data;
 using SoftwareIrrigacao.Setup;
+using Toolbox.Industrial.Core.Data;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 Log.Logger = new LoggerConfiguration()
@@ -23,13 +24,6 @@ try
 
     //using (var scope = app.Services.CreateScope())
     //{
-    //    //var teste = scope.ServiceProvider.GetRequiredService<EntityConfiguration>();
-    //    //teste.ApplyConfiguration = (Istore store) =>
-    //    //{
-    //    //    store.Entity<Configuracao>().Id(c => c.Id).Field(x => x.Value, "teste");
-    //    //};
-    //    //await teste.Ler();
-
     //    var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
 
     //    var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
@@ -40,7 +34,25 @@ try
     //        await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
     //}
 
-    await SeedData.EnsureSeedData(app.Services);
+    await app.EnsureSeedData(
+        (provider, store) =>
+        {
+            var controlador = store.FirstOrDefault<Controlador>(x => x.Id == Guid.Parse("4af7b186-41a4-4289-ace3-2a87ab6076fc")).Valor;
+            var dispositivo = controlador.Dispositivos.First();
+            var teste = dispositivo.Parametros!.Parametro["fabricante"];
+            if (dispositivo.Parametros!.Parametro["fabricante"] is Dictionary<string, object> fabricante)
+            {
+                var id = fabricante!["id"];
+            }
+            //exemplos de uso
+            var entityConfig = provider.GetRequiredService<EntityConfiguration>();
+            entityConfig.ApplyConfiguration = (IEntityStore store) =>
+            {
+                //store.Configure<Configuracao>().Field(x => x.Value, "Dados");
+            };
+            return Task.CompletedTask;
+        }
+    );
 
     await app.RunAsync();
 }

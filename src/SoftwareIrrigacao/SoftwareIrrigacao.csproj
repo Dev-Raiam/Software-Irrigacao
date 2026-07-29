@@ -49,4 +49,8 @@
     <ProjectReference Include="..\Toolbox.Industrial.Core\Toolbox.Industrial.Core.csproj" />
     <ProjectReference Include="..\Toolbox.Industrial.Driver\Toolbox.Industrial.Driver.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
 </Project>
