@@ -1,6 +1,6 @@
 using Toolbox.Industrial.Core.Messages;
-using Toolbox.Industrial.Driver.Tekon;
-using Toolbox.Industrial.Driver.Tekon.Interfaces;
+using Toolbox.Industrial.Driver.TekonBkp;
+using Toolbox.Industrial.Driver.TekonBkp.Interfaces;
 
 namespace SoftwareIrrigacao.Setup;
 

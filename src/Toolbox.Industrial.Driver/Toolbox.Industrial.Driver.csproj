@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Toolbox.Industrial.Core\Toolbox.Industrial.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Tekon\" />
+  </ItemGroup>
+
 </Project>
