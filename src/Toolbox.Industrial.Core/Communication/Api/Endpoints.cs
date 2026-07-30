@@ -1,10 +1,11 @@
-using System.Diagnostics;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Net;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -18,9 +19,12 @@ public static class Endpoints
 
     public static void RegisterEndpoints(this WebApplication app)
     {
+        app.UseHsts();
+        app.UseHttpsRedirection();
+        app.UseRateLimiter();
+        app.UseJwksDiscovery();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseRateLimiter();
         app.MapPost(
                 "/configuracao/credenciais",
                 async (
@@ -46,7 +50,7 @@ public static class Endpoints
                 {
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
-                        ?.Value?.ToString();
+                        ?.Valor?.ToString();
 
                     if (config == null)
                     {
@@ -77,11 +81,11 @@ public static class Endpoints
 
                     if (config == null)
                     {
-                        config = new Configuracao(id: Entity.Keys.Serilog.Config, value: json);
+                        config = new Configuracao(id: Entity.Keys.Serilog.Config, configuracao: json);
                     }
                     else
                     {
-                        config.Update(json);
+                        config.Atualizar(json);
                     }
                     await store.UpsertAsync(config);
                     lifetime.StopApplication();

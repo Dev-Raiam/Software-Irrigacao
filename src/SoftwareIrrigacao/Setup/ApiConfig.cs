@@ -13,8 +13,8 @@ public static class ApiConfig
     /// <summary>
     /// Password = 9ee58e75-0741-47dd-4ea6-cf2559eac5a3
     /// </summary>
-    internal static string ConnectionString =
-        $"Filename=Irrigacao.db;Password={"Irrigacao.db".GetId()};Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared";
+    internal static string ConnectionString = //Password={"Irrigacao.db".GetId()};
+        $"Filename=Irrigacao.db;Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared";
 
     public static void AddApiConfiguration(
         this IServiceCollection services,
@@ -41,7 +41,7 @@ public static class ApiConfig
         services.AddHostedService<WorkerRaspIO>();
         services.AddHostedService<MqttWorker>();
         services
-            .AddIndustrialCore(builder.Configuration, Assembly.GetExecutingAssembly())
+            .AddIndustrialCore(Assembly.GetExecutingAssembly())
             .AddLiteDbEntityStore(builder, ConnectionString);
 
         //services.AddModuloTekon();

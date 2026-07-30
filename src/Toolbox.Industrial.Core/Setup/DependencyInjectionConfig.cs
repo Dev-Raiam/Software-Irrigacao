@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using LiteDB;
 using Microsoft.AspNetCore.Builder;
@@ -8,15 +9,16 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Serilog;
-using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security.Cryptography;
 using IMediator = Toolbox.Core.Mediator.IMediator;
 using MediatorImp = Toolbox.Core.Mediator.Mediator;
@@ -33,7 +35,7 @@ namespace Toolbox.Industrial.Core.Setup
                 var store = provider.GetRequiredService<IEntityStore>();
                 ApiClient.BaseAddress = store
                     .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
-                    ?.Value.ToString();
+                    ?.Valor.ToString();
             }
 
             if (ApiClient.BaseAddress != null)
@@ -44,11 +46,16 @@ namespace Toolbox.Industrial.Core.Setup
 
         public static IServiceCollection AddIndustrialCore(
             this IServiceCollection services,
-            IConfiguration configuration,
             params Assembly[] assemblies
         )
         {
             services.AddSingleton<IControllerIO, PythonIoController>();
+            services.AddMemoryCache();
+            services
+                .AddJwksManager() // (options => options.Jws = Algorithm.Create(AlgorithmType.ECDsa, JwtType.Jws))
+                .PersistKeysInMemory();
+
+            //.PersistKeysToDatabaseStore<AutenticacaoDataContext>();
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
             services.AddSingleton<ICryptography, Cryptography>();
@@ -60,6 +67,23 @@ namespace Toolbox.Industrial.Core.Setup
                 .PersistKeysToFileSystem(
                     new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Keys"))
                 );
+
+            services.ConfigureHttpJsonOptions(options =>
+            {
+                options.SerializerOptions.DefaultIgnoreCondition =
+                    JsonIgnoreCondition.WhenWritingNull;
+            });
+
+            JsonConvert.DefaultSettings = () =>
+                new JsonSerializerSettings
+                {
+                    Formatting = Formatting.None,
+                    DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                    DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    NullValueHandling = NullValueHandling.Ignore,
+                    Converters = { new StringEnumConverter() },
+                };
 
             #region HttpClient
 
@@ -102,7 +126,7 @@ namespace Toolbox.Industrial.Core.Setup
                     var store = provider.GetRequiredService<IEntityStore>();
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local)
-                        ?.Value;
+                        ?.Valor;
 
                     return new MqttManager((MqttConfiguration?)config ?? new MqttConfiguration());
                 }
@@ -115,7 +139,7 @@ namespace Toolbox.Industrial.Core.Setup
                     var store = provider.GetRequiredService<IEntityStore>();
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
-                        ?.Value;
+                        ?.Valor;
 
                     return new MqttManager((MqttConfiguration?)config ?? new MqttConfiguration());
                 }
@@ -136,7 +160,7 @@ namespace Toolbox.Industrial.Core.Setup
                 );
             });
 
-            services.AddJwtConfiguration(configuration);
+            services.AddJwtConfiguration();
             //            typeof(SincronizarAutomacao).GetTypeInfo().Assembly
 
             services.AddMediator([typeof(DependencyInjectionConfig).Assembly, .. assemblies]);
@@ -157,7 +181,7 @@ namespace Toolbox.Industrial.Core.Setup
                     var store = provider.GetRequiredService<IEntityStore>();
                     var cfg = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
-                        ?.Value.ToString();
+                        ?.Valor.ToString();
 
                     if (cfg == null)
                     {
@@ -200,7 +224,7 @@ namespace Toolbox.Industrial.Core.Setup
                         );
 
                         await store.UpsertAsync(
-                            new Configuracao(id: Entity.Keys.Serilog.Config, value: cfg)
+                            new Configuracao(id: Entity.Keys.Serilog.Config, configuracao: cfg)
                         );
                     }
 
@@ -209,6 +233,7 @@ namespace Toolbox.Industrial.Core.Setup
                     config.ReadFrom.Configuration(configuration);
                 }
             );
+
             return services;
         }
 

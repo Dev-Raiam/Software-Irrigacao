@@ -37,7 +37,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     await _store.FirstOrDefaultAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.PainelId
                     )
-                )?.Value.ToString(),
+                )?.Valor.ToString(),
                 out var painelId
             )
             || painelId == Guid.Empty
@@ -56,15 +56,15 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     {
         var chave = (
             await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
-        )?.Value;
+        )?.Valor;
 
         var segredo = (
             await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
-        )?.Value;
+        )?.Valor;
 
         var contextoId = (
             await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
-        )?.Value;
+        )?.Valor;
 
         return chave != null && segredo != null && contextoId != null;
     }

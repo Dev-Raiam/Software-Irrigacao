@@ -1,7 +1,6 @@
 ﻿using LiteDB;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Toolbox.Core.Converters;
 using Toolbox.Core.Extensions;
 
 namespace Toolbox.Industrial.Core.Data
@@ -26,8 +25,6 @@ namespace Toolbox.Industrial.Core.Data
             { "lavoura", "lavouras" },
             { "setor", "setores" }
         };
-
-
 
         public static string Pluralize(string singular)
         {
@@ -142,12 +139,11 @@ namespace Toolbox.Industrial.Core.Data
             return char.ToLower(word[0]) + word.Substring(1);
         }
 
-
-        public static string GetCollection<T>()
-            where T : Entity
+        public static string GetCollection<TEntity>()
+            where TEntity : Entity
         {
             return JsonNamingPolicy.SnakeCaseLower.ConvertName(
-                Pluralize(typeof(T).Name) //PortuguesPluralizer
+                Pluralize(typeof(TEntity).Name) //PortuguesPluralizer
             );
         }
 
@@ -210,6 +206,25 @@ namespace Toolbox.Industrial.Core.Data
                 /// 5b8c9baa-00d3-4ab5-9ca8-2913660cf776
                 /// </summary>
                 public static Guid BaseAddress = "Api.BaseAddress".GetId();
+
+                public static class Jwt
+                {
+                    /// <summary>
+                    /// 
+                    /// </summary>
+                    public static Guid KId = "Authentication.Jwt.KeyMaterial".GetId();
+                    
+                    /// <summary>
+                    /// 
+                    /// </summary>
+                    public static Guid Issuers = "Authentication.Jwt.Issuers".GetId();
+
+                    /// <summary>
+                    /// 
+                    /// </summary>
+                    public static Guid JwksUrl = "Authentication.Jwt.JwksUrl".GetId();
+
+                }
             }
 
             public static class Topic
@@ -223,28 +238,28 @@ namespace Toolbox.Industrial.Core.Data
     {
         protected Entity() { }
 
-        public Entity(TKey id, TValue value)
+        public Entity(TKey id, TValue valor)
         {
             Id = id;
-            Value = value;
-            LastUpdateAt = DateTime.UtcNow;
+            Valor = valor;
+            UltimaAtualizacao = DateTime.UtcNow;
         }
 
         [BsonId]
         public TKey Id { get; init; } = default!;
+
 #pragma warning disable CS8603 // Possible null reference return.
         internal override object BsonId => Id;
 #pragma warning restore CS8603 // Possible null reference return.
-        [BsonField("Valor")]
-        public TValue Value { get; private set; } = default!;
 
-        [BsonField("UltimaAtualizacao")]
-        public DateTime LastUpdateAt { get; private set; }
+        public virtual DateTime UltimaAtualizacao { get; protected set; }
 
-        public void Update(TValue value)
+        public virtual TValue Valor { get; protected set; } = default!;
+
+        public virtual void Atualizar(TValue valor)
         {
-            Value = value;
-            LastUpdateAt = DateTime.UtcNow;
+            Valor = valor;
+            UltimaAtualizacao = DateTime.UtcNow;
         }
     }
 }

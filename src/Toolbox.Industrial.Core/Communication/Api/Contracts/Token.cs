@@ -1,38 +1,37 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Toolbox.Industrial.Core.Communication.Api.Contracts;
 
-public sealed record Token
+internal sealed record Token
 {
     public string? TokenAcesso { get; private set; }
-    public string? TokenAtualizacao { get; private set; }
     public DateTime Emitido { get; private set; }
     public DateTime Expira { get; private set; }
+    public string? KId { get; private set; }
     public bool Expirado => Expira <= DateTime.UtcNow;
 
     public Token()
     {
+        KId = null;
         TokenAcesso = null;
-        TokenAtualizacao = null;
         Emitido = DateTime.MinValue;
         Expira = DateTime.MinValue;
     }
 
     [JsonConstructor]
-    public Token(string? tokenAcesso, string? tokenAtualizacao, DateTime emitido, DateTime expira)
+    public Token(string? tokenAcesso, DateTime emitido, DateTime expira, string? kId)
     {
-        TokenAcesso = tokenAcesso;
-        TokenAtualizacao = tokenAtualizacao;
+        KId = kId;
         Emitido = emitido;
+        TokenAcesso = tokenAcesso;
         Expira = expira.AddSeconds(-15);
     }
 
     public void Update(Token token)
     {
-        TokenAcesso = token.TokenAcesso;
-        TokenAtualizacao = token.TokenAtualizacao;
-        Emitido = token.Emitido;
+        KId = null;
         Expira = token.Expira;
+        Emitido = token.Emitido;
+        TokenAcesso = token.TokenAcesso;
     }
-
 }

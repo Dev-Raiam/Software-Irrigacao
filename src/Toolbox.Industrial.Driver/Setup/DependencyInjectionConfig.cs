@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Toolbox.Industrial.Driver.Tekon;
-using Toolbox.Industrial.Driver.Tekon.Interfaces;
+using Toolbox.Industrial.Driver.TekonBkp;
+using Toolbox.Industrial.Driver.TekonBkp.Interfaces;
 
 namespace Toolbox.Industrial.Driver.Setup
 {
