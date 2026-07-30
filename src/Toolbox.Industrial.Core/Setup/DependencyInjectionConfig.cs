@@ -1,4 +1,8 @@
-﻿using LiteDB;
+﻿using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -9,10 +13,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
-using System.Reflection;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -48,6 +48,12 @@ namespace Toolbox.Industrial.Core.Setup
             params Assembly[] assemblies
         )
         {
+            services.AddMemoryCache();
+            services
+                .AddJwksManager() // (options => options.Jws = Algorithm.Create(AlgorithmType.ECDsa, JwtType.Jws))
+                .PersistKeysInMemory();
+
+            //.PersistKeysToDatabaseStore<AutenticacaoDataContext>();
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
             services.AddSingleton<ICryptography, Cryptography>();
@@ -225,30 +231,6 @@ namespace Toolbox.Industrial.Core.Setup
                     config.ReadFrom.Configuration(configuration);
                 }
             );
-
-            //BsonMapper.Global.RegisterType<Parametros>(
-            //    serialize: p =>
-            //    {
-            //        var doc = new BsonDocument();
-            //        foreach (var item in p.Parametro)
-            //        {
-            //            doc[item.Key] = BsonJsonConverter.ToBsonValue(item.Value);
-            //        }
-
-            //        return doc;
-            //    },
-            //    deserialize: bson =>
-            //    {
-            //        var parametros = new Parametros();
-
-            //        foreach (var item in bson.AsDocument)
-            //        {
-            //            parametros.Parametro[item.Key] = item.Value.RawValue;
-            //        }
-
-            //        return parametros;
-            //    }
-            //);
 
             return services;
         }

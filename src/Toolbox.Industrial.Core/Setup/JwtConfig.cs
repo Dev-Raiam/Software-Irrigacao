@@ -1,13 +1,15 @@
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using NetDevPack.Security.Jwt.Core;
 using NetDevPack.Security.JwtExtensions;
+using System.IdentityModel.Tokens.Jwt;
 using Toolbox.Industrial.Core.Communication.Api;
 
 namespace Toolbox.Industrial.Core.Setup;
@@ -16,9 +18,27 @@ internal static class JwtConfig
 {
     private static TokenValidationParameters _validationParameters = null!;
 
-    public static IServiceCollection AddJwtConfiguration(
-        this IServiceCollection services
-    )
+    public static void SetJwksOptions(JwtBearerOptions options, JwkOptions jwkOptions)
+    {
+        HttpClient httpClient = new HttpClient(options.BackchannelHttpHandler ?? new HttpClientHandler())
+        {
+            Timeout = options.BackchannelTimeout,
+            MaxResponseContentBufferSize = 10485760L
+        };
+        options.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(jwkOptions.JwksUri, new JwksRetriever(), new HttpDocumentRetriever(httpClient)
+        {
+            RequireHttps = options.RequireHttpsMetadata
+        });
+        options.TokenValidationParameters.ValidateAudience = false;
+        options.TokenValidationParameters.ValidIssuer = jwkOptions.Issuer;
+        if (!string.IsNullOrEmpty(jwkOptions.Audience))
+        {
+            options.TokenValidationParameters.ValidateAudience = true;
+            options.TokenValidationParameters.ValidAudience = jwkOptions.Audience;
+        }
+    }
+
+    public static IServiceCollection AddJwtConfiguration(this IServiceCollection services)
     {
         services
             .AddAuthentication(x =>
@@ -28,43 +48,55 @@ internal static class JwtConfig
             })
             .AddJwtBearer(options =>
             {
-                _validationParameters = options.TokenValidationParameters;
+                //_validationParameters = options.TokenValidationParameters;
                 options.SaveToken = true; //cache
                 options.MapInboundClaims = false;
                 options.RequireHttpsMetadata = true;
-                options.SetJwksOptions(new JwkOptions(ApiClient.JwtJwksUrl!));
+                SetJwksOptions(options, new JwkOptions(ApiClient.JwtJwksUrl!));
                 options.UseSecurityTokenValidators = true;
                 options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
+                options.TokenValidationParameters.ValidTypes = ["JWT"];
+                options.TokenValidationParameters.ValidIssuer = null;
                 options.TokenValidationParameters.ValidateIssuer = true;
                 options.TokenValidationParameters.ValidateAudience = false;
                 options.TokenValidationParameters.ValidateLifetime = true;
                 options.TokenValidationParameters.RequireSignedTokens = true;
                 options.TokenValidationParameters.RequireExpirationTime = true;
-                options.TokenValidationParameters.ValidateIssuerSigningKey = false; //tem que pegar a chave de segurança.
-                options.TokenValidationParameters.ValidTypes = ["JWT"];
-                options.TokenValidationParameters.ValidIssuer = null;
+                options.TokenValidationParameters.IssuerSigningKey = ApiClient.Credentials?.Key;
+                options.TokenValidationParameters.ValidateIssuerSigningKey =
+                    ApiClient.Credentials?.Key != null;
                 options.TokenValidationParameters.ValidIssuers = ApiClient.JwtIssuers?.Split(
                     ';',
                     StringSplitOptions.RemoveEmptyEntries
                 );
-                //Remover isso para deixar a validação padrao.
-                options.TokenValidationParameters.SignatureValidator = delegate(
-                    string token,
-                    TokenValidationParameters parameters
-                )
+                if (ApiClient.Credentials?.Key == null)
                 {
-                    return new JwtSecurityToken(token);
-                };
+                    options.TokenValidationParameters.SignatureValidator = delegate(
+                        string token,
+                        TokenValidationParameters parameters
+                    )
+                    {
+                        return new JwtSecurityToken(token);
+                    };
+                }
+                options.TokenValidationParameters.IssuerSigningKeyResolver =
+                    (token, securityToken, kid, parameters) =>
+                    {
+                        var key = ApiClient.Credentials?.Key;
+
+                        if (key == null)
+                            return Enumerable.Empty<SecurityKey>();
+
+                        return new[] { key };
+                    };
                 options.Events = new JwtBearerEvents
                 {
                     OnTokenValidated = context =>
                     {
-                        var logger = context.HttpContext.RequestServices.GetRequiredService<
-                            ILogger<JwtBearerEvents>
-                        >();
                         var options = context
                             .HttpContext.RequestServices.GetRequiredService<IOptions<JwtOptions>>()
                             .Value;
+
                         var jwt = (JwtSecurityToken)context.SecurityToken;
                         if (
                             !string.Equals(
@@ -76,30 +108,12 @@ internal static class JwtConfig
                         {
                             context.Fail("Algoritmo inválido.");
                         }
+
+                        if (jwt.Header.Typ != "JWT")
+                        {
+                            context.Fail("Tipo inválido.");
+                        }
                         return Task.CompletedTask;
-                        //var jwksOptions = context
-                        //    .HttpContext.RequestServices.GetRequiredService<IOptions<JwtOptions>>()
-                        //    .Value;
-                        //var token = ((JwtSecurityToken)context.SecurityToken).RawData;
-                        //var tokenHandler = new JwtSecurityTokenHandler();
-                        //tokenHandler.ValidateToken(
-                        //    token,
-                        //    _validationParameters,
-                        //    out SecurityToken securityToken
-                        //);
-                        //if (
-                        //    securityToken is not JwtSecurityToken jwtSecurityToken
-                        //    || !jwtSecurityToken.Header.Alg.Equals(
-                        //        jwksOptions?.Jws.Alg,
-                        //        StringComparison.InvariantCultureIgnoreCase
-                        //    )
-                        //)
-                        //{
-                        //    throw new SecurityTokenInvalidSignatureException(
-                        //        "Assinatura do token inválida"
-                        //    );
-                        //}
-                        //return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = context =>
                     {

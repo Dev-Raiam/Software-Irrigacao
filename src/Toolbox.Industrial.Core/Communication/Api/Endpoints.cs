@@ -1,10 +1,11 @@
-using System.Diagnostics;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Net;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -18,9 +19,12 @@ public static class Endpoints
 
     public static void RegisterEndpoints(this WebApplication app)
     {
+        app.UseHsts();
+        app.UseHttpsRedirection();
+        app.UseRateLimiter();
+        app.UseJwksDiscovery();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseRateLimiter();
         app.MapPost(
                 "/configuracao/credenciais",
                 async (

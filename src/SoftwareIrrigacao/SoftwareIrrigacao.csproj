@@ -2,7 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+    <NoWarn>CS8981,IDE1006</NoWarn>
     <UserSecretsId>9f6b9367-ffcc-4737-bbcd-d4f16e150b14</UserSecretsId>
   </PropertyGroup>
 
@@ -16,7 +19,7 @@
     <Optimize>true</Optimize>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <Compile Remove="Application\**" />
     <Compile Remove="Domain\**" />

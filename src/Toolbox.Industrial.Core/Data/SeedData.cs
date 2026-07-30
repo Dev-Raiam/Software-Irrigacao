@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Text;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using NetDevPack.Security.Jwt.Core.Interfaces;
+using NetDevPack.Security.Jwt.Core.Model;
 using Toolbox.Industrial.Core.Communication.Api;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 
@@ -19,8 +22,7 @@ public static class SeedData
             .CreateScope();
 
         var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
-
-        await InternalSeedData(store);
+        await InternalSeedData(scope.ServiceProvider, store);
 
         if (applicationSeedData != null)
         {
@@ -28,7 +30,7 @@ public static class SeedData
         }
     }
 
-    private static async Task InternalSeedData(IEntityStore store)
+    private static async Task InternalSeedData(IServiceProvider provider, IEntityStore store)
     {
         var id = Entity.Keys.Api.BaseAddress;
         var apiBaseAddress = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
@@ -38,6 +40,25 @@ public static class SeedData
             await store.UpsertAsync(apiBaseAddress);
         }
         ApiClient.BaseAddress = apiBaseAddress.Valor.ToString();
+
+        var kid = await store.FirstOrDefaultAsync<Configuracao>(x =>
+            x.Id == Entity.Keys.Api.Jwt.KId
+        );
+        if (kid?.Valor != null)
+        {
+            var keyStore = provider.GetRequiredService<IJsonWebKeyStore>();
+            var keyMaterial = Newtonsoft.Json.JsonConvert.DeserializeObject<KeyMaterial>(
+                Encoding.UTF8.GetString(
+                    Convert.FromBase64String(kid.Valor.ToString()!.Remove(3, 2))
+                )
+            );
+            if ((await keyStore.Get(keyMaterial!.KeyId))?.Id != keyMaterial.Id)
+            {
+                await keyStore.Store(keyMaterial!);
+            }
+            var jwtService = provider.GetRequiredService<IJwtService>();
+            ApiClient.Credentials = await jwtService.GetCurrentSigningCredentials();
+        }
 
         id = Entity.Keys.Api.Jwt.Issuers;
         var jwtIssuers = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
@@ -52,7 +73,10 @@ public static class SeedData
         var jwtJwksUrl = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (jwtJwksUrl?.Valor == null)
         {
-            jwtJwksUrl = new Configuracao(id: id, configuracao: $"{ApiClient.BaseAddress}/autenticacao/jwks");
+            jwtJwksUrl = new Configuracao(
+                id: id,
+                configuracao: $"{ApiClient.BaseAddress}/autenticacao/jwks"
+            );
             await store.UpsertAsync(jwtJwksUrl);
         }
         ApiClient.JwtJwksUrl = jwtJwksUrl.Valor.ToString();
@@ -62,12 +86,7 @@ public static class SeedData
         {
             var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };
 
-            await store.UpsertAsync(
-                new Configuracao(
-                    id: id,
-                    configuracao: config
-                )
-            );
+            await store.UpsertAsync(new Configuracao(id: id, configuracao: config));
         }
 
         id = Entity.Keys.Mqtt.Remoto;

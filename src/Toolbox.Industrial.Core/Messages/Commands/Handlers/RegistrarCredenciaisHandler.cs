@@ -1,7 +1,10 @@
-using System.Net.Mime;
-using System.Text.Json;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NetDevPack.Security.Jwt.Core.Interfaces;
+using NetDevPack.Security.Jwt.Core.Model;
+using System.Net.Mime;
+using System.Text;
+using System.Text.Json;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -17,14 +20,15 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
     private readonly AuthGuard _auth;
     private readonly IMediator _mediator;
     private readonly IEntityStore _store;
+    private readonly IJsonWebKeyStore _keyStore;
     private readonly ICryptography _cryptography;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ILogger<RegistrarCredenciaisHandler> _logger;
-
     public RegistrarCredenciaisHandler(
         AuthGuard auth,
         IMediator mediator,
         IEntityStore store,
+        IJsonWebKeyStore keyStore,
         ICryptography cryptography,
         IHostApplicationLifetime lifetime,
         ILogger<RegistrarCredenciaisHandler> logger
@@ -35,6 +39,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         _logger = logger;
         _mediator = mediator;
         _lifetime = lifetime;
+        _keyStore = keyStore;
         _cryptography = cryptography;
     }
 
@@ -60,7 +65,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             return BadRequest().AddError(nameof(request), "Dados inválidos");
         }
 
-        var credentials = new Credentials(request.Chave, request.Segredo, request.ContextoId);
+        var credentials = new Credentials(request.Chave, request.Segredo, request.ContextoId, Entity.Keys.Api.Jwt.KId);
 
         var response = await _auth.Authenticate(credentials, cancellationToken);
 
@@ -133,7 +138,10 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         {
             await _store.UpsertAsync(configuracao);
         }
-
+        if (!string.IsNullOrWhiteSpace(response.Data.KId))
+        {
+            await _store.UpsertAsync(new Configuracao(Entity.Keys.Api.Jwt.KId, response.Data.KId));
+        }
         _auth.Token.Update(response.Data);
         
         #endregion Salvar configurações

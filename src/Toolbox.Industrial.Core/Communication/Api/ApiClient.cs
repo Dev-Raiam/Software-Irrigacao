@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
@@ -12,10 +13,11 @@ public interface IApiClient
 
 public class ApiClient : IApiClient
 {
-    public const string Anonymous = "anonymous";
-    internal static string? BaseAddress;
-    internal static string? JwtIssuers;
     internal static string? JwtJwksUrl;
+    internal static string? JwtIssuers;
+    internal static string? BaseAddress;
+    internal static SigningCredentials? Credentials = null;
+    public const string Anonymous = "anonymous";
 
     private readonly HttpClient _httpClient;
     private readonly ILogger<ApiClient> _logger;

@@ -26,8 +26,6 @@ namespace Toolbox.Industrial.Core.Data
             { "setor", "setores" }
         };
 
-
-
         public static string Pluralize(string singular)
         {
             if (string.IsNullOrWhiteSpace(singular))
@@ -214,12 +212,18 @@ namespace Toolbox.Industrial.Core.Data
                     /// <summary>
                     /// 
                     /// </summary>
+                    public static Guid KId = "Authentication.Jwt.KeyMaterial".GetId();
+                    
+                    /// <summary>
+                    /// 
+                    /// </summary>
                     public static Guid Issuers = "Authentication.Jwt.Issuers".GetId();
 
                     /// <summary>
                     /// 
                     /// </summary>
                     public static Guid JwksUrl = "Authentication.Jwt.JwksUrl".GetId();
+
                 }
             }
 

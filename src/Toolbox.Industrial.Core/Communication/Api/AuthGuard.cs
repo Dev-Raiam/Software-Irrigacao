@@ -1,15 +1,15 @@
 using System.Net.Http.Headers;
 using System.Net.Mime;
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NetDevPack.Security.Jwt.Core.Interfaces;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
-internal sealed record Credentials(string chave, string segredo, Guid contextoId);
+internal sealed record Credentials(string chave, string segredo, Guid contextoId, Guid? KId = null);
 
 internal class AuthGuard : DelegatingHandler
 {
@@ -20,7 +20,8 @@ internal class AuthGuard : DelegatingHandler
     //private readonly HttpClient _httpClient;
     private readonly ICryptography _cryptography;
     private readonly ILogger<AuthGuard> _logger;
-    
+
+    //private readonly IJsonWebKeyStore _keyStore;
     public Token Token => _token;
 
     public AuthGuard(
@@ -28,6 +29,7 @@ internal class AuthGuard : DelegatingHandler
         IEntityStore store,
         //HttpClient httpClient,
         ICryptography cryptography,
+        //IJsonWebKeyStore keyStore,
         ILogger<AuthGuard> logger,
         [FromKeyedServices(ApiClient.Anonymous)] IApiClient client
     )
@@ -36,6 +38,7 @@ internal class AuthGuard : DelegatingHandler
         _store = store;
         _client = client;
         _logger = logger;
+        //_keyStore = keyStore;
         //_httpClient = httpClient;
         _cryptography = cryptography;
     }
@@ -58,7 +61,8 @@ internal class AuthGuard : DelegatingHandler
         return new Credentials(
             _cryptography.Decrypt(chave),
             _cryptography.Decrypt(segredo),
-            Guid.Parse(contextoId)
+            Guid.Parse(contextoId),
+            Entity.Keys.Api.Jwt.KId
         );
     }
 
@@ -73,15 +77,12 @@ internal class AuthGuard : DelegatingHandler
         );
 
         request.Content = new StringContent(
-            JsonSerializer.Serialize(credentials),
+            System.Text.Json.JsonSerializer.Serialize(credentials),
             System.Text.Encoding.UTF8,
             MediaTypeNames.Application.Json
         );
 
-        var response = await _client.SendAsync<Token>(
-            request,
-            cancellationToken
-        );
+        var response = await _client.SendAsync<Token>(request, cancellationToken);
 
         return response;
     }
@@ -107,6 +108,12 @@ internal class AuthGuard : DelegatingHandler
             {
                 _logger.LogError("Falha na autenticação: {Error}", response.Error);
                 return await base.SendAsync(request, cancellationToken);
+            }
+            if (!string.IsNullOrWhiteSpace(response.Data.KId))
+            {
+                await _store.UpsertAsync(
+                    new Configuracao(Entity.Keys.Api.Jwt.KId, response.Data.KId)
+                );
             }
             _token.Update(response.Data);
         }
