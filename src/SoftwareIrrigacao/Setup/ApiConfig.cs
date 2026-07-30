@@ -38,6 +38,7 @@ public static class ApiConfig
                 .WhenWritingNull;
         });
 
+        services.AddHostedService<WorkerRaspIO>();
         services.AddHostedService<MqttWorker>();
         services
             .AddIndustrialCore(builder.Configuration, Assembly.GetExecutingAssembly())
