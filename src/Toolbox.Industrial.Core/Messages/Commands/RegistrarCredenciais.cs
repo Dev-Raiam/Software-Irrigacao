@@ -19,6 +19,8 @@ namespace Toolbox.Industrial.Core.Messages.Commands
 
         [Required(ErrorMessage = "PainelId é obrigatório")]
         public Guid PainelId { get; init; }
+
+        public Guid? ControladorId { get; init; }
     }
 
 }

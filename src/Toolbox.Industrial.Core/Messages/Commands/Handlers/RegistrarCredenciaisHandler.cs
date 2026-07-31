@@ -51,6 +51,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             || request.ContextoId == Guid.Empty
             || request.PainelId == Guid.Empty
             || request.ContaId == Guid.Empty
+            || (request.ControladorId != null && request.ControladorId == Guid.Empty)
         )
         {
             _logger.LogError(
@@ -89,6 +90,15 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             Guid.TryParse(
                 (
                     await _store.FirstOrDefaultAsync<Configuracao>(x =>
+                        x.Id == Entity.Keys.ControladorId
+                    )
+                )?.Valor.ToString(),
+                out var controladorId
+            );
+
+            Guid.TryParse(
+                (
+                    await _store.FirstOrDefaultAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.PainelId
                     )
                 )?.Valor.ToString(),
@@ -103,7 +113,8 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             );
 
             if (
-                contextoId != request.ContextoId
+                controladorId != request.ControladorId
+                || contextoId != request.ContextoId
                 || painelId != request.PainelId
                 || contaId != request.ContaId
             )
@@ -121,29 +132,39 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         var chave = _cryptography.Encrypt(request.Chave);
         var segredo = _cryptography.Encrypt(request.Segredo);
-        Configuracao[] configuracoes =
+        List<Configuracao> configuracoes =
         [
             new(Entity.Keys.Auth.Chave, chave!, grupo: Grupo.Auth, tipo: Tipo.Config),
             new(Entity.Keys.Auth.Segredo, segredo!, grupo: Grupo.Auth, tipo: Tipo.Config),
             new(
                 Entity.Keys.Auth.ContextoId,
-                request.ContextoId.ToString(),
+                $"{request.ContextoId}",
                 grupo: Grupo.Auth,
                 tipo: Tipo.Config
             ),
             new(
                 Entity.Keys.ContaId,
-                request.ContaId.ToString(),
+                $"{request.ContaId}",
                 grupo: Grupo.App,
                 tipo: Tipo.Config
             ),
             new(
                 Entity.Keys.PainelId,
-                request.PainelId.ToString(),
+                $"{request.PainelId}",
                 grupo: Grupo.App,
                 tipo: Tipo.Config
             ),
         ];
+        if (request.ControladorId != null)
+        {
+            configuracoes.Add(new(
+                Entity.Keys.ControladorId,
+                $"{request.ControladorId}",
+                grupo: Grupo.App,
+                tipo: Tipo.Config
+            ));
+
+        }
         foreach (var configuracao in configuracoes)
         {
             await _store.UpsertAsync(configuracao);

@@ -1,8 +1,4 @@
-﻿using System.Reflection;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
-using LiteDB;
+﻿using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,9 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Serilog;
+using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -21,6 +20,7 @@ using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using IMediator = Toolbox.Core.Mediator.IMediator;
 using MediatorImp = Toolbox.Core.Mediator.Mediator;
@@ -115,12 +115,12 @@ namespace Toolbox.Industrial.Core.Setup
 
             services.AddKeyedTransient<IMqtt>(
                 Mqtt.Local,
-                (provider, key) => provider.GetRequiredKeyedService<MqttManager>(key).Current
+                (provider, key) => provider.GetRequiredKeyedService<MqttManager>(key).Current!
             );
 
             services.AddKeyedTransient<IMqtt>(
                 Mqtt.Remoto,
-                (provider, key) => provider.GetRequiredKeyedService<MqttManager>(key).Current
+                (provider, key) => provider.GetRequiredKeyedService<MqttManager>(key).Current!
             );
 
             services.AddKeyedSingleton<MqttManager>(
@@ -128,11 +128,13 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
+                    var logger = provider.GetRequiredService<ILogger<Mqtt>>();
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local)
                         ?.Valor;
+                    var mqtt = new Mqtt((MqttConfiguration?)config ?? new MqttConfiguration(), logger);
 
-                    return new MqttManager((MqttConfiguration?)config ?? new MqttConfiguration());
+                    return new MqttManager(mqtt);
                 }
             );
 
@@ -140,12 +142,19 @@ namespace Toolbox.Industrial.Core.Setup
                 Mqtt.Remoto,
                 (provider, key) =>
                 {
-                    var store = provider.GetRequiredService<IEntityStore>();
-                    var config = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
-                        ?.Valor;
+                    Mqtt? mqtt = null;
+                    if (Controlador.Master)
+                    {
+                        var logger = provider.GetRequiredService<ILogger<Mqtt>>();
+                        var store = provider.GetRequiredService<IEntityStore>();
+                        var config = store
+                            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
+                            ?.Valor;
 
-                    return new MqttManager((MqttConfiguration?)config ?? new MqttConfiguration());
+                        mqtt = new Mqtt((MqttConfiguration?)config ?? new MqttConfiguration(), logger);
+                    }
+
+                    return new MqttManager(mqtt);
                 }
             );
 

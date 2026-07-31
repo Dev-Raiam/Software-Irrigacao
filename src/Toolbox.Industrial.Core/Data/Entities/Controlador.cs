@@ -5,6 +5,8 @@ namespace Toolbox.Industrial.Core.Data;
 
 public class Controlador : Entity<Guid, controlador>
 {
+    public static bool Master = false;
+
     protected Controlador() { }
 
     public Controlador(Guid id, controlador controlador)

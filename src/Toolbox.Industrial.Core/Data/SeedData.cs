@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -97,14 +98,55 @@ public static class SeedData
             }
         }
 
+        Controlador.Master = false;
+        var controladores = store.Query<Controlador>().ToList();
+        Guid.TryParse(
+            (
+                await store.FirstOrDefaultAsync<Configuracao>(x =>
+                    x.Id == Entity.Keys.ControladorId
+                )
+            )?.Valor.ToString(),
+            out var controladorId
+        );
+
+        if (controladorId != Guid.Empty)
+        {
+            Controlador.Master =
+                controladores.FirstOrDefault(c => c.Id == controladorId)?.Valor.Master ?? false;
+        }
+        else if (controladores.Count == 1)
+        {
+            Controlador.Master = controladores.First().Valor.Master;
+        }
+
         id = Entity.Keys.Mqtt.Local;
-        if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
+        var mqttLocal = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
+        if (mqttLocal?.Valor == null)
         {
             var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };
-
-            await store.UpsertAsync(
-                new Configuracao(id: id, configuracao: config, grupo: Grupo.Mqtt, tipo: Tipo.Config)
+            mqttLocal = new Configuracao(
+                id: id,
+                configuracao: config,
+                grupo: Grupo.Mqtt,
+                tipo: Tipo.Config
             );
+            await store.UpsertAsync(mqttLocal);
+        }
+        if (!Controlador.Master)
+        {
+            var config = (MqttConfiguration)mqttLocal.Valor;
+            var master = controladores.FirstOrDefault(c => c.Valor.Master);
+            if (master != null && config.Host != master.Valor.Conexoes.Host)
+            {
+                config.SetHost(master.Valor.Conexoes.Host);
+                mqttLocal = new Configuracao(
+                    id: id,
+                    configuracao: config,
+                    grupo: Grupo.Mqtt,
+                    tipo: Tipo.Config
+                );
+                await store.UpsertAsync(mqttLocal);
+            }
         }
 
         id = Entity.Keys.Mqtt.LocalPython;
@@ -120,9 +162,8 @@ public static class SeedData
         id = Entity.Keys.Mqtt.Remoto;
         if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
         {
-            var config = new MqttConfiguration
+            var config = new MqttConfiguration(host: "broker.freemqtt.com")
             {
-                Host = "broker.freemqtt.com",
                 Username = "freemqtt",
                 Password = "public",
             };
