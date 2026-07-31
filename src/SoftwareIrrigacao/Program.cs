@@ -1,4 +1,3 @@
-using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
