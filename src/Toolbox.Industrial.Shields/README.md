@@ -50,3 +50,37 @@ python src/hub/server.py
 ```powershell
 pip freeze > requirements.txt
 ```
+
+## Estrutura do Json
+
+### Telemetria
+```json
+{
+  "comando":"telemetria",
+  "portas": [
+    {
+        "device_id": "eca90b75-f7b7-41c0-b1c4-2a879e9d6723",
+        "porta": "I0.1",
+        "sinal": "analogica",
+        "tipo": "output"
+    },
+    {
+        "device_id": "eca90b75-f7b7-41c0-b1c4-2a879e9d6723",
+        "porta": "I0.12",
+        "sinal": "analogica",
+        "tipo": "output"
+    }
+  ]
+}
+```
+
+### Comando
+```json
+{
+  "device_id": "eca90b75-f7b7-41c0-b1c4-2a879e9d6723",
+  "porta": "I0.1",
+  "sinal": "analogica",
+  "tipo": "output",
+  "valor": 1026
+}
+```
