@@ -45,3 +45,8 @@ python src/hub/server.py
 - O `.venv` não é versionado (veja `.gitignore`)
 - Cada desenvolvedor deve criar seu próprio ambiente virtual
 - Para Raspberry/Linux, usar Socket em vez de NamedPipe
+
+## Atualizar Requirements
+```powershell
+pip freeze > requirements.txt
+```
