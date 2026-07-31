@@ -212,6 +212,10 @@ namespace Toolbox.Industrial.Core.Setup
                                     {
                                         new Configuration.SerilogConfig.WriteToConfig
                                         {
+                                            Name = "Console",
+                                        },
+                                        new Configuration.SerilogConfig.WriteToConfig
+                                        {
                                             Name = "LiteDB",
                                             Args = new Dictionary<string, object>
                                             {
