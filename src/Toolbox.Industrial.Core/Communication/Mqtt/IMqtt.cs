@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public interface IMqtt : IDisposable

@@ -22,11 +22,17 @@ public static class SeedData
             .CreateScope();
 
         var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
+        var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
+
         await InternalSeedData(scope.ServiceProvider, store);
 
         if (applicationSeedData != null)
         {
             await applicationSeedData(scope.ServiceProvider, store);
+        }
+        if (!exporter.Exported)
+        {
+            await exporter.ExportAsync();
         }
     }
 
@@ -92,6 +98,16 @@ public static class SeedData
         }
 
         id = Entity.Keys.Mqtt.Local;
+        if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
+        {
+            var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };
+
+            await store.UpsertAsync(
+                new Configuracao(id: id, configuracao: config, grupo: Grupo.Mqtt, tipo: Tipo.Config)
+            );
+        }
+
+        id = Entity.Keys.Mqtt.LocalPython;
         if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
         {
             var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };

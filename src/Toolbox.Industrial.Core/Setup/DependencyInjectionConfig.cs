@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -61,6 +62,8 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddSingleton<EntityConfiguration>();
             services.AddSingleton<ICryptography, Cryptography>();
             services.AddSingleton<IControllerIO, PythonIoController>();
+            services.TryAddSingleton<IPythonSettingsExporter, PythonSettingsExporter>();
+
             services.AddTransient<AuthGuard>();
             services
                 .AddDataProtection()
@@ -84,7 +87,6 @@ namespace Toolbox.Industrial.Core.Setup
                     DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
                     ContractResolver = new CamelCasePropertyNamesContractResolver(),
                     NullValueHandling = NullValueHandling.Ignore,
-                    Converters = { new StringEnumConverter() },
                 };
 
             #region HttpClient

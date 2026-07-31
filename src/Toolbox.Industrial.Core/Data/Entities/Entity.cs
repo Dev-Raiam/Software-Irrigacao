@@ -200,6 +200,11 @@ namespace Toolbox.Industrial.Core.Data
                 public static Guid Local = "Mqtt.Local".GetId();
 
                 /// <summary>
+                ///
+                /// </summary>
+                public static Guid LocalPython = "Mqtt.Local.Python".GetId();
+
+                /// <summary>
                 /// aac72483-9d76-4e3f-b562-fe50ff6966a6
                 /// </summary>
                 public static Guid Remoto = "Mqtt.Remoto".GetId();
