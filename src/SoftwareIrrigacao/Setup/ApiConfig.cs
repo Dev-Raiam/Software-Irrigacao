@@ -1,7 +1,7 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
-using System.Reflection;
 using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
@@ -21,6 +21,24 @@ public static class ApiConfig
         WebApplicationBuilder builder
     )
     {
+        builder
+            .Configuration.SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+            .AddUserSecrets<Program>()
+            .AddEnvironmentVariables();
+
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.DefaultIgnoreCondition = System
+                .Text
+                .Json
+                .Serialization
+                .JsonIgnoreCondition
+                .WhenWritingNull;
+        });
+
+        services.AddHostedService<WorkerRaspIO>();
         services.AddHostedService<MqttWorker>();
         services
             .AddIndustrialCore(Assembly.GetExecutingAssembly())

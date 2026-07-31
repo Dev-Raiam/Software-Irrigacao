@@ -17,6 +17,7 @@ using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
+using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
 using IMediator = Toolbox.Core.Mediator.IMediator;
