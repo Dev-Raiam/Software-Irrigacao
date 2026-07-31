@@ -1,13 +1,15 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
+using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using SerilogConfig = Toolbox.Industrial.Core.Setup.Configuration;
+using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
@@ -17,8 +19,8 @@ public static class Endpoints
 
     public static void RegisterEndpoints(this WebApplication app)
     {
-        app.UseHsts();
-        app.UseHttpsRedirection();
+        //app.UseHsts();
+        //app.UseHttpsRedirection();
         app.UseRateLimiter();
         //app.UseJwksDiscovery();
         app.UseAuthentication();
@@ -79,7 +81,12 @@ public static class Endpoints
 
                     if (config == null)
                     {
-                        config = new Configuracao(id: Entity.Keys.Serilog.Config, configuracao: json);
+                        config = new Configuracao(
+                            id: Entity.Keys.Serilog.Config,
+                            configuracao: json,
+                            grupo: Grupo.Log,
+                            tipo: Tipo.Config
+                        );
                     }
                     else
                     {

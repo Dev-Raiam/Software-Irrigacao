@@ -1,3 +1,4 @@
+using SoftwareIrrigacao.Workes;
 using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Driver.TekonBkp;
 using Toolbox.Industrial.Driver.TekonBkp.Interfaces;
@@ -11,6 +12,7 @@ public static class DependencyInjectionConfig
         services.AddHttpContextAccessor();
         services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
         services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
+        services.AddHostedService<WorkerRaspIO>();
         //services.AddHostedService<WorkerTeste>();
     }
 }

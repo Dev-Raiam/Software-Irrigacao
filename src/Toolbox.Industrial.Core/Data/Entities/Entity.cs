@@ -1,15 +1,15 @@
-﻿using LiteDB;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using LiteDB;
 using Toolbox.Core.Extensions;
 
 namespace Toolbox.Industrial.Core.Data
 {
-   
     public abstract class Entity
     {
-
-        private static readonly Dictionary<string, string> Irregulares = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly Dictionary<string, string> Irregulares = new(
+            StringComparer.OrdinalIgnoreCase
+        )
         {
             { "cao", "caes" },
             { "pao", "paes" },
@@ -23,7 +23,7 @@ namespace Toolbox.Industrial.Core.Data
             { "luz", "luzes" },
             { "flor", "flores" },
             { "lavoura", "lavouras" },
-            { "setor", "setores" }
+            { "setor", "setores" },
         };
 
         public static string Pluralize(string singular)
@@ -85,14 +85,17 @@ namespace Toolbox.Industrial.Core.Data
             //// Default → só adiciona "s"
             //return singular + "s";
         }
+
         private static string PluralizeSingle(string word)
         {
             if (Irregulares.TryGetValue(word, out var plural))
                 return CapitalizeLike(word, plural);
 
             // Termina em "r" ou "z"
-            if (word.EndsWith("r", StringComparison.OrdinalIgnoreCase) ||
-                word.EndsWith("z", StringComparison.OrdinalIgnoreCase))
+            if (
+                word.EndsWith("r", StringComparison.OrdinalIgnoreCase)
+                || word.EndsWith("z", StringComparison.OrdinalIgnoreCase)
+            )
                 return word + "es";
 
             // Termina em "m"
@@ -125,15 +128,17 @@ namespace Toolbox.Industrial.Core.Data
 
         private static List<string> SplitCamelCase(string input)
         {
-            return Regex.Matches(input, @"([A-Z][a-z]*)")
-                        .Cast<Match>()
-                        .Select(m => m.Value)
-                        .ToList();
+            return Regex
+                .Matches(input, @"([A-Z][a-z]*)")
+                .Cast<Match>()
+                .Select(m => m.Value)
+                .ToList();
         }
 
         private static string CapitalizeLike(string original, string word)
         {
-            if (string.IsNullOrEmpty(original)) return word;
+            if (string.IsNullOrEmpty(original))
+                return word;
             if (char.IsUpper(original[0]))
                 return char.ToUpper(word[0]) + word.Substring(1);
             return char.ToLower(word[0]) + word.Substring(1);
@@ -210,20 +215,19 @@ namespace Toolbox.Industrial.Core.Data
                 public static class Jwt
                 {
                     /// <summary>
-                    /// 
+                    /// 0da49e09-17a7-47e8-8b2a-2e27654188c4
                     /// </summary>
                     public static Guid SecKeys = "Authentication.Jwt.SecurityKeys".GetId();
-                    
+
                     /// <summary>
-                    /// 
+                    /// 508646db-6b3d-487d-9dfa-1be85042af1d
                     /// </summary>
                     public static Guid ValidIssuers = "Authentication.Jwt.ValidIssuers".GetId();
 
                     /// <summary>
-                    /// 
+                    /// adf8f36c-4f38-4b79-7081-dbcdd7438150
                     /// </summary>
                     public static Guid JwksUrl = "Authentication.Jwt.JwksUrl".GetId();
-
                 }
             }
 

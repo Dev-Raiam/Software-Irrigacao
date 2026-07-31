@@ -1,25 +1,41 @@
 using LiteDB;
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.Timeouts;
 
 namespace Toolbox.Industrial.Core.Data;
 
-public class Configuracao : Entity<Guid, object> 
+public class Configuracao : Entity<Guid, object>
 {
     protected Configuracao() { }
 
-    public Configuracao(Guid id, object configuracao, Tipo tipo = Tipo.Indefinido) : base(id, configuracao)
+    public Configuracao(Guid id, object configuracao, grupo grupo, tipo tipo)
+        : base(id, configuracao)
     {
-        Type = tipo;
+        Grupo = (int)grupo;
+        Tipo = (int)tipo;
     }
 
-    [BsonField("Tipo")]
-    public Tipo Type { get; protected set; } = default!;
+    public int Grupo { get; protected set; } = default!;
+
+    public int Tipo { get; protected set; } = default!;
 
     [BsonField("Configuracao")]
     public override object Valor { get; protected set; } = default!;
 
-    public enum Tipo : int 
+    public enum grupo : int
     {
         Indefinido = 0,
+        Api = 1,
+        App = 2,
+        Log = 3,
+        Auth = 4,
+        Mqtt = 5,
+    }
+
+    public enum tipo : int
+    {
+        Indefinido = 0,
+        Seguranca = 1,
+        Config = 2,
+        Topico = 3,
     }
 }

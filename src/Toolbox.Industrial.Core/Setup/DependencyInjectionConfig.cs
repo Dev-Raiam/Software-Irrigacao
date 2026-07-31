@@ -20,9 +20,11 @@ using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using IMediator = Toolbox.Core.Mediator.IMediator;
 using MediatorImp = Toolbox.Core.Mediator.Mediator;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
+using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Setup
 {
@@ -58,6 +60,7 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
             services.AddSingleton<ICryptography, Cryptography>();
+            services.AddSingleton<IControllerIO, PythonIoController>();
             services.AddTransient<AuthGuard>();
             services
                 .AddDataProtection()
@@ -223,7 +226,12 @@ namespace Toolbox.Industrial.Core.Setup
                         );
 
                         await store.UpsertAsync(
-                            new Configuracao(id: Entity.Keys.Serilog.Config, configuracao: cfg)
+                            new Configuracao(
+                                id: Entity.Keys.Serilog.Config,
+                                configuracao: cfg,
+                                grupo: Grupo.Log,
+                                tipo: Tipo.Config
+                            )
                         );
                     }
 

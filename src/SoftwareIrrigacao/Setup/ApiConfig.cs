@@ -27,6 +27,9 @@ public static class ApiConfig
         //    .AddUserSecrets<Program>()
         //    .AddEnvironmentVariables();
 
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
+
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.DefaultIgnoreCondition = System
@@ -44,8 +47,7 @@ public static class ApiConfig
             .AddLiteDbEntityStore(builder, ConnectionString);
 
         //services.AddModuloTekon();
-        services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
+
     }
 
     public static void UseConfig(this WebApplication app)

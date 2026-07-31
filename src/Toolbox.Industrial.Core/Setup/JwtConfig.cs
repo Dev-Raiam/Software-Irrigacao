@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Tokens;
 using Toolbox.Industrial.Core.Data;
+using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
+using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Setup;
 
@@ -70,7 +72,12 @@ internal static class JwtConfig
                     OnTokenValidated = context =>
                     {
                         var jwt = (JwtSecurityToken)context.SecurityToken;
-                        if (!JwtService.Config.KeyStore.JsonWebKeys.TryGetValue(jwt.Header.Kid, out var key))
+                        if (
+                            !JwtService.Config.KeyStore.JsonWebKeys.TryGetValue(
+                                jwt.Header.Kid,
+                                out var key
+                            )
+                        )
                         {
                             context.Fail("Token inválido.");
                             return Task.CompletedTask;
@@ -82,10 +89,13 @@ internal static class JwtConfig
                             return Task.CompletedTask;
                         }
 
-                        if (!string.Equals(
+                        if (
+                            !string.Equals(
                                 key.Use,
                                 JsonWebKeyUseNames.Sig,
-                                StringComparison.Ordinal))
+                                StringComparison.Ordinal
+                            )
+                        )
                         {
                             context.Fail("Uso da chave inválido.");
                         }
@@ -117,12 +127,13 @@ internal sealed class JwtInMemoryConfig
 {
     public string JwksUrl { get; set; } = null!;
     public string[] ValidIssuers { get; set; } = [];
-    public JwtKeyStore KeyStore { get; set; } = new()
-    {
-        KeySet = new(),
-        SigningKeys = [],
-        JsonWebKeys = new Dictionary<string, JsonWebKey>()
-    };
+    public JwtKeyStore KeyStore { get; set; } =
+        new()
+        {
+            KeySet = new(),
+            SigningKeys = [],
+            JsonWebKeys = new Dictionary<string, JsonWebKey>(),
+        };
 }
 
 internal sealed class JwtKeyStore
@@ -175,7 +186,12 @@ internal class JwtService
             string json = await retriever.GetDocumentAsync(Config.JwksUrl, cancellationToken);
             if (!string.IsNullOrWhiteSpace(json))
             {
-                var config = new Configuracao(id: Entity.Keys.Api.Jwt.SecKeys, configuracao: json);
+                var config = new Configuracao(
+                    id: Entity.Keys.Api.Jwt.SecKeys,
+                    configuracao: json,
+                    grupo: Grupo.Auth,
+                    tipo: Tipo.Seguranca
+                );
                 await _store.UpsertAsync(config);
             }
             await LoadJwksAsync(json);

@@ -1,6 +1,6 @@
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using System.Net.Http.Headers;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;

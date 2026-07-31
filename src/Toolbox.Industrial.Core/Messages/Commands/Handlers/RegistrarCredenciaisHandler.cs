@@ -7,6 +7,8 @@ using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
+using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
@@ -18,6 +20,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
     private readonly ICryptography _cryptography;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ILogger<RegistrarCredenciaisHandler> _logger;
+
     public RegistrarCredenciaisHandler(
         AuthGuard auth,
         IMediator mediator,
@@ -120,18 +123,33 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         var segredo = _cryptography.Encrypt(request.Segredo);
         Configuracao[] configuracoes =
         [
-            new(Entity.Keys.Auth.Chave, chave!),
-            new(Entity.Keys.Auth.Segredo, segredo!),
-            new(Entity.Keys.Auth.ContextoId, request.ContextoId.ToString()),
-            new(Entity.Keys.ContaId, request.ContaId.ToString()),
-            new(Entity.Keys.PainelId, request.PainelId.ToString()),
+            new(Entity.Keys.Auth.Chave, chave!, grupo: Grupo.Auth, tipo: Tipo.Config),
+            new(Entity.Keys.Auth.Segredo, segredo!, grupo: Grupo.Auth, tipo: Tipo.Config),
+            new(
+                Entity.Keys.Auth.ContextoId,
+                request.ContextoId.ToString(),
+                grupo: Grupo.Auth,
+                tipo: Tipo.Config
+            ),
+            new(
+                Entity.Keys.ContaId,
+                request.ContaId.ToString(),
+                grupo: Grupo.App,
+                tipo: Tipo.Config
+            ),
+            new(
+                Entity.Keys.PainelId,
+                request.PainelId.ToString(),
+                grupo: Grupo.App,
+                tipo: Tipo.Config
+            ),
         ];
         foreach (var configuracao in configuracoes)
         {
             await _store.UpsertAsync(configuracao);
         }
         _auth.Token.Update(response.Data);
-        
+
         #endregion Salvar configurações
 
         //Disparar sincronia

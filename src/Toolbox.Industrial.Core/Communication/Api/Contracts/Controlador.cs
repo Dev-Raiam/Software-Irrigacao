@@ -108,7 +108,8 @@ public sealed class ParametrosJsonConverter : JsonConverter<Parametros>
         Type objectType,
         Parametros? existingValue,
         bool hasExistingValue,
-        JsonSerializer serializer)
+        JsonSerializer serializer
+    )
     {
         var parametros = existingValue ?? new Parametros();
 
@@ -122,10 +123,7 @@ public sealed class ParametrosJsonConverter : JsonConverter<Parametros>
         return parametros;
     }
 
-    public override void WriteJson(
-        JsonWriter writer,
-        Parametros? value,
-        JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, Parametros? value, JsonSerializer serializer)
     {
         writer.WriteStartObject();
 
@@ -159,17 +157,17 @@ public sealed class ParametrosJsonConverter : JsonConverter<Parametros>
 
             JTokenType.Date => token.Value<DateTime>(),
 
-            JTokenType.Array => token.Children()
-                                      .Select(ConvertToken)
-                                      .ToList(),
+            JTokenType.Array => token.Children().Select(ConvertToken).ToList(),
 
-            JTokenType.Object => token.Children<JProperty>()
-                                      .ToDictionary(
-                                          p => p.Name,
-                                          p => ConvertToken(p.Value),
-                                          StringComparer.OrdinalIgnoreCase),
+            JTokenType.Object => token
+                .Children<JProperty>()
+                .ToDictionary(
+                    p => p.Name,
+                    p => ConvertToken(p.Value),
+                    StringComparer.OrdinalIgnoreCase
+                ),
 
-            _ => ((JValue)token).Value
+            _ => ((JValue)token).Value,
         };
     }
 

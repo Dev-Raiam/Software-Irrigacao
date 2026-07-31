@@ -2,7 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
+using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
+using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Data;
 
@@ -34,7 +36,12 @@ public static class SeedData
         var apiBaseAddress = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (apiBaseAddress?.Valor == null)
         {
-            apiBaseAddress = new Configuracao(id: id, configuracao: "https://api.toolbox.app.br");
+            apiBaseAddress = new Configuracao(
+                id: id,
+                configuracao: "https://api.toolbox.app.br",
+                grupo: Grupo.Api,
+                tipo: Tipo.Config
+            );
             await store.UpsertAsync(apiBaseAddress);
         }
         ApiClient.BaseAddress = apiBaseAddress.Valor.ToString();
@@ -43,7 +50,12 @@ public static class SeedData
         var validIssuers = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (validIssuers?.Valor == null)
         {
-            validIssuers = new Configuracao(id: id, configuracao: $"{ApiClient.BaseAddress}");
+            validIssuers = new Configuracao(
+                id: id,
+                configuracao: $"{ApiClient.BaseAddress}",
+                grupo: Grupo.Auth,
+                tipo: Tipo.Seguranca
+            );
             await store.UpsertAsync(validIssuers);
         }
         JwtService.Config.ValidIssuers =
@@ -58,7 +70,9 @@ public static class SeedData
         {
             jwksUrl = new Configuracao(
                 id: id,
-                configuracao: $"{ApiClient.BaseAddress}/autenticacao/jwks"
+                configuracao: $"{ApiClient.BaseAddress}/autenticacao/jwks",
+                grupo: Grupo.Auth,
+                tipo: Tipo.Seguranca
             );
             await store.UpsertAsync(jwksUrl);
         }
@@ -82,7 +96,9 @@ public static class SeedData
         {
             var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };
 
-            await store.UpsertAsync(new Configuracao(id: id, configuracao: config));
+            await store.UpsertAsync(
+                new Configuracao(id: id, configuracao: config, grupo: Grupo.Mqtt, tipo: Tipo.Config)
+            );
         }
 
         id = Entity.Keys.Mqtt.Remoto;
@@ -95,7 +111,9 @@ public static class SeedData
                 Password = "public",
             };
 
-            await store.UpsertAsync(new Configuracao(id: id, configuracao: config));
+            await store.UpsertAsync(
+                new Configuracao(id: id, configuracao: config, grupo: Grupo.Mqtt, tipo: Tipo.Config)
+            );
         }
     }
 }
