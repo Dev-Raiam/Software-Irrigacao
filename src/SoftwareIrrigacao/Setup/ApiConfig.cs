@@ -1,8 +1,7 @@
-using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
-using Toolbox.Core.Extensions;
+using System.Reflection;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
 
@@ -21,12 +20,12 @@ public static class ApiConfig
         WebApplicationBuilder builder
     )
     {
-        builder
-            .Configuration.SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-            .AddUserSecrets<Program>()
-            .AddEnvironmentVariables();
+        //builder
+        //    .Configuration.SetBasePath(Directory.GetCurrentDirectory())
+        //    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        //    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+        //    .AddUserSecrets<Program>()
+        //    .AddEnvironmentVariables();
 
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
