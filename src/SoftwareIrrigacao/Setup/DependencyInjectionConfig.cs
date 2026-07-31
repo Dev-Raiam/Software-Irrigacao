@@ -12,7 +12,6 @@ public static class DependencyInjectionConfig
         services.AddHttpContextAccessor();
         services.AddSingleton<ITekonDispositivoFactory, TekonDispositivoFactory>();
         services.AddSingleton<ITekonDriverFactory, TekonDriverFactory>();
-        services.AddHostedService<WorkerRaspIO>();
         //services.AddHostedService<WorkerTeste>();
     }
 }
