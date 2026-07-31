@@ -48,10 +48,10 @@ namespace Toolbox.Industrial.Core.Setup
             params Assembly[] assemblies
         )
         {
-            services.AddMemoryCache();
-            services
-                .AddJwksManager() // (options => options.Jws = Algorithm.Create(AlgorithmType.ECDsa, JwtType.Jws))
-                .PersistKeysInMemory();
+            //services.AddMemoryCache();
+            //services
+            //    .AddJwksManager() // (options => options.Jws = Algorithm.Create(AlgorithmType.ECDsa, JwtType.Jws))
+            //    .PersistKeysInMemory();
 
             //.PersistKeysToDatabaseStore<AutenticacaoDataContext>();
             services.AddSingleton<Token>();
@@ -160,7 +160,7 @@ namespace Toolbox.Industrial.Core.Setup
 
             services.AddJwtConfiguration();
             //            typeof(SincronizarAutomacao).GetTypeInfo().Assembly
-
+            services.AddSingleton<JwtService>();
             services.AddMediator([typeof(DependencyInjectionConfig).Assembly, .. assemblies]);
             return services;
         }

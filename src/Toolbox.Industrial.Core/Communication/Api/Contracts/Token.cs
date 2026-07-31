@@ -7,21 +7,18 @@ internal sealed record Token
     public string? TokenAcesso { get; private set; }
     public DateTime Emitido { get; private set; }
     public DateTime Expira { get; private set; }
-    public string? KId { get; private set; }
     public bool Expirado => Expira <= DateTime.UtcNow;
 
     public Token()
     {
-        KId = null;
         TokenAcesso = null;
-        Emitido = DateTime.MinValue;
         Expira = DateTime.MinValue;
+        Emitido = DateTime.MinValue;
     }
 
     [JsonConstructor]
-    public Token(string? tokenAcesso, DateTime emitido, DateTime expira, string? kId)
+    public Token(string? tokenAcesso, DateTime emitido, DateTime expira)
     {
-        KId = kId;
         Emitido = emitido;
         TokenAcesso = tokenAcesso;
         Expira = expira.AddSeconds(-15);
@@ -29,7 +26,6 @@ internal sealed record Token
 
     public void Update(Token token)
     {
-        KId = null;
         Expira = token.Expira;
         Emitido = token.Emitido;
         TokenAcesso = token.TokenAcesso;

@@ -212,12 +212,12 @@ namespace Toolbox.Industrial.Core.Data
                     /// <summary>
                     /// 
                     /// </summary>
-                    public static Guid KId = "Authentication.Jwt.KeyMaterial".GetId();
+                    public static Guid SecKeys = "Authentication.Jwt.SecurityKeys".GetId();
                     
                     /// <summary>
                     /// 
                     /// </summary>
-                    public static Guid Issuers = "Authentication.Jwt.Issuers".GetId();
+                    public static Guid ValidIssuers = "Authentication.Jwt.ValidIssuers".GetId();
 
                     /// <summary>
                     /// 

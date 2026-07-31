@@ -13,10 +13,7 @@ public interface IApiClient
 
 public class ApiClient : IApiClient
 {
-    internal static string? JwtJwksUrl;
-    internal static string? JwtIssuers;
     internal static string? BaseAddress;
-    internal static SigningCredentials? Credentials = null;
     public const string Anonymous = "anonymous";
 
     private readonly HttpClient _httpClient;

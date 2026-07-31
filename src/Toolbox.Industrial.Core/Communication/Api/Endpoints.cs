@@ -2,10 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
-using System.Net;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -22,7 +20,7 @@ public static class Endpoints
         app.UseHsts();
         app.UseHttpsRedirection();
         app.UseRateLimiter();
-        app.UseJwksDiscovery();
+        //app.UseJwksDiscovery();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapPost(
