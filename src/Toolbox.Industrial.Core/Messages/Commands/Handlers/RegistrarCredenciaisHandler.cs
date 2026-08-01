@@ -75,7 +75,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         #region Verificar reconfiguração
 
-        var restart = false;
         Guid.TryParse(
             (
                 await _store.FirstOrDefaultAsync<Configuracao>(x =>
@@ -85,6 +84,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             out var contextoId
         );
 
+        var restart = contextoId == Guid.Empty;
         if (contextoId != Guid.Empty)
         {
             Guid.TryParse(
@@ -142,28 +142,19 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
                 grupo: Grupo.Auth,
                 tipo: Tipo.Config
             ),
-            new(
-                Entity.Keys.ContaId,
-                $"{request.ContaId}",
-                grupo: Grupo.App,
-                tipo: Tipo.Config
-            ),
-            new(
-                Entity.Keys.PainelId,
-                $"{request.PainelId}",
-                grupo: Grupo.App,
-                tipo: Tipo.Config
-            ),
+            new(Entity.Keys.ContaId, $"{request.ContaId}", grupo: Grupo.App, tipo: Tipo.Config),
+            new(Entity.Keys.PainelId, $"{request.PainelId}", grupo: Grupo.App, tipo: Tipo.Config),
         ];
         if (request.ControladorId != null)
         {
-            configuracoes.Add(new(
-                Entity.Keys.ControladorId,
-                $"{request.ControladorId}",
-                grupo: Grupo.App,
-                tipo: Tipo.Config
-            ));
-
+            configuracoes.Add(
+                new(
+                    Entity.Keys.ControladorId,
+                    $"{request.ControladorId}",
+                    grupo: Grupo.App,
+                    tipo: Tipo.Config
+                )
+            );
         }
         foreach (var configuracao in configuracoes)
         {

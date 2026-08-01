@@ -1,13 +1,9 @@
 using System.Text;
 using System.Timers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
 using MQTTnet;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using Serilog;
-using Toolbox.Industrial.Core.Communication.Api;
-using static Toolbox.Industrial.Core.Data.Entity.Keys;
 using Timer = System.Timers.Timer;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
@@ -28,6 +24,9 @@ public sealed class Mqtt : IMqtt
     private bool _disposed;
 
     internal ILogger<Mqtt> Logger => _logger;
+    internal string Host => _host;
+    internal int Port => _port;
+
     internal IReadOnlyList<MqttTopicFilter> Topics => _topics;
 
     public bool IsConnected => _mqttClient.IsConnected;
@@ -65,6 +64,7 @@ public sealed class Mqtt : IMqtt
         {
             if (_connectGuard.Enabled)
             {
+                _logger.LogInformation($"Sucesso na reconexão com broker MQTT ({_host}:{_port})");
                 _connectGuard.Stop();
                 Thread.Sleep(500);
                 _connectGuard.Interval = 1000;
@@ -79,11 +79,11 @@ public sealed class Mqtt : IMqtt
 
         _mqttClient.DisconnectedAsync += e =>
         {
-            _logger.LogInformation($"Desconectado do broker MQTT ({_host}:{_port})");
             if (!_disposed)
             {
                 if (!_connectGuard.Enabled)
                 {
+                    _logger.LogInformation($"Reconectando broker MQTT ({_host}:{_port})");
                     _connectGuard.Interval = 1000;
                     _connectGuard.Start();
                 }
@@ -118,15 +118,17 @@ public sealed class Mqtt : IMqtt
 
             try
             {
-                _logger.LogInformation($"Reconectando broker MQTT ({_host}:{_port})");
                 var result = await _mqttClient.ConnectAsync(_options);
                 if (result != null && result.ResultCode == MqttClientConnectResultCode.Success)
                 {
-                    _connectGuard.Stop();
-                    _connectGuard.Interval = 1000;
-                    _logger.LogInformation(
-                        $"Reconectado com sucesso ao broker MQTT ({_host}:{_port})"
-                    );
+                    if (_connectGuard.Enabled)
+                    {
+                        _connectGuard.Stop();
+                        _connectGuard.Interval = 1000;
+                        _logger.LogInformation(
+                            $"Sucesso na reconexão com broker MQTT ({_host}:{_port})"
+                        );
+                    }
                     return;
                 }
                 if (result != null && result.ResultCode != MqttClientConnectResultCode.Success)
@@ -138,9 +140,8 @@ public sealed class Mqtt : IMqtt
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogInformation($"Falha na tentativa de reconexão MQTT ({_host}:{_port})");
                 _connectGuard.Interval *= 2;
                 if (_connectGuard.Interval > 15000) // Limite máximo de espera de 1 minuto
                 {
@@ -161,31 +162,28 @@ public sealed class Mqtt : IMqtt
 
         try
         {
-            _logger.LogInformation($"Conectando ao broker MQTT ({_host}:{_port})");
+            //_logger.LogInformation($"Conectando ao broker MQTT ({_host}:{_port})");
             var result = await _mqttClient.ConnectAsync(_options);
             if (result.ResultCode != MqttClientConnectResultCode.Success)
             {
+                _logger.LogError(
+                    $"Falha ao conectar ao broker MQTT ({_host}:{_port}): {result.ResultCode} - {result.ReasonString}"
+                );
                 if (!_connectGuard.Enabled)
                 {
                     _connectGuard.Interval = 1000;
                     _connectGuard.Start();
                 }
-                _logger.LogError(
-                    $"Falha ao conectar ao broker MQTT ({_host}:{_port}): {result.ResultCode} - {result.ReasonString}"
-                );
             }
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, $"Erro ao conectar ao broker MQTT ({_host}:{_port})");
             if (!_connectGuard.Enabled)
             {
                 _connectGuard.Interval = 1000;
                 _connectGuard.Start();
             }
-            _logger.LogError(
-                ex,
-                $"Erro ao conectar ao broker MQTT ({_host}:{_port}): {ex.Message}"
-            );
         }
     }
 
@@ -351,6 +349,9 @@ public sealed class MqttManager
     }
 
     public IMqtt? Current => _current;
+
+    public string Host => _current?.Host ?? "";
+    public int Port => _current?.Port ?? 0;
 
     public async Task Reload(Configuration config)
     {

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
@@ -13,7 +14,8 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Aplicação inicializando...");
+    var cronometro = Stopwatch.StartNew();
+    Log.Information("Inicializando aplicação");
     var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddApiConfiguration(builder);
     builder.Services.RegisterServices();
@@ -38,14 +40,15 @@ try
         {
             //exemplos de uso
             var entityConfig = provider.GetRequiredService<EntityConfiguration>();
-            entityConfig.ApplyConfiguration = (IEntityStore store) =>
-            {
+            entityConfig.ApplyConfiguration = (IEntityStore store) => {
                 //store.Configure<Configuracao>().Field(x => x.Value, "Dados");
             };
             return Task.CompletedTask;
         }
     );
 
+    cronometro.Stop();
+    Log.Information("Aplicação inicializada. Tempo Decorrido({Elapsed})", cronometro.Elapsed);
     await app.RunAsync();
 }
 catch (Exception ex)

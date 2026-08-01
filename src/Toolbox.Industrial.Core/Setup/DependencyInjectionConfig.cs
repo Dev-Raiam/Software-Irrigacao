@@ -1,4 +1,8 @@
-﻿using LiteDB;
+﻿using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -9,10 +13,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
-using System.Reflection;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -89,6 +89,12 @@ namespace Toolbox.Industrial.Core.Setup
                     NullValueHandling = NullValueHandling.Ignore,
                 };
 
+            services.AddSingleton<InternetMonitor>();
+
+            services.AddSingleton<IInternetMonitor>(sp => sp.GetRequiredService<InternetMonitor>());
+
+            services.AddHostedService(sp => sp.GetRequiredService<InternetMonitor>());
+
             #region HttpClient
 
             services
@@ -103,8 +109,8 @@ namespace Toolbox.Industrial.Core.Setup
                     var httpClient = new HttpClient();
                     ConfigureClient(provider, httpClient);
                     return new ApiClient(
-                        httpClient,
-                        provider.GetRequiredService<ILogger<ApiClient>>()
+                        httpClient
+                    //provider.GetRequiredService<ILogger<ApiClient>>()
                     );
                 }
             );
@@ -132,7 +138,10 @@ namespace Toolbox.Industrial.Core.Setup
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local)
                         ?.Valor;
-                    var mqtt = new Mqtt((MqttConfiguration?)config ?? new MqttConfiguration(), logger);
+                    var mqtt = new Mqtt(
+                        (MqttConfiguration?)config ?? new MqttConfiguration(),
+                        logger
+                    );
 
                     return new MqttManager(mqtt);
                 }
@@ -151,7 +160,10 @@ namespace Toolbox.Industrial.Core.Setup
                             .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
                             ?.Valor;
 
-                        mqtt = new Mqtt((MqttConfiguration?)config ?? new MqttConfiguration(), logger);
+                        mqtt = new Mqtt(
+                            (MqttConfiguration?)config ?? new MqttConfiguration(),
+                            logger
+                        );
                     }
 
                     return new MqttManager(mqtt);

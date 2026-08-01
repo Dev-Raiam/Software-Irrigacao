@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
@@ -12,13 +11,13 @@ namespace SoftwareIrrigacao.Workes;
 public class MqttWorker : BackgroundService
 {
     private bool _disposed = false;
+    private readonly IEntityStore _store;
     private readonly MqttManager _mqttLocal;
     private readonly MqttManager _mqttRemoto;
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IEntityStore _store;
-    private readonly JsonSerializerSettings _jsonSettingsLocal;
-    private readonly JsonSerializerSettings _jsonSettingsRemoto;
+    private readonly JsonSerializerSettings _mqttLocalSerializer;
+    private readonly JsonSerializerSettings _mqttRemotoSerializer;
 
     public MqttWorker(
         [FromKeyedServices(Mqtt.Local)] MqttManager mqttLocal,
@@ -28,32 +27,15 @@ public class MqttWorker : BackgroundService
         IEntityStore store
     )
     {
+        _store = store;
+        _logger = logger;
         _mqttLocal = mqttLocal;
         _mqttRemoto = mqttRemoto;
-        _logger = logger;
         _serviceProvider = serviceProvider;
-        _store = store;
 
-        _jsonSettingsLocal = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented,
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.Objects,
-        };
-
-        _jsonSettingsRemoto = new JsonSerializerSettings
-        {
-            Formatting = Formatting.None,
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            DateTimeZoneHandling = DateTimeZoneHandling.RoundtripKind,
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.Objects,
-        };
-
+        _mqttLocalSerializer = JsonConvert.DefaultSettings!.Invoke();
+        _mqttLocalSerializer.Formatting = Formatting.Indented;
+        _mqttLocalSerializer.TypeNameHandling = TypeNameHandling.Objects;
         _mqttLocal.Current?.SetHandler(
             async (topic, payload) =>
             {
@@ -61,6 +43,8 @@ public class MqttWorker : BackgroundService
             }
         );
 
+        _mqttRemotoSerializer = JsonConvert.DefaultSettings!.Invoke();
+        _mqttRemotoSerializer.TypeNameHandling = TypeNameHandling.Objects;
         _mqttRemoto.Current?.SetHandler(
             async (topic, payload) =>
             {
@@ -69,19 +53,8 @@ public class MqttWorker : BackgroundService
         );
     }
 
-    //private bool ConexaoLocalAtiva = false;
-    //private bool ConexaoRemotaAtiva = false;
-
-    private async Task<Toolbox.Industrial.Core.Communication.Api.Contracts.Controlador?> ObterControladorMaster(
-        CancellationToken cancellationToken = default
-    )
-    {
-        var configuracao = await _store.FirstOrDefaultAsync<Controlador>(c => c.Valor.Master);
-
-        var controlador = configuracao == null ? null : configuracao.Valor;
-
-        return controlador;
-    }
+    private async Task<Toolbox.Industrial.Core.Communication.Api.Contracts.Controlador?> ObterControladorMaster() =>
+        (await _store.FirstOrDefaultAsync<Controlador>(c => c.Valor.Master))?.Valor;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -96,6 +69,9 @@ public class MqttWorker : BackgroundService
                     await _mqttLocal.Current.ConnectAsync();
                     if (_mqttLocal.Current.IsConnected)
                     {
+                        _logger.LogInformation(
+                            $"Conectado ao broker MQTT ({_mqttLocal.Host}:{_mqttLocal.Port})"
+                        );
                         await _mqttLocal.Current.SubscribeAsync("topic", qos: 0);
                         localStarted = true;
                     }
@@ -106,6 +82,9 @@ public class MqttWorker : BackgroundService
                     await _mqttRemoto.Current.ConnectAsync();
                     if (_mqttRemoto.Current.IsConnected)
                     {
+                        _logger.LogInformation(
+                            $"Conectado ao broker MQTT ({_mqttRemoto.Host}:{_mqttRemoto.Port})"
+                        );
                         var controlador = ObterControladorMaster();
 
                         if (controlador != null)
@@ -148,7 +127,7 @@ public class MqttWorker : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            var mensagem = JsonConvert.DeserializeObject(payload, _jsonSettingsLocal)!;
+            var mensagem = JsonConvert.DeserializeObject(payload, _mqttLocalSerializer)!;
 
             if (mensagem is Toolbox.Core.Messages.Command command)
             {

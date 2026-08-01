@@ -1,7 +1,7 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
-using System.Reflection;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
 
@@ -47,7 +47,6 @@ public static class ApiConfig
             .AddLiteDbEntityStore(builder, ConnectionString);
 
         //services.AddModuloTekon();
-
     }
 
     public static void UseConfig(this WebApplication app)

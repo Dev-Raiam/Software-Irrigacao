@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Setup;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
@@ -38,6 +40,27 @@ public static class SeedData
 
     private static async Task InternalSeedData(IServiceProvider provider, IEntityStore store)
     {
+        var mediator = provider.GetRequiredService<IMediator>();
+
+        //Disparar sincronia na inicialização
+        try
+        {
+            Guid.TryParse(
+                (
+                    await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+                )?.Valor.ToString(),
+                out var painelId
+            );
+            if (painelId != Guid.Empty)
+            {
+                await mediator.Execute(
+                    new SincronizarAutomacao { PainelId = painelId },
+                    cancellationToken: default
+                );
+            }
+        }
+        catch { }
+
         var id = Entity.Keys.Api.BaseAddress;
         var apiBaseAddress = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (apiBaseAddress?.Valor == null)

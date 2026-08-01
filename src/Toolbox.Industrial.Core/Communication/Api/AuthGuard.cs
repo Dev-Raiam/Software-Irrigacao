@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using Microsoft.Extensions.DependencyInjection;
@@ -90,16 +91,22 @@ internal class AuthGuard : DelegatingHandler
 
             if (credentials == null)
             {
-                _logger.LogError("Credenciais de integração não encontradas.");
-                return await base.SendAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    RequestMessage = request,
+                    Content = new StringContent("Credenciais de integração não encontradas."),
+                };
             }
 
             var response = await Authenticate(credentials, cancellationToken);
 
             if (!response.Success || response.Data == null)
             {
-                _logger.LogError("Falha na autenticação: {Error}", response.Error);
-                return await base.SendAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    RequestMessage = request,
+                    Content = new StringContent(response.Error ?? "Falha na autenticação"),
+                };
             }
             _token.Update(response.Data);
         }

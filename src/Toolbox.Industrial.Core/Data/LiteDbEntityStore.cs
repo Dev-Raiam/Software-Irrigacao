@@ -61,7 +61,7 @@ internal class LiteDbEntityStore : IEntityStore
             _database.GetCollection<TEntity>(Entity.GetCollection<TEntity>()).DeleteMany(predicate)
         );
 
-    public Task<bool> DeleteAllDataCollectionsAsync()
+    public async Task<bool> DeleteAllDataCollectionsAsync()
     {
         var result = false;
         foreach (
@@ -72,10 +72,11 @@ internal class LiteDbEntityStore : IEntityStore
                 .ToList()
         )
         {
-            result = result || _database.GetCollection(collection["name"].AsString).DeleteAll() > 0;
+            var deleted = _database.GetCollection(collection["name"].AsString).DeleteAll();
+            result = result || deleted > 0;
         }
-        Task.Delay(1000);
-        return Task.FromResult(result);
+        await Task.Delay(TimeSpan.FromSeconds(3));
+        return result;
     }
 
     public Task<int> DeleteAllAsync<TEntity>()

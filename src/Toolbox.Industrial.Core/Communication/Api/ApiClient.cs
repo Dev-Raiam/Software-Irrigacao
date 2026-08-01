@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
@@ -11,17 +10,21 @@ public interface IApiClient
     Task<Result<T>> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken);
 }
 
-public class ApiClient : IApiClient
+public sealed class ApiClient : IApiClient
 {
+    internal static bool Online = true;
     internal static string? BaseAddress;
-    public const string Anonymous = "anonymous";
+
+    internal const string Anonymous = "anonymous";
+    public static bool IsOnline => Online;
 
     private readonly HttpClient _httpClient;
-    private readonly ILogger<ApiClient> _logger;
 
-    public ApiClient(HttpClient httpClient, ILogger<ApiClient> logger)
+    //private readonly ILogger<ApiClient> _logger;
+
+    public ApiClient(HttpClient httpClient) //, ILogger<ApiClient> logger
     {
-        _logger = logger;
+        //_logger = logger;
         _httpClient = httpClient;
     }
 
@@ -36,12 +39,19 @@ public class ApiClient : IApiClient
 
             if (!response.IsSuccessStatusCode)
             {
+                var content = await response.Content.ReadAsStringAsync();
                 return response.StatusCode switch
                 {
-                    System.Net.HttpStatusCode.Unauthorized => Result<T>.Fail("Não autorizado"),
-                    System.Net.HttpStatusCode.Forbidden => Result<T>.Fail("Sem permissão"),
-                    System.Net.HttpStatusCode.NotFound => Result<T>.Fail("Recurso não encontrado"),
-                    _ => Result<T>.Fail($"Erro HTTP: {response.StatusCode}"),
+                    System.Net.HttpStatusCode.Unauthorized => Result<T>.Fail(
+                        $"Não autorizado => {content}"
+                    ),
+                    System.Net.HttpStatusCode.Forbidden => Result<T>.Fail(
+                        $"Sem permissão => {content}"
+                    ),
+                    System.Net.HttpStatusCode.NotFound => Result<T>.Fail(
+                        $"Recurso não encontrado => {content}"
+                    ),
+                    _ => Result<T>.Fail($"Erro HTTP: {response.StatusCode} => {content}"),
                 };
             }
 
@@ -56,22 +66,22 @@ public class ApiClient : IApiClient
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogWarning(ex, "Timeout ao chamar {Url}", request.RequestUri);
+            //_logger.LogWarning(ex, "Timeout ao chamar {Url}", request.RequestUri);
             return Result<T>.Fail($"Timeout {ex.Message}", ex);
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", request.RequestUri);
+            //_logger.LogWarning(ex, "Falha de conexão ao chamar {Url}", request.RequestUri);
             return Result<T>.Fail($"Erro de conexão {ex.Message}", ex);
         }
         catch (System.Text.Json.JsonException ex)
         {
-            _logger.LogError(ex, "Erro ao converter JSON de {Url}", request.RequestUri);
+            //_logger.LogError(ex, "Erro ao converter JSON de {Url}", request.RequestUri);
             return Result<T>.Fail($"Erro ao converter JSON {ex.Message}", ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro inesperado ao chamar {Url}", request.RequestUri);
+            //_logger.LogError(ex, "Erro inesperado ao chamar {Url}", request.RequestUri);
             return Result<T>.Fail($"Erro inesperado {ex.Message}", ex);
         }
     }

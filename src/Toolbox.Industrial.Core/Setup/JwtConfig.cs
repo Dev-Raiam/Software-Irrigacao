@@ -150,12 +150,17 @@ internal class JwtService
 
     private readonly IEntityStore _store;
     private readonly HttpClient _httpClient;
-    private readonly ILogger<JwtService> _logger;
 
-    public JwtService(IEntityStore store, ILogger<JwtService> logger, HttpClient httpClient)
+    //private readonly ILogger<JwtService> _logger;
+
+    public JwtService(
+        IEntityStore store /*, ILogger<JwtService> logger*/
+        ,
+        HttpClient httpClient
+    )
     {
         _store = store;
-        _logger = logger;
+        //_logger = logger;
         _httpClient = httpClient;
         _httpClient.Timeout = TimeSpan.FromSeconds(10);
         _httpClient.MaxResponseContentBufferSize = 10485760L;
@@ -196,9 +201,9 @@ internal class JwtService
             }
             await LoadJwksAsync(json);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Falha ao carregar chaves");
+            //_logger.LogError(ex, "Falha ao carregar chaves");
         }
     }
 }
