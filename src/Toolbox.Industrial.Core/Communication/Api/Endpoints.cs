@@ -93,7 +93,8 @@ public static class Endpoints
                         config.Atualizar(json);
                     }
                     await store.UpsertAsync(config);
-                    lifetime.StopApplication();
+                    //lifetime.StopApplication();
+                    Environment.Exit(1);
                     return Results.Accepted(
                         value: new string[]
                         {
