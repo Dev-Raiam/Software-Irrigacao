@@ -113,7 +113,8 @@ public static class Endpoints
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    lifetime.StopApplication();
+                    // lifetime.StopApplication();
+                    Environment.Exit(1);
                     return Results.Accepted(value: "Aplicação será reiniciada.");
                 }
             )

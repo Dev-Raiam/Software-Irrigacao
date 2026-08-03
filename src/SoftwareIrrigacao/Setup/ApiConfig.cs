@@ -1,7 +1,8 @@
-using System.Reflection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
+using System.Reflection;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
 
@@ -40,6 +41,21 @@ public static class ApiConfig
                 .WhenWritingNull;
         });
 
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(5000);
+        });
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllRequests",
+                builder =>
+                    builder
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+        });
+
         //services.AddHostedService<WorkerRaspIO>();
         services.AddHostedService<MqttWorker>();
         services
@@ -52,6 +68,7 @@ public static class ApiConfig
     public static void UseConfig(this WebApplication app)
     {
         app.UseExceptionHandler();
+        app.UseCors("AllRequests");
         app.RegisterEndpoints();
     }
 }
