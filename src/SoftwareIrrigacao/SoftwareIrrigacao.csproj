@@ -18,7 +18,6 @@
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
     <PublishTrimmed>false</PublishTrimmed>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
