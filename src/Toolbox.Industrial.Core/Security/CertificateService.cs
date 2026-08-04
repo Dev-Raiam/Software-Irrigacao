@@ -129,7 +129,13 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         if (_purpose == Purpose.MqttLocal)
         {
             //File.WriteAllBytes("certificate.pfx", content);
+            // Checar se a maquina contem o broker mqtt instalado (service)
             CertificateExporter.Export(certificate, _purpose.ToString().ToLowerInvariant());
+            //TODO: Configuração de acesso ao Certificado no linux
+            // Parar serviço do mosquitto (Linux/Windows)
+            // Criar e configurar o arquivo local.conf (Linux/Windows)
+            // Criar permisões dos certificados para linux para o usuario mosquitto acessar esse arquivo
+            // Restart o mosquitto
         }
         var config = new Certificate
         {
