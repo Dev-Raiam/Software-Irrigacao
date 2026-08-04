@@ -56,12 +56,15 @@ internal static class CertificateFactory
         var certificate = authorityService.Sign(
             request,
             DateTimeOffset.UtcNow.AddDays(-1),
-            DateTimeOffset.UtcNow.AddYears(10)
+            DateTimeOffset.UtcNow.AddYears(20)
         );
 
         certificate = certificate.CopyWithPrivateKey(ecdsa);
 
-        certificate.FriendlyName = $"Toolbox Industrial {purpose}";
+        if (OperatingSystem.IsWindows())
+        {
+            certificate.FriendlyName = $"Toolbox Industrial {purpose}";
+        }
 
         return certificate;
     }

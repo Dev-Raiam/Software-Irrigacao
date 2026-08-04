@@ -18,7 +18,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
     private readonly IMediator _mediator;
     private readonly IEntityStore _store;
     private readonly ICryptography _cryptography;
-    private readonly IHostApplicationLifetime _lifetime;
     private readonly ILogger<RegistrarCredenciaisHandler> _logger;
 
     public RegistrarCredenciaisHandler(
@@ -26,7 +25,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         IMediator mediator,
         IEntityStore store,
         ICryptography cryptography,
-        IHostApplicationLifetime lifetime,
         ILogger<RegistrarCredenciaisHandler> logger
     )
     {
@@ -34,7 +32,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         _store = store;
         _logger = logger;
         _mediator = mediator;
-        _lifetime = lifetime;
         _cryptography = cryptography;
     }
 
@@ -175,7 +172,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             _logger.LogWarning(
                 "A aplicação será finalizada para completar o ciclo de reconfiguração."
             );
-            //_lifetime.StopApplication();
             Environment.Exit(1);
         }
 

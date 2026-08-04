@@ -8,7 +8,7 @@ public interface IEntityStore
     EntityBuilder<TEntity> Configure<TEntity>()
         where TEntity : Entity;
 
-    ILiteQueryable<BsonDocument> Query(string collection);
+    ILiteQueryable<T> Query<T>(string collection);
 
     ILiteQueryable<TEntity> Query<TEntity>()
         where TEntity : Entity;

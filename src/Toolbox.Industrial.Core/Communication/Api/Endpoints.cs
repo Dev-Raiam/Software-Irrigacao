@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
+using Toolbox.Industrial.Core.Security;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using SerilogConfig = Toolbox.Industrial.Core.Setup.Configuration;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
@@ -25,6 +26,9 @@ public static class Endpoints
         //app.UseJwksDiscovery();
         app.UseAuthentication();
         app.UseAuthorization();
+
+        #region endpoints de configuracao
+
         app.MapPost(
                 "/configuracao/credenciais",
                 async (
@@ -70,7 +74,6 @@ public static class Endpoints
                 async (
                     [FromBody] SerilogConfig cfg,
                     [FromServices] IEntityStore store,
-                    [FromServices] IHostApplicationLifetime lifetime,
                     CancellationToken cancellationToken
                 ) =>
                 {
@@ -93,7 +96,6 @@ public static class Endpoints
                         config.Atualizar(json);
                     }
                     await store.UpsertAsync(config);
-                    //lifetime.StopApplication();
                     Environment.Exit(1);
                     return Results.Accepted(
                         value: new string[]
@@ -107,14 +109,49 @@ public static class Endpoints
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitingPolicy);
 
+        #endregion endpoints de configuracao
+
+        #region endpoints de sistema
+
+
+        app.MapGet(
+                "/system/security/{Guid:id}",
+                async ([FromServices] IEntityStore store, CancellationToken cancellationToken, Guid id) =>
+                {
+                    var certificate = store
+                        .FirstOrDefault<Configuracao>(x => x.Id == id)
+                        ?.Valor as Certificate;
+
+                    if (certificate == null)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    return Results.Ok(certificate);
+                }
+            )
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
+
+        app.MapGet(
+                "/system/logs",
+                async ([FromServices] IEntityStore store, CancellationToken cancellationToken) =>
+                {
+                    var logs = store
+                        .Query<Serilog.Events.LogEvent>("logs").ToList();
+                    
+                    return Results.Ok(logs.OrderByDescending(x => x.Timestamp));
+                }
+            )
+            .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingPolicy);
+
         app.MapPost(
                 "/system/restart",
                 async (
-                    [FromServices] IHostApplicationLifetime lifetime,
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    // lifetime.StopApplication();
                     Environment.Exit(1);
                     return Results.Accepted(value: "Aplicação será reiniciada.");
                 }
@@ -221,5 +258,7 @@ public static class Endpoints
             )
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitingPolicy);
+
+        #endregion endpoints de sistema
     }
 }

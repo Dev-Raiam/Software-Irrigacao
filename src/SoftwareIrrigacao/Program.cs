@@ -3,7 +3,6 @@ using Serilog;
 using SoftwareIrrigacao.Setup;
 using System.Diagnostics;
 using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Security;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 Log.Logger = new LoggerConfiguration()

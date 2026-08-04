@@ -101,6 +101,10 @@ public sealed class InternetMonitor : BackgroundService, IInternetMonitor
             {
                 requestUri = $"{ApiClient.BaseAddress}/health";
             }
+            //if (ApiClient.BaseAddress != null)
+            //{
+            //    requestUri = $"{ApiClient.BaseAddress}/automacao/v1/paineis/{painelIl}/controladores/{controladorId}/sinal-vida";
+            //}
             using var request = new HttpRequestMessage(
                 HttpMethod.Head,
                 requestUri ?? "https://clients3.google.com/generate_204"

@@ -154,7 +154,7 @@ namespace Toolbox.Industrial.Core.Data
 
         internal abstract object BsonId { get; }
 
-        public class Keys
+        internal class Keys
         {
             /// <summary>
             /// c8327b74-9333-45fc-f5b0-1235a2c1fd1a

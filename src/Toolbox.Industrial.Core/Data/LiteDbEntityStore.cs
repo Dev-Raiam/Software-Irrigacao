@@ -22,8 +22,8 @@ internal class LiteDbEntityStore : IEntityStore
     public EntityBuilder<TEntity> Configure<TEntity>()
         where TEntity : Entity => BsonMapper.Global.Entity<TEntity>();
 
-    public ILiteQueryable<BsonDocument> Query(string collection) =>
-        _database.GetCollection(collection).Query();
+    public ILiteQueryable<T> Query<T>(string collection) =>
+        _database.GetCollection<T>(collection).Query();
 
     public ILiteQueryable<TEntity> Query<TEntity>()
         where TEntity : Entity =>

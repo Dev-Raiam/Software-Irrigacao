@@ -1,7 +1,8 @@
-﻿using System.Security.Cryptography;
+﻿using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Logging;
 using Toolbox.Industrial.Core.Data;
+using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
@@ -10,17 +11,14 @@ namespace Toolbox.Industrial.Core.Security;
 internal interface ICertificateAuthorityService
 {
     X509Certificate2 GetCertificate();
+
     X509Certificate2 Sign(
         CertificateRequest request,
         DateTimeOffset notBefore,
         DateTimeOffset notAfter
     );
 
-    //X509Certificate2 Sign(
-    //    CertificateRequest request,
-    //    DateTimeOffset notBefore,
-    //    DateTimeOffset notAfter
-    //);
+    void Renew(X509Certificate2? certificate = null);
 }
 
 internal sealed class CertificateAuthorityService : ICertificateAuthorityService
@@ -84,8 +82,21 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         Span<byte> serial = stackalloc byte[16];
 
         RandomNumberGenerator.Fill(serial);
+        var certificate = GetCertificate();
+        return request.Create(certificate, notBefore, notAfter, serial);
+    }
 
-        return request.Create(GetCertificate(), notBefore, notAfter, serial);
+    public void Renew(X509Certificate2? certificate = null)
+    {
+        lock (_sync)
+        {
+            _logger.LogInformation($"Renewing Root Certificate Authority.");
+            certificate ??= CreateRootCertificate();
+            Save(certificate);
+            var old = _certificate;
+            _certificate = certificate;
+            old?.Dispose();
+        }
     }
 
     private X509Certificate2 CreateRootCertificate()
@@ -119,8 +130,8 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         );
 
         var certificate = request.CreateSelfSigned(
-            DateTimeOffset.UtcNow.AddDays(-1),
-            DateTimeOffset.UtcNow.AddYears(20)
+            DateTimeOffset.UtcNow.AddDays(-2),
+            DateTimeOffset.UtcNow.AddYears(500)
         );
 
         certificate.FriendlyName = "Toolbox Industrial Root CA";

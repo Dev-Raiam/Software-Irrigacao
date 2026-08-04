@@ -120,7 +120,6 @@ public static class SeedData
             }
         }
 
-        Controlador.Master = false;
         var controladores = store.Query<Controlador>().ToList();
         Guid.TryParse(
             (
@@ -131,6 +130,7 @@ public static class SeedData
             out var controladorId
         );
 
+        Controlador.Master = true;
         if (controladorId != Guid.Empty)
         {
             Controlador.Master =
@@ -145,7 +145,7 @@ public static class SeedData
         var mqttLocal = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (mqttLocal?.Valor == null)
         {
-            var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };
+            var config = new MqttConfiguration();
             mqttLocal = new Configuracao(
                 id: id,
                 configuracao: config,
@@ -174,7 +174,7 @@ public static class SeedData
         id = Entity.Keys.Mqtt.LocalPython;
         if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
         {
-            var config = new MqttConfiguration { Username = "master", Password = "broker@MQ" };
+            var config = new MqttConfiguration();
 
             await store.UpsertAsync(
                 new Configuracao(id: id, configuracao: config, grupo: Grupo.Mqtt, tipo: Tipo.Config)

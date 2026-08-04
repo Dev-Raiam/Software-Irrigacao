@@ -41,10 +41,10 @@ public static class ApiConfig
                 .WhenWritingNull;
         });
 
-        builder.WebHost.ConfigureKestrel(options =>
-        {
-            options.ListenAnyIP(5000);
-        });
+        //builder.WebHost.ConfigureKestrel(options =>
+        //{
+        //    options.ListenAnyIP(5000);
+        //});
 
         services.AddCors(options =>
         {
