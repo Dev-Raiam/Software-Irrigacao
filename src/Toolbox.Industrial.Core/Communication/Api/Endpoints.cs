@@ -93,7 +93,8 @@ public static class Endpoints
                         config.Atualizar(json);
                     }
                     await store.UpsertAsync(config);
-                    lifetime.StopApplication();
+                    //lifetime.StopApplication();
+                    Environment.Exit(1);
                     return Results.Accepted(
                         value: new string[]
                         {
@@ -113,7 +114,8 @@ public static class Endpoints
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    lifetime.StopApplication();
+                    // lifetime.StopApplication();
+                    Environment.Exit(1);
                     return Results.Accepted(value: "Aplicação será reiniciada.");
                 }
             )
