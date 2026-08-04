@@ -203,7 +203,7 @@ public static class Endpoints
                         }
                         if (process != null)
                         {
-                            await process!.WaitForExitAsync();
+                            await process.WaitForExitAsync();
                             result = Results.Accepted("O dispositivo será reiniciado.");
                         }
                     });
@@ -252,7 +252,7 @@ public static class Endpoints
                         }
                         if (process != null)
                         {
-                            await process!.WaitForExitAsync();
+                            await process.WaitForExitAsync();
                             result = Results.Accepted("O dispositivo será desligado.");
                         }
                     });
