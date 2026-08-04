@@ -167,7 +167,7 @@ namespace Toolbox.Industrial.Core.Data
             public static Guid PainelId = "Padrao.PainelId".GetId();
 
             /// <summary>
-            /// 
+            ///
             /// </summary>
             public static Guid ControladorId = "Padrao.ControladorId".GetId();
 
@@ -239,6 +239,14 @@ namespace Toolbox.Industrial.Core.Data
                     /// </summary>
                     public static Guid JwksUrl = "Authentication.Jwt.JwksUrl".GetId();
                 }
+            }
+
+            public static class Security
+            {
+                public static Guid CertificateAuthority = "Security.Certificate.Authority".GetId();
+                public static Guid CertificateMqttLocal = "Security.Certificate.Mqtt.Local".GetId();
+                public static Guid CertificateMqttRemoto = "Security.Certificate.Mqtt.Remoto".GetId();
+                public static Guid CertificateHttpsLocal = "Security.Certificate.Https.Local".GetId();
             }
 
             public static class Topic

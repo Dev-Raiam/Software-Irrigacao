@@ -39,7 +39,7 @@ public sealed record Configuration
     }
 
     public string Host { get; private set; } = "localhost";
-    public int Port { get; init; } = 1883;
+    public int Port { get; init; } = 8883;
     public string ClientId { get; init; } = Guid.NewGuid().ToString();
     public string? Username { get; init; }
     public string? Password { get; init; }

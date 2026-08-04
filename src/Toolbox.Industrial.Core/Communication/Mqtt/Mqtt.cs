@@ -1,9 +1,14 @@
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Timers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using Toolbox.Industrial.Core.Security;
+using static Toolbox.Industrial.Core.Security.Certificate;
 using Timer = System.Timers.Timer;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
@@ -12,6 +17,7 @@ public sealed class Mqtt : IMqtt
 {
     public const string Local = "local";
     public const string Remoto = "remoto";
+    private readonly X509Certificate2? _certificate;
     private readonly List<MqttTopicFilter> _topics;
     private readonly MqttClientOptions _options;
     private readonly IMqttClient _mqttClient;
@@ -23,6 +29,7 @@ public sealed class Mqtt : IMqtt
     private readonly int _port;
     private bool _disposed;
 
+    internal X509Certificate2? Certificate => _certificate;
     internal ILogger<Mqtt> Logger => _logger;
     internal string Host => _host;
     internal int Port => _port;
@@ -36,6 +43,7 @@ public sealed class Mqtt : IMqtt
     public Mqtt(
         Configuration config,
         ILogger<Mqtt> logger,
+        X509Certificate2? certificate = null,
         IEnumerable<MqttTopicFilter>? topics = null
     )
     {
@@ -43,15 +51,67 @@ public sealed class Mqtt : IMqtt
         _port = config.Port;
         _logger = logger;
         _topics = new List<MqttTopicFilter>(topics ?? []);
+        _certificate = certificate;
+
         var options = new MqttClientOptionsBuilder()
             .WithClientId(config.ClientId)
             .WithTcpServer(config.Host, config.Port)
             .WithCleanSession(config.CleanSession)
             .WithTimeout(TimeSpan.FromSeconds(config.ConnectionTimeoutSeconds));
 
-        if (!string.IsNullOrEmpty(config.Username))
+        if (certificate != null)
         {
-            options.WithCredentials(config.Username, config.Password);
+            options = options.WithTlsOptions(tls =>
+            {
+                var ca = X509CertificateLoader.LoadCertificateFromFile("ca.crt");
+
+                tls.UseTls();
+                tls.WithCertificateValidationHandler(context =>
+                {
+                    //Console.WriteLine(context.SslPolicyErrors);
+
+                    //foreach (var s in context.Chain.ChainStatus)
+                    //{
+                    //    Console.WriteLine($"{s.Status} - {s.StatusInformation}");
+                    //}
+                    using var chain = new X509Chain();
+
+                    chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+
+                    chain.ChainPolicy.CustomTrustStore.Add(ca);
+
+                    chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+
+                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
+
+                    chain.ChainPolicy.DisableCertificateDownloads = true;
+                    chain.ChainPolicy.VerificationFlags =
+                        X509VerificationFlags.IgnoreEndRevocationUnknown
+                        | X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown
+                        | X509VerificationFlags.IgnoreRootRevocationUnknown;
+
+                    return chain.Build(new X509Certificate2(context.Certificate));
+                });
+
+                //tls.WithCertificateValidationHandler(context =>
+                //{
+                //    Console.WriteLine(context.SslPolicyErrors);
+
+                //    foreach (var s in context.Chain.ChainStatus)
+                //    {
+                //        Console.WriteLine($"{s.Status} - {s.StatusInformation}");
+                //    }
+
+                //    return false;
+                //});
+                tls.WithClientCertificates([certificate]);
+
+                tls.WithSslProtocols(SslProtocols.Tls12 | SslProtocols.Tls13);
+            });
+        }
+        else if (!string.IsNullOrEmpty(config.Username))
+        {
+            options = options.WithCredentials(config.Username, config.Password);
         }
 
         _options = options.Build();
@@ -358,14 +418,17 @@ public sealed class MqttManager
         if (_current == null)
             return;
 
-        var logger = _current.Logger;
-        var topics = _current.Topics;
         var handler = _current.Handler;
-        var conected = _current.IsConnected;
+        var connected = _current.IsConnected;
         _current.Dispose();
-        _current = new Mqtt(config, logger, topics);
+        _current = new Mqtt(
+            config: config,
+            logger: _current.Logger,
+            topics: _current.Topics,
+            certificate: _current.Certificate
+        );
         _current.SetHandler(handler);
-        if (conected)
+        if (connected)
         {
             await _current.ConnectAsync();
         }

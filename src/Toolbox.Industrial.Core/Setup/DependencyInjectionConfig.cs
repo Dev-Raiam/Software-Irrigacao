@@ -6,10 +6,12 @@ using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
@@ -19,7 +21,9 @@ using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using static Toolbox.Industrial.Core.Security.Certificate;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using IMediator = Toolbox.Core.Mediator.IMediator;
@@ -63,6 +67,47 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddSingleton<ICryptography, Cryptography>();
             services.AddSingleton<IControllerIO, PythonIoController>();
             services.TryAddSingleton<IPythonSettingsExporter, PythonSettingsExporter>();
+            services.AddSingleton<ICertificateAuthorityService, CertificateAuthorityService>();
+            services.AddSingleton<IConfigureOptions<KestrelServerOptions>, ConfigureKestrelHttps>();
+
+            services.AddKeyedSingleton<ICertificateService>(
+                Purpose.HttpsLocal,
+                (provider, purpose) =>
+                {
+                    return new CertificateService(
+                        (Purpose)purpose,
+                        provider.GetRequiredService<IEntityStore>(),
+                        provider.GetRequiredService<ILogger<CertificateService>>(),
+                        provider.GetRequiredService<ICertificateAuthorityService>()
+                    );
+                }
+            );
+
+            services.AddKeyedSingleton<ICertificateService>(
+                Purpose.MqttLocal,
+                (provider, purpose) =>
+                {
+                    return new CertificateService(
+                        (Purpose)purpose,
+                        provider.GetRequiredService<IEntityStore>(),
+                        provider.GetRequiredService<ILogger<CertificateService>>(),
+                        provider.GetRequiredService<ICertificateAuthorityService>()
+                    );
+                }
+            );
+
+            services.AddKeyedSingleton<ICertificateService>(
+                Purpose.MqttRemoto,
+                (provider, purpose) =>
+                {
+                    return new CertificateService(
+                        (Purpose)purpose,
+                        provider.GetRequiredService<IEntityStore>(),
+                        provider.GetRequiredService<ILogger<CertificateService>>(),
+                        provider.GetRequiredService<ICertificateAuthorityService>()
+                    );
+                }
+            );
 
             services.AddTransient<AuthGuard>();
             services
@@ -138,9 +183,15 @@ namespace Toolbox.Industrial.Core.Setup
                     var config = store
                         .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local)
                         ?.Valor;
+
+                    var certificateService = provider.GetRequiredKeyedService<ICertificateService>(
+                        Purpose.MqttLocal
+                    );
+
                     var mqtt = new Mqtt(
-                        (MqttConfiguration?)config ?? new MqttConfiguration(),
-                        logger
+                        logger: logger,
+                        certificate: certificateService.GetCertificate(),
+                        config: (MqttConfiguration?)config ?? new MqttConfiguration()
                     );
 
                     return new MqttManager(mqtt);
@@ -154,15 +205,25 @@ namespace Toolbox.Industrial.Core.Setup
                     Mqtt? mqtt = null;
                     if (Controlador.Master)
                     {
+                        ICertificateService? certificateService = null;
                         var logger = provider.GetRequiredService<ILogger<Mqtt>>();
                         var store = provider.GetRequiredService<IEntityStore>();
                         var config = store
                             .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
                             ?.Valor;
 
+                        var certificate = store.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttRemoto)?.Valor;
+                        if (certificate != null)
+                        {
+                            certificateService = provider.GetRequiredKeyedService<ICertificateService>(
+                                Purpose.MqttRemoto
+                            );
+                        }
+
                         mqtt = new Mqtt(
-                            (MqttConfiguration?)config ?? new MqttConfiguration(),
-                            logger
+                            logger: logger,
+                            certificate: certificateService?.GetCertificate(),
+                            config: (MqttConfiguration?)config ?? new MqttConfiguration()
                         );
                     }
 

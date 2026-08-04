@@ -19,8 +19,8 @@ public static class Endpoints
 
     public static void RegisterEndpoints(this WebApplication app)
     {
-        //app.UseHsts();
-        //app.UseHttpsRedirection();
+        app.UseHsts();
+        app.UseHttpsRedirection();
         app.UseRateLimiter();
         //app.UseJwksDiscovery();
         app.UseAuthentication();
