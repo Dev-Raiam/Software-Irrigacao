@@ -188,6 +188,7 @@ public static class SeedData
             {
                 Username = "freemqtt",
                 Password = "public",
+                Port = 1883
             };
 
             await store.UpsertAsync(

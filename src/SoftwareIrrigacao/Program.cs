@@ -49,7 +49,6 @@ try
 
     cronometro.Stop();
     Log.Information("Aplicação inicializada. Tempo Decorrido({Elapsed})", cronometro.Elapsed);
-    Log.Information("Software Atualizado para versão v1.0.4");
     await app.RunAsync();
 }
 catch (Exception ex)

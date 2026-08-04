@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
 using Toolbox.Industrial.Core.Data;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -134,13 +134,19 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
             DateTimeOffset.UtcNow.AddYears(500)
         );
 
-        certificate.FriendlyName = "Toolbox Industrial Root CA";
+        if (OperatingSystem.IsWindows())
+        {
+            certificate.FriendlyName = "Toolbox Industrial Root CA";
+        }
 
         return certificate;
     }
 
     private void InstallRootCertificate(X509Certificate2 certificate)
     {
+        if (!OperatingSystem.IsWindows())
+            return;
+
         using var store = new X509Store(StoreName.Root, StoreLocation.LocalMachine);
 
         store.Open(OpenFlags.ReadWrite);

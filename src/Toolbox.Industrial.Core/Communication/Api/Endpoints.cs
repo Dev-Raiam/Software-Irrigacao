@@ -114,24 +114,24 @@ public static class Endpoints
         #region endpoints de sistema
 
 
-        app.MapGet(
-                "/system/security/{Guid:id}",
-                async ([FromServices] IEntityStore store, CancellationToken cancellationToken, Guid id) =>
-                {
-                    var certificate = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == id)
-                        ?.Valor as Certificate;
+        //app.MapGet(
+        //        "/system/security/{Guid:id}",
+        //        async ([FromServices] IEntityStore store, CancellationToken cancellationToken, Guid id) =>
+        //        {
+        //            var certificate = store
+        //                .FirstOrDefault<Configuracao>(x => x.Id == id)
+        //                ?.Valor as Certificate;
 
-                    if (certificate == null)
-                    {
-                        return Results.NotFound();
-                    }
+        //            if (certificate == null)
+        //            {
+        //                return Results.NotFound();
+        //            }
 
-                    return Results.Ok(certificate);
-                }
-            )
-            .RequireAuthorization()
-            .RequireRateLimiting(RateLimitingPolicy);
+        //            return Results.Ok(certificate);
+        //        }
+        //    )
+        //    .RequireAuthorization()
+        //    .RequireRateLimiting(RateLimitingPolicy);
 
         app.MapGet(
                 "/system/logs",
