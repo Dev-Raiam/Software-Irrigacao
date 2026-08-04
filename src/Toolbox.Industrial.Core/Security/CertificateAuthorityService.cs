@@ -27,6 +27,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
     private X509Certificate2? _certificate;
     private readonly object _sync = new();
     private readonly IEntityStore _store;
+    public const string fileNameRootCA = "ca.crt";
 
     public CertificateAuthorityService(
         IEntityStore store,
@@ -159,7 +160,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);
         //File.WriteAllBytes("ca.pfx", pfx);
-        CertificateExporter.ExportCertificate(certificate, "ca.crt");
+        CertificateExporter.ExportCertificate(certificate, fileNameRootCA);
         InstallRootCertificate(certificate);
         var config = new Certificate
         {
