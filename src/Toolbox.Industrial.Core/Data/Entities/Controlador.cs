@@ -6,6 +6,8 @@ namespace Toolbox.Industrial.Core.Data;
 public class Controlador : Entity<Guid, controlador>
 {
     public static bool Master = false;
+    public static Guid PainelId = Guid.Empty;
+    public static Guid ControladorId = Guid.Empty;
 
     protected Controlador() { }
 

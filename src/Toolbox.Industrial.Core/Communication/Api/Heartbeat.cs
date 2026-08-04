@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using Toolbox.Industrial.Core.Data;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
-public interface IInternetMonitor
+public interface IHeartbeat
 {
     bool IsOnline { get; }
 
@@ -12,12 +15,14 @@ public interface IInternetMonitor
     event EventHandler<bool>? StatusChanged;
 }
 
-public sealed class InternetMonitor : BackgroundService, IInternetMonitor
+public sealed class Heartbeat : BackgroundService, IHeartbeat
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5) };
+    internal sealed record HeartbeatInfo(Dictionary<string, object>? Metrics);
 
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5) };
     public event EventHandler<bool>? StatusChanged;
-    private readonly ILogger<InternetMonitor> _logger;
+    private readonly ILogger<Heartbeat> _logger;
+    private readonly IApiClient _apiClient;
     private int _successCount;
     private int _failureCount;
     public bool IsOnline { get; private set; }
@@ -33,9 +38,10 @@ public sealed class InternetMonitor : BackgroundService, IInternetMonitor
     /// </summary>
     public int FailureThreshold { get; init; } = 3;
 
-    public InternetMonitor(ILogger<InternetMonitor> logger)
+    public Heartbeat(ILogger<Heartbeat> logger, IApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -79,7 +85,7 @@ public sealed class InternetMonitor : BackgroundService, IInternetMonitor
     private void SetOnline()
     {
         IsOnline = true;
-        _logger.LogInformation("Internet ONLINE.");
+        _logger.LogInformation("Controlador ONLINE.");
 
         StatusChanged?.Invoke(this, true);
     }
@@ -87,12 +93,12 @@ public sealed class InternetMonitor : BackgroundService, IInternetMonitor
     private void SetOffline()
     {
         IsOnline = false;
-        _logger.LogWarning("Internet OFFLINE.");
+        _logger.LogWarning("Controlador OFFLINE.");
 
         StatusChanged?.Invoke(this, false);
     }
 
-    private static async Task<bool> CheckAsync()
+    private async Task<bool> CheckAsync()
     {
         try
         {
@@ -100,11 +106,33 @@ public sealed class InternetMonitor : BackgroundService, IInternetMonitor
             if (ApiClient.BaseAddress != null)
             {
                 requestUri = $"{ApiClient.BaseAddress}/health";
+                if (Controlador.PainelId != Guid.Empty && Controlador.ControladorId != Guid.Empty)
+                {
+                    using var heartbeat = new HttpRequestMessage(
+                        HttpMethod.Post,
+                        $"automacao/v1/paineis/{Controlador.PainelId}/controladores/{Controlador.ControladorId}/sinal-vida"
+                    );
+
+                    heartbeat.Content = new StringContent(
+                        System.Text.Json.JsonSerializer.Serialize(new HeartbeatInfo(
+                            Metrics: new Dictionary<string, object>
+                            {
+                                { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
+                                { "controladorId", Controlador.ControladorId },
+                                { "painelId", Controlador.PainelId }
+                            })
+                        ),
+                        System.Text.Encoding.UTF8,
+                        MediaTypeNames.Application.Json
+                    );
+                    var result = await _apiClient.SendAsync<object?>(
+                        heartbeat,
+                        default
+                    );
+                    ApiClient.Online = result.Success;
+                    return result.Success;
+                }
             }
-            //if (ApiClient.BaseAddress != null)
-            //{
-            //    requestUri = $"{ApiClient.BaseAddress}/automacao/v1/paineis/{painelIl}/controladores/{controladorId}/sinal-vida";
-            //}
             using var request = new HttpRequestMessage(
                 HttpMethod.Head,
                 requestUri ?? "https://clients3.google.com/generate_204"

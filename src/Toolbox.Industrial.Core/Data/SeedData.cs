@@ -51,6 +51,7 @@ public static class SeedData
                 )?.Valor.ToString(),
                 out var painelId
             );
+            Controlador.PainelId = painelId;
             if (painelId != Guid.Empty)
             {
                 await mediator.Execute(
@@ -129,8 +130,8 @@ public static class SeedData
             )?.Valor.ToString(),
             out var controladorId
         );
-
         Controlador.Master = true;
+        Controlador.ControladorId = controladorId;
         if (controladorId != Guid.Empty)
         {
             Controlador.Master =
@@ -138,7 +139,9 @@ public static class SeedData
         }
         else if (controladores.Count == 1)
         {
-            Controlador.Master = controladores.First().Valor.Master;
+            var controlador = controladores.First().Valor;
+            Controlador.Master = controlador.Master;
+            Controlador.ControladorId = controlador.Id;
         }
 
         id = Entity.Keys.Mqtt.Local;

@@ -134,11 +134,11 @@ namespace Toolbox.Industrial.Core.Setup
                     NullValueHandling = NullValueHandling.Ignore,
                 };
 
-            services.AddSingleton<InternetMonitor>();
+            services.AddSingleton<Heartbeat>();
 
-            services.AddSingleton<IInternetMonitor>(sp => sp.GetRequiredService<InternetMonitor>());
+            services.AddSingleton<IHeartbeat>(sp => sp.GetRequiredService<Heartbeat>());
 
-            services.AddHostedService(sp => sp.GetRequiredService<InternetMonitor>());
+            services.AddHostedService(sp => sp.GetRequiredService<Heartbeat>());
 
             #region HttpClient
 
