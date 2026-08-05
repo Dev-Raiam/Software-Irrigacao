@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System.Net.Http.Headers;
+using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -9,6 +12,7 @@ using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
 using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
@@ -31,10 +35,10 @@ public static class SeedData
         try
         {
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
-            var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
 
             await InternalSeedData(scope.ServiceProvider, store);
 
+            var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
             if (applicationSeedData != null)
             {
                 await applicationSeedData.Invoke(scope.ServiceProvider, store);
@@ -56,8 +60,12 @@ public static class SeedData
         await ConfigureApiBaseAddress(store);
         await ConfigureJwtService(store, provider.GetRequiredService<JwtService>());
         await SynchronizeData(store, provider.GetRequiredService<IMediator>());
-        await ConfigureMqttLocal(store, provider.GetRequiredService<Token>());
         await ConfigureMqttRemoto(store);
+        await ConfigureMqttLocal(
+            store,
+            provider.GetRequiredService<Token>(),
+            provider.GetRequiredService<ICertificateAuthorityService>()
+        );
     }
 
     private static async Task ConfigureApiBaseAddress(IEntityStore store)
@@ -146,7 +154,11 @@ public static class SeedData
         catch { }
     }
 
-    private static async Task ConfigureMqttLocal(IEntityStore store, Token token)
+    private static async Task ConfigureMqttLocal(
+        IEntityStore store,
+        Token token,
+        ICertificateAuthorityService authorityService
+    )
     {
         Guid id = Entity.Keys.Mqtt.Local;
         var mqttLocal = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
@@ -193,8 +205,27 @@ public static class SeedData
         {
             var config = (MqttConfiguration)mqttLocal.Valor;
             var master = controladores.FirstOrDefault(c => c.Valor.Master);
-            if (master != null && config.Host != master.Valor.Conexoes.Host)
+            var masterHostName = master?.Valor.Conexoes.Host;
+            if (master != null && config.Host != masterHostName)
             {
+                var data =
+                    store
+                        .FirstOrDefault<Configuracao>(x =>
+                            x.Id == Entity.Keys.Security.CertificateAuthority
+                        )
+                        ?.Valor as Certificate;
+
+                if (
+                    data != null
+                    && data.Subject != masterHostName!.ToLowerInvariant().GetId().ToString()
+                )
+                {
+                    await store.DeleteAsync(mqttLocal);
+                    await LoadCertificateAuthorityMaster(token, authorityService, masterHostName);
+                    Environment.Exit(1);
+                    return;
+                }
+
                 config.SetHost(master.Valor.Conexoes.Host);
                 mqttLocal = new Configuracao(
                     id: id,
@@ -203,33 +234,55 @@ public static class SeedData
                     tipo: Tipo.Config
                 );
                 await store.UpsertAsync(mqttLocal);
+
+                Environment.Exit(1);
+                return;
             }
-            if (master != null)
+        }
+    }
+
+    private static async Task LoadCertificateAuthorityMaster(
+        Token token,
+        ICertificateAuthorityService authorityService,
+        string masterHostName
+    )
+    {
+        using var httpClient = new HttpClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(10);
+        httpClient.BaseAddress = new Uri($"http://{masterHostName}");
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            token.TokenAcesso
+        );
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"system/security/certificate-authority/{Entity.Keys.Security.CertificateAuthority}"
+        );
+
+        using var response = await httpClient.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var data = await response.Content.ReadFromJsonAsync<Certificate>();
+            if (data != null)
             {
-                //var httpClient = new HttpClient();
-                //httpClient.Timeout = TimeSpan.FromSeconds(5);
-                //httpClient.BaseAddress = new Uri($"https://{master.Valor.Conexoes.Host}:443");
-                //httpClient.DefaultRequestHeaders.Authorization =
-                //    new AuthenticationHeaderValue("Bearer", token.TokenAcesso);
-                //using var request = new HttpRequestMessage(
-                //    HttpMethod.Get,
-                //    $"/system/security/certificate-authority/{Entity.Keys.Security.CertificateAuthority}"
-                //);
-
-                //using var response = await httpClient.SendAsync(request);
-
-                //if (response.IsSuccessStatusCode)
-                //{
-                //    //Certificate
-                //    //Security.CertificateAuthority = response.Data.Id;
-                //}
-                //else
-                //{
-                //    Log.Error(
-                //        "Falha ao obter certificado da autoridade certificadora do controlador master."
-                //    );
-                //}
+                authorityService.Save(
+                    X509CertificateLoader.LoadPkcs12(
+                        data.Content,
+                        data.Password,
+                        X509KeyStorageFlags.Exportable
+                    ),
+                    subject: masterHostName.ToLowerInvariant().GetId().ToString()
+                );
             }
+            //Certificate
+            //Security.CertificateAuthority = response.Data.Id;
+        }
+        else
+        {
+            Log.Error(
+                "Falha ao obter certificado da autoridade certificadora do controlador master"
+            );
         }
     }
 

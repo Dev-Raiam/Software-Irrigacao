@@ -11,6 +11,8 @@ internal sealed class Certificate
         //OpcUa,
     }
 
+    public string? Subject { get; init; }
+
     public byte[] Content { get; init; } = [];
 
     public string Password { get; init; } = string.Empty;

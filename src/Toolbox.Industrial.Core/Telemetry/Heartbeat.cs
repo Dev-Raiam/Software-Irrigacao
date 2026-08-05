@@ -28,10 +28,7 @@ internal sealed class Heartbeat : BackgroundService
     /// </summary>
     public int FailureThreshold { get; init; } = 3;
 
-    public Heartbeat(
-        IHeartbeatClient client,
-        ILogger<Heartbeat> logger
-    )
+    public Heartbeat(IHeartbeatClient client, ILogger<Heartbeat> logger)
     {
         _client = client;
         _logger = logger;
@@ -113,7 +110,6 @@ internal sealed class Heartbeat : BackgroundService
             return false;
         }
     }
-
 }
 
 internal sealed record HeartbeatOptions

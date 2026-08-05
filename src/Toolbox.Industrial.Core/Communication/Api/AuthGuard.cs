@@ -66,7 +66,7 @@ internal class AuthGuard : DelegatingHandler
     {
         var request = new HttpRequestMessage(
             HttpMethod.Post,
-            "/autenticacao/v1/autenticar-cliente"
+            "autenticacao/v1/autenticar-cliente"
         );
 
         request.Content = new StringContent(

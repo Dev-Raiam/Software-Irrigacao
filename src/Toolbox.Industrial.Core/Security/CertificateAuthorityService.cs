@@ -11,6 +11,8 @@ namespace Toolbox.Industrial.Core.Security;
 internal interface ICertificateAuthorityService
 {
     X509Certificate2 GetCertificate();
+    
+    void Save(X509Certificate2 certificate, string? subject = null);
 
     X509Certificate2 Sign(
         CertificateRequest request,
@@ -155,7 +157,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         store.Add(certificate);
     }
 
-    private void Save(X509Certificate2 certificate)
+    public void Save(X509Certificate2 certificate, string? subject = null)
     {
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);
@@ -164,6 +166,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         InstallRootCertificate(certificate);
         var config = new Certificate
         {
+            Subject = subject,
             Content = content,
             Password = password,
             Thumbprint = certificate.Thumbprint,

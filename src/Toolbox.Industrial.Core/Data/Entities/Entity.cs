@@ -240,8 +240,10 @@ namespace Toolbox.Industrial.Core.Data
             {
                 public static Guid CertificateAuthority = "Security.Certificate.Authority".GetId();
                 public static Guid CertificateMqttLocal = "Security.Certificate.Mqtt.Local".GetId();
-                public static Guid CertificateMqttRemoto = "Security.Certificate.Mqtt.Remoto".GetId();
-                public static Guid CertificateHttpsLocal = "Security.Certificate.Https.Local".GetId();
+                public static Guid CertificateMqttRemoto =
+                    "Security.Certificate.Mqtt.Remoto".GetId();
+                public static Guid CertificateHttpsLocal =
+                    "Security.Certificate.Https.Local".GetId();
             }
 
             public static class Topic
