@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
 using System.Reflection;
@@ -14,7 +13,7 @@ public static class ApiConfig
     /// Password = 9ee58e75-0741-47dd-4ea6-cf2559eac5a3
     /// </summary>
     internal static string ConnectionString = //Password={"Irrigacao.db".GetId()};
-        $"Filename=Irrigacao.db;Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared";
+        $"Filename=irrigacao.db;Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared";
 
     public static void AddApiConfiguration(
         this IServiceCollection services,
