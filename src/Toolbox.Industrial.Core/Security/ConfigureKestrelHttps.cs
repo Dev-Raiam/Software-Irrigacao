@@ -19,6 +19,7 @@ internal sealed class ConfigureKestrelHttps : IConfigureOptions<KestrelServerOpt
 
     public void Configure(KestrelServerOptions options)
     {
+        options.ListenAnyIP(80);
         options.ListenAnyIP(
             443,
             listen =>

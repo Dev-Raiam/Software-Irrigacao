@@ -22,13 +22,45 @@ public static class Endpoints
     public static void RegisterEndpoints(this WebApplication app)
     {
         app.UseHsts();
-        app.UseHttpsRedirection();
+        app.Use(async (context, next) =>
+        {
+            if (!context.Request.IsHttps)
+            {
+                // Permitir em HTTP
+                if (context.Request.Path.StartsWithSegments("/system/security/certificate-authority"))
+                {
+                    await next();
+                    return;
+                }
+
+                var host = context.Request.Host.Host;
+
+                var location =
+                    $"https://{host}{context.Request.Path}{context.Request.QueryString}";
+
+                context.Response.Redirect(location, permanent: false);
+                return;
+            }
+            await next();
+        });
         app.UseRateLimiter();
-        //app.UseJwksDiscovery();
         app.UseAuthentication();
         app.UseAuthorization();
 
         #region endpoints de configuracao
+
+        app.Use(async (context, next) =>
+        {
+            if (!context.Request.IsHttps)
+            {
+                if (!context.Request.Path.StartsWithSegments("/system/security/certificate-authority"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    return;
+                }
+            }
+            await next();
+        });
 
         app.MapPost(
                 "/configuracao/credenciais",
@@ -134,6 +166,7 @@ public static class Endpoints
                     return Results.Ok(certificate);
                 }
             )
+            .RequireHost("*:80")
             .RequireAuthorization()
             .RequireRateLimiting(RateLimitingPolicy);
 
