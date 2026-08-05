@@ -1,14 +1,11 @@
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using Toolbox.Industrial.Core.Security;
-using static Toolbox.Industrial.Core.Security.Certificate;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;

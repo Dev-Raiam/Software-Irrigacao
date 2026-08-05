@@ -1,11 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Bot.Schema.Teams;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -172,26 +168,88 @@ internal sealed class CertificateService : ICertificateService, IDisposable
                 {
                     const string serviceName = "mosquitto";
 
-                    bool existsService = await ExistsService(serviceName);
-
-                    if (existsService)
+                    try
                     {
-                        CertificateExporter.Export(
-                            certificate,
-                            _purpose.ToString().ToLowerInvariant()
+                        bool existsService = await ExistsService(serviceName);
+
+                        if (existsService)
+                        {
+                            CertificateExporter.Export(
+                                certificate,
+                                _purpose.ToString().ToLowerInvariant()
+                            );
+
+                            await AddPermissionsCertificates();
+
+                            var stopped = await StopService(serviceName);
+                            if (stopped)
+                            {
+                                CreateMqttConfFile();
+                                await StartService(serviceName);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Falha ao configurar certificado {Purpose} para Mosquitto",
+                            _purpose
                         );
-
-                        await AddPermissionsCertificates();
-                        await StopService(serviceName);
-
-                        CreateMqttConfFile();
-
-                        await StartService(serviceName);
                     }
                 })
                 .GetAwaiter()
                 .GetResult();
+
+            Environment.Exit(1);
         }
+    }
+
+    private async Task<bool> IsServiceRunning(string serviceName)
+    {
+        using var process = new Process();
+
+        if (OperatingSystem.IsWindows())
+        {
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = "sc",
+                ArgumentList = { "query", serviceName },
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = "systemctl",
+                ArgumentList = { "is-active", serviceName },
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+        }
+        else
+        {
+            return false;
+        }
+
+        process.Start();
+        await process.WaitForExitAsync();
+
+        if (OperatingSystem.IsLinux())
+        {
+            // systemctl is-active: 0=active, !=0=not active
+            return process.ExitCode == 0;
+        }
+
+        var output = await process.StandardOutput.ReadToEndAsync();
+        return process.ExitCode == 0
+            && output.Contains("RUNNING", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> ExistsService(string serviceName)
@@ -227,29 +285,22 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             return false;
         }
 
-        try
-        {
-            process.Start();
-            await process.WaitForExitAsync();
+        process.Start();
+        await process.WaitForExitAsync();
 
-            if (OperatingSystem.IsLinux())
-            {
-                // systemctl status: 0=ativo, 3=não existe, 4=inativo
-                return process.ExitCode != 3;
-            }
-
-            // sc query: 0=serviço existe, !=0=não encontrado
-            var output = await process.StandardOutput.ReadToEndAsync();
-            return process.ExitCode == 0
-                && output.Contains(serviceName, StringComparison.OrdinalIgnoreCase);
-        }
-        catch
+        if (OperatingSystem.IsLinux())
         {
-            return false;
+            // systemctl status: 0=ativo, 3=não existe, 4=inativo
+            return process.ExitCode != 3;
         }
+
+        // sc query: 0=serviço existe, !=0=não encontrado
+        var output = await process.StandardOutput.ReadToEndAsync();
+        return process.ExitCode == 0
+            && output.Contains(serviceName, StringComparison.OrdinalIgnoreCase);
     }
 
-    private async Task StartService(string serviceName)
+    private async Task<bool> StartService(string serviceName)
     {
         using var process = new Process();
 
@@ -279,11 +330,23 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         }
 
         process.Start();
-        var code = process.ExitCode;
         await process.WaitForExitAsync();
+
+        const int maxRetries = 10;
+        const int retryDelayMs = 1000;
+
+        for (int i = 0; i < maxRetries; i++)
+        {
+            await Task.Delay(retryDelayMs);
+
+            if (await IsServiceRunning(serviceName))
+                return true;
+        }
+
+        return false;
     }
 
-    private async Task StopService(string serviceName)
+    private async Task<bool> StopService(string serviceName)
     {
         using var process = new Process();
 
@@ -314,11 +377,25 @@ internal sealed class CertificateService : ICertificateService, IDisposable
 
         process.Start();
         await process.WaitForExitAsync();
+
+        const int maxRetries = 10;
+        const int retryDelayMs = 1000;
+
+        for (int i = 0; i < maxRetries; i++)
+        {
+            await Task.Delay(retryDelayMs);
+
+            if (!await IsServiceRunning(serviceName))
+                return true;
+        }
+
+        return false;
     }
 
     private async Task AddPermissionsCertificates()
     {
         const string user = "mosquitto";
+        const string group = "root";
 
         var crt = $"{_purpose}.crt".ToLowerInvariant();
         var key = $"{_purpose}.key".ToLowerInvariant();
@@ -329,13 +406,17 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             await Chmod(CertificateAuthorityService.fileNameRootCA, "644");
             await Chmod(key, "600");
 
-            await Chown(CertificateAuthorityService.fileNameRootCA, user, user);
-            await Chown(crt, user, user);
-            await Chown(key, user, user);
+            await Chown(CertificateAuthorityService.fileNameRootCA, user, group);
+            await Chown(crt, user, group);
+            await Chown(key, user, group);
 
             // -rw-r--r-- mosquitto mosquitto mqttlocal.crt
             // -rw-r--r-- mosquitto mosquitto ca.crt
             // -rw-r--r-- mosquitto mosquitto mqttlocal.key
+
+            // -rw-r--r-- mosquitto root mqttlocal.crt
+            // -rw-r--r-- mosquitto root ca.crt
+            // -rw-r--r-- mosquitto root mqttlocal.key
         }
     }
 
@@ -395,7 +476,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
 
         if (OperatingSystem.IsWindows())
         {
-            File.AppendAllText(
+            File.WriteAllText(
                 @"C:\Program Files\mosquitto\mosquitto.conf",
                 ToMosquittoConfigString(config)
             );
