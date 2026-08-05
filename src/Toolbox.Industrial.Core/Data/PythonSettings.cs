@@ -43,12 +43,14 @@ public class PythonSettingsExporter : IPythonSettingsExporter
         {
             var settings = new PythonSettings
             {
-                Mqtt = (MqttConfiguration)
-                    (
-                        await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                            x.Id == Entity.Keys.Mqtt.LocalPython
-                        )
-                    ).Valor,
+                Mqtt = MqttConfiguration.PythonSettings(
+                    (MqttConfiguration)
+                        (
+                            await _store.FirstOrDefaultAsync<Configuracao>(x =>
+                                x.Id == Entity.Keys.Mqtt.Local
+                            )
+                        ).Valor
+                ),
             };
 
             var json = JsonConvert.SerializeObject(settings, Formatting.Indented);

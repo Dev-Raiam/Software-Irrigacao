@@ -1,9 +1,14 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using System.Net.Http.Headers;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
+using static System.Net.WebRequestMethods;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
@@ -23,45 +28,40 @@ public static class SeedData
             .ApplicationServices.GetRequiredService<IServiceScopeFactory>()
             .CreateScope();
 
-        var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
-        var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
-
-        await InternalSeedData(scope.ServiceProvider, store);
-
-        if (applicationSeedData != null)
+        try
         {
-            await applicationSeedData(scope.ServiceProvider, store);
+            var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
+            var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
+
+            await InternalSeedData(scope.ServiceProvider, store);
+
+            if (applicationSeedData != null)
+            {
+                await applicationSeedData.Invoke(scope.ServiceProvider, store);
+            }
+            if (!exporter.Exported)
+            {
+                await exporter.ExportAsync();
+            }
         }
-        if (!exporter.Exported)
+        catch (Exception ex)
         {
-            await exporter.ExportAsync();
+            Log.Error(ex, "Erro ao inicializar dados");
         }
     }
 
     private static async Task InternalSeedData(IServiceProvider provider, IEntityStore store)
     {
-        var mediator = provider.GetRequiredService<IMediator>();
+        //Manter a sequencia de execução porque a execução depende do processo anterior
+        await ConfigureApiBaseAddress(store);
+        await ConfigureJwtService(store, provider.GetRequiredService<JwtService>());
+        await SynchronizeData(store, provider.GetRequiredService<IMediator>());
+        await ConfigureMqttLocal(store, provider.GetRequiredService<Token>());
+        await ConfigureMqttRemoto(store);
+    }
 
-        //Disparar sincronia na inicialização
-        try
-        {
-            Guid.TryParse(
-                (
-                    await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
-                )?.Valor.ToString(),
-                out var painelId
-            );
-            Controlador.PainelId = painelId;
-            if (painelId != Guid.Empty)
-            {
-                await mediator.Execute(
-                    new SincronizarAutomacao { PainelId = painelId },
-                    cancellationToken: default
-                );
-            }
-        }
-        catch { }
-
+    private static async Task ConfigureApiBaseAddress(IEntityStore store)
+    {
         var id = Entity.Keys.Api.BaseAddress;
         var apiBaseAddress = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (apiBaseAddress?.Valor == null)
@@ -75,8 +75,11 @@ public static class SeedData
             await store.UpsertAsync(apiBaseAddress);
         }
         ApiClient.BaseAddress = apiBaseAddress.Valor.ToString();
+    }
 
-        id = Entity.Keys.Api.Jwt.ValidIssuers;
+    private static async Task ConfigureJwtService(IEntityStore store, JwtService jwtService)
+    {
+        Guid id = Entity.Keys.Api.Jwt.ValidIssuers;
         var validIssuers = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
         if (validIssuers?.Valor == null)
         {
@@ -108,7 +111,6 @@ public static class SeedData
         }
         JwtService.Config.JwksUrl = jwksUrl.Valor.ToString()!;
 
-        var jwtService = provider.GetRequiredService<JwtService>();
         await jwtService.LoadJwksAsync();
         if (!JwtService.Config.KeyStore.SigningKeys.Any())
         {
@@ -119,6 +121,45 @@ public static class SeedData
             {
                 await jwtService.LoadJwksAsync(securityKeys.Valor.ToString()!);
             }
+        }
+    }
+
+    private static async Task SynchronizeData(IEntityStore store, IMediator mediator)
+    {
+        try
+        {
+            Guid.TryParse(
+                (
+                    await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId)
+                )?.Valor.ToString(),
+                out var painelId
+            );
+            Controlador.PainelId = painelId;
+            if (painelId != Guid.Empty)
+            {
+                await mediator.Execute(
+                    new SincronizarAutomacao { PainelId = painelId },
+                    cancellationToken: default
+                );
+            }
+        }
+        catch { }
+    }
+
+    private static async Task ConfigureMqttLocal(IEntityStore store, Token token)
+    {
+        Guid id = Entity.Keys.Mqtt.Local;
+        var mqttLocal = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
+        if (mqttLocal?.Valor == null)
+        {
+            var config = new MqttConfiguration();
+            mqttLocal = new Configuracao(
+                id: id,
+                configuracao: config,
+                grupo: Grupo.Mqtt,
+                tipo: Tipo.Config
+            );
+            await store.UpsertAsync(mqttLocal);
         }
 
         var controladores = store.Query<Controlador>().ToList();
@@ -143,20 +184,11 @@ public static class SeedData
             Controlador.Master = controlador.Master;
             Controlador.ControladorId = controlador.Id;
         }
-
-        id = Entity.Keys.Mqtt.Local;
-        var mqttLocal = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id);
-        if (mqttLocal?.Valor == null)
+        else if (controladores.Count > 1)
         {
-            var config = new MqttConfiguration();
-            mqttLocal = new Configuracao(
-                id: id,
-                configuracao: config,
-                grupo: Grupo.Mqtt,
-                tipo: Tipo.Config
-            );
-            await store.UpsertAsync(mqttLocal);
+            Log.Error("Configure um controlador para o processo.");
         }
+
         if (!Controlador.Master)
         {
             var config = (MqttConfiguration)mqttLocal.Valor;
@@ -172,26 +204,45 @@ public static class SeedData
                 );
                 await store.UpsertAsync(mqttLocal);
             }
+            if (master != null)
+            {
+                //var httpClient = new HttpClient();
+                //httpClient.Timeout = TimeSpan.FromSeconds(5);
+                //httpClient.BaseAddress = new Uri($"https://{master.Valor.Conexoes.Host}:443");
+                //httpClient.DefaultRequestHeaders.Authorization =
+                //    new AuthenticationHeaderValue("Bearer", token.TokenAcesso);
+                //using var request = new HttpRequestMessage(
+                //    HttpMethod.Get,
+                //    $"/system/security/certificate-authority/{Entity.Keys.Security.CertificateAuthority}"
+                //);
+
+                //using var response = await httpClient.SendAsync(request);
+
+                //if (response.IsSuccessStatusCode)
+                //{
+                //    //Certificate
+                //    //Security.CertificateAuthority = response.Data.Id;
+                //}
+                //else
+                //{
+                //    Log.Error(
+                //        "Falha ao obter certificado da autoridade certificadora do controlador master."
+                //    );
+                //}
+            }
         }
+    }
 
-        id = Entity.Keys.Mqtt.LocalPython;
-        if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
-        {
-            var config = new MqttConfiguration();
-
-            await store.UpsertAsync(
-                new Configuracao(id: id, configuracao: config, grupo: Grupo.Mqtt, tipo: Tipo.Config)
-            );
-        }
-
-        id = Entity.Keys.Mqtt.Remoto;
+    private static async Task ConfigureMqttRemoto(IEntityStore store)
+    {
+        Guid id = Entity.Keys.Mqtt.Remoto;
         if ((await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == id))?.Valor == null)
         {
             var config = new MqttConfiguration(host: "broker.freemqtt.com")
             {
                 Username = "freemqtt",
                 Password = "public",
-                Port = 1883
+                Port = 1883,
             };
 
             await store.UpsertAsync(

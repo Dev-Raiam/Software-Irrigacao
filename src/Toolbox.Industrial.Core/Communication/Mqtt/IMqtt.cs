@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Toolbox.Core.Extensions;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
@@ -36,6 +37,21 @@ public sealed record Configuration
     public Configuration(string host = "localhost")
     {
         Host = host;
+    }
+
+    internal static Configuration PythonSettings(Configuration config)
+    {
+        return new Configuration(host: config.Host)
+        {
+            Port = config.Port,
+            ClientId = config.ClientId.GetId().ToString(),
+            Username = config.Username,
+            Password = config.Password,
+            DefaultQoS = config.DefaultQoS,
+            CleanSession = config.CleanSession,
+            DefaultRetain = config.DefaultRetain,
+            ConnectionTimeoutSeconds = config.ConnectionTimeoutSeconds,
+        };
     }
 
     public string Host { get; private set; } = "localhost";

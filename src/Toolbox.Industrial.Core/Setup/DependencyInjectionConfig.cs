@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -23,6 +24,9 @@ using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using Toolbox.Industrial.Core.Telemetry;
+using Toolbox.Industrial.Core.Telemetry.Services;
+using static System.Net.WebRequestMethods;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -48,6 +52,24 @@ namespace Toolbox.Industrial.Core.Setup
             if (ApiClient.BaseAddress != null)
             {
                 http.BaseAddress = new Uri(ApiClient.BaseAddress);
+            }
+        }
+
+        private static void ConfigureHeartbeatClient(IServiceProvider provider, HttpClient client)
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+            if (
+                ApiClient.BaseAddress != null
+                && Controlador.PainelId != Guid.Empty
+                && Controlador.ControladorId != Guid.Empty
+            )
+            {
+                client.BaseAddress = new Uri(ApiClient.BaseAddress);
+                var token = provider.GetRequiredService<Token>();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    token.TokenAcesso
+                );
             }
         }
 
@@ -134,13 +156,27 @@ namespace Toolbox.Industrial.Core.Setup
                     NullValueHandling = NullValueHandling.Ignore,
                 };
 
-            services.AddSingleton<Heartbeat>();
+            //services.AddSingleton<HeartbeatOld>();
 
-            services.AddSingleton<IHeartbeat>(sp => sp.GetRequiredService<Heartbeat>());
+            //services.AddSingleton<IHeartbeat>(sp => sp.GetRequiredService<HeartbeatOld>());
 
-            services.AddHostedService(sp => sp.GetRequiredService<Heartbeat>());
+            //services.AddHostedService(sp => sp.GetRequiredService<HeartbeatOld>());
+
+            services.AddSingleton<ISystemMetricsCollector, SystemMetricsCollector>();
+            if (OperatingSystem.IsWindows())
+            {
+                services.AddSingleton<IMetricsProvider, WindowsMetricsProvider>();
+            }
+            if (OperatingSystem.IsLinux())
+            {
+                services.AddSingleton<IMetricsProvider, LinuxMetricsProvider>();
+            }
+
+            services.AddHostedService<SystemMetricsCollector>();
+            services.AddHostedService<Heartbeat>();
 
             #region HttpClient
+            services.AddHttpClient<IHeartbeatClient, HeartbeatClient>(ConfigureHeartbeatClient);
 
             services
                 .AddHttpClient<IApiClient, ApiClient>(ConfigureClient)
@@ -212,12 +248,17 @@ namespace Toolbox.Industrial.Core.Setup
                             .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
                             ?.Valor;
 
-                        var certificate = store.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttRemoto)?.Valor;
+                        var certificate = store
+                            .FirstOrDefault<Configuracao>(x =>
+                                x.Id == Entity.Keys.Security.CertificateMqttRemoto
+                            )
+                            ?.Valor;
                         if (certificate != null)
                         {
-                            certificateService = provider.GetRequiredKeyedService<ICertificateService>(
-                                Purpose.MqttRemoto
-                            );
+                            certificateService =
+                                provider.GetRequiredKeyedService<ICertificateService>(
+                                    Purpose.MqttRemoto
+                                );
                         }
 
                         mqtt = new Mqtt(

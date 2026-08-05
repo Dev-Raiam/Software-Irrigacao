@@ -7,7 +7,7 @@ public sealed record Configuration(string BaseUrl);
 
 public interface IApiClient
 {
-    Task<Result<T>> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken);
+    Task<Result<T>> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken, HttpClient? httpClient = null);
 }
 
 public sealed class ApiClient : IApiClient
@@ -16,6 +16,7 @@ public sealed class ApiClient : IApiClient
     internal static string? BaseAddress;
 
     internal const string Anonymous = "anonymous";
+    //internal const string MasterLocal = "master.local";
     public static bool IsOnline => Online;
 
     private readonly HttpClient _httpClient;
@@ -30,12 +31,14 @@ public sealed class ApiClient : IApiClient
 
     public async Task<Result<T>> SendAsync<T>(
         HttpRequestMessage request,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        HttpClient? httpClient = null
     )
     {
         try
         {
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            httpClient ??= _httpClient;
+            var response = await httpClient.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {

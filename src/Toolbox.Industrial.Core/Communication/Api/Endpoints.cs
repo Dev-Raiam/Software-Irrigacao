@@ -117,11 +117,14 @@ public static class Endpoints
 
         app.MapGet(
                 "/system/security/certificate-authority/{id:guid}",
-                async ([FromServices] IEntityStore store, Guid id, CancellationToken cancellationToken) =>
+                async (
+                    [FromServices] IEntityStore store,
+                    Guid id,
+                    CancellationToken cancellationToken
+                ) =>
                 {
-                    var certificate = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == id)
-                        ?.Valor as Certificate;
+                    var certificate =
+                        store.FirstOrDefault<Configuracao>(x => x.Id == id)?.Valor as Certificate;
 
                     if (certificate == null)
                     {
@@ -142,7 +145,7 @@ public static class Endpoints
                         .Query<Dictionary<string, object>>("logs")
                         .OrderByDescending("_t")
                         .ToList();
-                    
+
                     return Results.Ok(logs);
                 }
             )
@@ -151,9 +154,7 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/restart",
-                async (
-                    CancellationToken cancellationToken
-                ) =>
+                async (CancellationToken cancellationToken) =>
                 {
                     Environment.Exit(1);
                     return Results.Accepted(value: "Aplicação será reiniciada.");

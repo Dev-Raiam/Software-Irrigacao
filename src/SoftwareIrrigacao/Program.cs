@@ -17,9 +17,9 @@ try
     var cronometro = Stopwatch.StartNew();
     Log.Information("Inicializando aplicação");
     var builder = WebApplication.CreateBuilder(args);
+
     builder.Services.AddApiConfiguration(builder);
     builder.Services.RegisterServices();
-
     var app = builder.Build();
     app.UseConfig();
 
