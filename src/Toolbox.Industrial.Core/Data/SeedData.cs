@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Core;
-using System.Collections;
+﻿using System.Collections;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -12,6 +6,12 @@ using System.Net.Http.Json;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Core;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -257,16 +257,16 @@ public static class SeedData
             }
         }
     }
-    private static async Task SetHostName(string hostName) 
+
+    private static async Task SetHostName(string hostName)
     {
         var host = Dns.GetHostEntry(Environment.MachineName);
 
         if (
-                !string.IsNullOrEmpty(hostName)
-                && !host.HostName.Equals(hostName, StringComparison.OrdinalIgnoreCase)
-            )
+            !string.IsNullOrEmpty(hostName)
+            && !host.HostName.Equals(hostName, StringComparison.OrdinalIgnoreCase)
+        )
         {
-
             if (OperatingSystem.IsLinux())
             {
                 using var process = new Process();
@@ -274,14 +274,14 @@ public static class SeedData
                 process.StartInfo = new ProcessStartInfo
                 {
                     FileName = "sudo",
-                    ArgumentList = { "hostnamectl", "set-hostname", hostName},
+                    ArgumentList = { "hostnamectl", "set-hostname", hostName },
                 };
 
                 process.Start();
                 await process.WaitForExitAsync();
 
                 var exitCode = process.ExitCode;
-                if (exitCode == 0) 
+                if (exitCode == 0)
                 {
                     UpdateEtcHosts(hostName);
                     await Reboot();
@@ -301,7 +301,8 @@ public static class SeedData
             //}
         }
     }
-    private static async Task Reboot() 
+
+    private static async Task Reboot()
     {
         if (OperatingSystem.IsLinux())
         {
@@ -310,7 +311,7 @@ public static class SeedData
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = "systemctl",
-                ArgumentList = { "reboot"},
+                ArgumentList = { "reboot" },
             };
 
             process.Start();
@@ -332,6 +333,7 @@ public static class SeedData
         //    };
         //}
     }
+
     private static void UpdateEtcHosts(string hostName)
     {
         var path = "/etc/hosts";
@@ -356,6 +358,7 @@ public static class SeedData
 
         File.WriteAllLines(path, lines);
     }
+
     private static async Task LoadCertificateAuthorityMaster(
         Token token,
         ICertificateAuthorityService authorityService,
