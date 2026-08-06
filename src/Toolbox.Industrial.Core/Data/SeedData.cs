@@ -1,11 +1,17 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
+using System.Collections;
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
+using System.Xml.Linq;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -23,7 +29,7 @@ public delegate Task ApplicationSeedData(IServiceProvider serviceProvider, IEnti
 
 public static class SeedData
 {
-    private static ILogger<IApplicationBuilder> _logger = null!; 
+    private static ILogger<IApplicationBuilder> _logger = null!;
 
     public static async Task EnsureSeedData(
         this IApplicationBuilder app,
@@ -190,14 +196,21 @@ public static class SeedData
         Controlador.ControladorId = controladorId;
         if (controladorId != Guid.Empty)
         {
-            Controlador.Master =
-                controladores.FirstOrDefault(c => c.Id == controladorId)?.Valor.Master ?? false;
+            var controlador = controladores.FirstOrDefault(c => c.Id == controladorId)?.Valor;
+            Controlador.Master = controlador?.Master ?? false;
+
+            if (controlador != null)
+            {
+                await SetHostName(controlador.Conexoes.Host);
+            }
         }
         else if (controladores.Count == 1)
         {
             var controlador = controladores.First().Valor;
             Controlador.Master = controlador.Master;
             Controlador.ControladorId = controlador.Id;
+
+            await SetHostName(controlador.Conexoes.Host);
         }
         else if (controladores.Count > 1)
         {
@@ -244,7 +257,105 @@ public static class SeedData
             }
         }
     }
+    private static async Task SetHostName(string hostName) 
+    {
+        var host = Dns.GetHostEntry(Environment.MachineName);
 
+        if (
+                !string.IsNullOrEmpty(hostName)
+                && !host.HostName.Equals(hostName, StringComparison.OrdinalIgnoreCase)
+            )
+        {
+
+            if (OperatingSystem.IsLinux())
+            {
+                using var process = new Process();
+
+                process.StartInfo = new ProcessStartInfo
+                {
+                    FileName = "sudo",
+                    ArgumentList = { "hostnamectl", "set-hostname", hostName},
+                };
+
+                process.Start();
+                await process.WaitForExitAsync();
+
+                var exitCode = process.ExitCode;
+                if (exitCode == 0) 
+                {
+                    UpdateEtcHosts(hostName);
+                    await Reboot();
+                }
+            }
+            //if (OperatingSystem.IsWindows())
+            //{
+            //    process.StartInfo = new ProcessStartInfo
+            //    {
+            //        FileName = "powershell",
+            //        ArgumentList =
+            //        {
+            //            "-Command",
+            //            $"Rename-Computer -NewName \"{hostName}\" -Force"
+            //        }
+            //    };
+            //}
+        }
+    }
+    private static async Task Reboot() 
+    {
+        if (OperatingSystem.IsLinux())
+        {
+            using var process = new Process();
+
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = "systemctl",
+                ArgumentList = { "reboot"},
+            };
+
+            process.Start();
+            await process.WaitForExitAsync();
+        }
+        //if (OperatingSystem.IsWindows())
+        //{
+        //    process.StartInfo = new ProcessStartInfo
+        //    {
+        //        FileName = "Restart-Computer",
+        //        ArgumentList =
+        //        {
+        //            "/r", // Restart
+        //            "/f", //Força o encerramento dos aplicativos.
+        //            "/t",
+        //            "0", // Sem atraso <segundos>
+        //        },
+        //        UseShellExecute = false,
+        //    };
+        //}
+    }
+    private static void UpdateEtcHosts(string hostName)
+    {
+        var path = "/etc/hosts";
+        var lines = File.ReadAllLines(path).ToList();
+
+        bool found = false;
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            if (lines[i].StartsWith("127.0.1.1"))
+            {
+                lines[i] = $"127.0.1.1\t{hostName}";
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            lines.Add($"127.0.1.1\t{hostName}");
+        }
+
+        File.WriteAllLines(path, lines);
+    }
     private static async Task LoadCertificateAuthorityMaster(
         Token token,
         ICertificateAuthorityService authorityService,

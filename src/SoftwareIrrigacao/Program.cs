@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
 using System.Diagnostics;
+using System.Net;
 using Toolbox.Industrial.Core.Data;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
@@ -15,7 +16,9 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var cronometro = Stopwatch.StartNew();
-    Log.Information("Inicializando aplicação");
+    var hostName = Dns.GetHostEntry(Environment.MachineName).HostName;
+
+    Log.Information($"Inicializando aplicação {hostName}");
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddApiConfiguration(builder);
