@@ -32,8 +32,10 @@ internal sealed class HeartbeatClient : IHeartbeatClient
     public async ValueTask<HttpResponseMessage> SendAsync(CancellationToken cancellationToken)
     {
         var delta = _collector.Current.Take();
+        var requestUri = $"automacao/v1/paineis/{Controlador.PainelId}/controladores/{Controlador.ControladorId}/telemetria";
+        var teste = JsonConvert.SerializeObject(delta, Formatting.Indented);
         var response = await _http.PostAsJsonAsync(
-            $"automacao/v1/paineis/{Controlador.PainelId}/controladores/{Controlador.ControladorId}/telemetria",
+            requestUri,
             delta,
             cancellationToken
         );
