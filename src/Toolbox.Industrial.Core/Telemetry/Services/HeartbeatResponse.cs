@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace Toolbox.Industrial.Core.Telemetry.Services;
 
@@ -13,7 +14,7 @@ internal sealed record DeviceCommand
 {
     public required Guid Id { get; init; }
     public required type Type { get; init; }
-    public JsonElement? Parameters { get; init; }
+    public JObject? Parameters { get; init; }
 
     internal enum type : int
     {
