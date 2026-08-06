@@ -12,7 +12,7 @@ internal interface ICertificateAuthorityService
 {
     X509Certificate2 GetCertificate();
     
-    void Save(X509Certificate2 certificate, string? subject = null);
+    void Save(X509Certificate2 certificate, string? subject = "localhost");
 
     X509Certificate2 Sign(
         CertificateRequest request,
@@ -157,7 +157,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         store.Add(certificate);
     }
 
-    public void Save(X509Certificate2 certificate, string? subject = null)
+    public void Save(X509Certificate2 certificate, string? subject = "localhost")
     {
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);

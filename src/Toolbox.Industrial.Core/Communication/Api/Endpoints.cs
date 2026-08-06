@@ -1,10 +1,9 @@
-using System.Diagnostics;
-using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -152,20 +151,14 @@ public static class Endpoints
         app.MapGet(
                 "/system/security/certificate-authority/{id:guid}",
                 async (
-                    [FromServices] IEntityStore store,
+                    [FromServices] ICertificateAuthorityService authority,
                     Guid id,
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    var certificate =
-                        store.FirstOrDefault<Configuracao>(x => x.Id == id)?.Valor as Certificate;
-
-                    if (certificate == null)
-                    {
-                        return Results.NotFound();
-                    }
-
-                    return Results.Ok(certificate);
+                    return Results.File(
+                        authority.GetCertificate().Export(X509ContentType.Cert),
+                        "application/pkix-cert");
                 }
             )
             .RequireHost("*:80")
