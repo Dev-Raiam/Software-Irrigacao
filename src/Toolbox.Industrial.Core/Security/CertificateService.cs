@@ -200,6 +200,10 @@ internal sealed class CertificateService : ICertificateService, IDisposable
                 })
                 .GetAwaiter()
                 .GetResult();
+            
+            Task.Delay(1000)
+                .GetAwaiter()
+                .GetResult();
 
             Environment.Exit(1);
         }

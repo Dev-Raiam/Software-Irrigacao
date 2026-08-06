@@ -129,6 +129,8 @@ public static class Endpoints
                         config.Atualizar(json);
                     }
                     await store.UpsertAsync(config);
+
+                    await Task.Delay(1000);
                     Environment.Exit(1);
                     return Results.Accepted(
                         value: new string[]
@@ -189,6 +191,7 @@ public static class Endpoints
                 "/system/restart",
                 async (CancellationToken cancellationToken) =>
                 {
+                    await Task.Delay(1000);
                     Environment.Exit(1);
                     return Results.Accepted(value: "Aplicação será reiniciada.");
                 }

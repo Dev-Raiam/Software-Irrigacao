@@ -65,6 +65,16 @@ public sealed class Mqtt : IMqtt
                 tls.UseTls();
                 tls.WithCertificateValidationHandler(context =>
                 {
+                    Console.WriteLine(context.SslPolicyErrors);
+
+                    if (context.Chain != null)
+                    {
+                        foreach (var status in context.Chain.ChainStatus)
+                        {
+                            Console.WriteLine($"{status.Status} - {status.StatusInformation}");
+                        }
+                    }
+
                     //Console.WriteLine(context.SslPolicyErrors);
 
                     //foreach (var s in context.Chain.ChainStatus)

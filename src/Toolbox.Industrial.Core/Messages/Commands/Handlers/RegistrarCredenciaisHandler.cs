@@ -172,6 +172,8 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             _logger.LogWarning(
                 "A aplicação será finalizada para completar o ciclo de reconfiguração."
             );
+
+            await Task.Delay(1000);
             Environment.Exit(1);
         }
 
