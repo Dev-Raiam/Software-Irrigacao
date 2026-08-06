@@ -1,10 +1,9 @@
 using System.Diagnostics;
-using LiteDB;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Hosting;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Commands;
@@ -22,45 +21,57 @@ public static class Endpoints
     public static void RegisterEndpoints(this WebApplication app)
     {
         app.UseHsts();
-        app.Use(async (context, next) =>
-        {
-            if (!context.Request.IsHttps)
+        app.Use(
+            async (context, next) =>
             {
-                // Permitir em HTTP
-                if (context.Request.Path.StartsWithSegments("/system/security/certificate-authority"))
+                if (!context.Request.IsHttps)
                 {
-                    await next();
+                    // Permitir em HTTP
+                    if (
+                        context.Request.Path.StartsWithSegments(
+                            "/system/security/certificate-authority"
+                        )
+                    )
+                    {
+                        await next();
+                        return;
+                    }
+
+                    var host = context.Request.Host.Host;
+
+                    var location =
+                        $"https://{host}{context.Request.Path}{context.Request.QueryString}";
+
+                    context.Response.Redirect(location, permanent: false);
                     return;
                 }
-
-                var host = context.Request.Host.Host;
-
-                var location =
-                    $"https://{host}{context.Request.Path}{context.Request.QueryString}";
-
-                context.Response.Redirect(location, permanent: false);
-                return;
+                await next();
             }
-            await next();
-        });
+        );
         app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
 
         #region endpoints de configuracao
 
-        app.Use(async (context, next) =>
-        {
-            if (!context.Request.IsHttps)
+        app.Use(
+            async (context, next) =>
             {
-                if (!context.Request.Path.StartsWithSegments("/system/security/certificate-authority"))
+                if (!context.Request.IsHttps)
                 {
-                    context.Response.StatusCode = StatusCodes.Status404NotFound;
-                    return;
+                    if (
+                        !context.Request.Path.StartsWithSegments(
+                            "/system/security/certificate-authority"
+                        )
+                    )
+                    {
+                        context.Response.StatusCode = StatusCodes.Status404NotFound;
+                        return;
+                    }
                 }
+                await next();
             }
-            await next();
-        });
+        );
 
         app.MapPost(
                 "/configuracao/credenciais",
@@ -152,20 +163,15 @@ public static class Endpoints
         app.MapGet(
                 "/system/security/certificate-authority/{id:guid}",
                 async (
-                    [FromServices] IEntityStore store,
+                    [FromServices] ICertificateAuthorityService authority,
                     Guid id,
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    var certificate =
-                        store.FirstOrDefault<Configuracao>(x => x.Id == id)?.Valor as Certificate;
-
-                    if (certificate == null)
-                    {
-                        return Results.NotFound();
-                    }
-
-                    return Results.Ok(certificate);
+                    return Results.File(
+                        authority.GetCertificate().Export(X509ContentType.Cert),
+                        "application/pkix-cert"
+                    );
                 }
             )
             .RequireHost("*:80")

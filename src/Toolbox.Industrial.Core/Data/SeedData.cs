@@ -166,7 +166,7 @@ public static class SeedData
     private static async Task ConfigureMqttLocal(
         IEntityStore store,
         Token token,
-        ICertificateAuthorityService authorityService
+        ICertificateAuthorityService authority
     )
     {
         Guid id = Entity.Keys.Mqtt.Local;
@@ -237,7 +237,7 @@ public static class SeedData
                 )
                 {
                     await store.DeleteAsync(mqttLocal);
-                    await LoadCertificateAuthorityMaster(token, authorityService, masterHostName);
+                    await LoadCertificateAuthorityMaster(token, authority, masterHostName);
                     await Task.Delay(1000);
                     Environment.Exit(1);
                     return;
@@ -361,7 +361,7 @@ public static class SeedData
 
     private static async Task LoadCertificateAuthorityMaster(
         Token token,
-        ICertificateAuthorityService authorityService,
+        ICertificateAuthorityService authority,
         string masterHostName
     )
     {
@@ -383,20 +383,9 @@ public static class SeedData
 
             if (response.IsSuccessStatusCode)
             {
-                var data = await response.Content.ReadFromJsonAsync<Certificate>();
-                if (data != null)
-                {
-                    authorityService.Save(
-                        X509CertificateLoader.LoadPkcs12(
-                            data.Content,
-                            data.Password,
-                            X509KeyStorageFlags.Exportable
-                        ),
-                        subject: masterHostName.ToLowerInvariant().GetId().ToString()
-                    );
-                }
-                //Certificate
-                //Security.CertificateAuthority = response.Data.Id;
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var root = X509CertificateLoader.LoadCertificate(bytes);
+                authority.Save(root, subject: masterHostName.ToLowerInvariant().GetId().ToString());
             }
             else
             {
