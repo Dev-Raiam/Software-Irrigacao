@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
+using Newtonsoft.Json;
 using Toolbox.Industrial.Core.Data;
+using static Toolbox.Industrial.Core.Data.Configuracao;
 
 namespace Toolbox.Industrial.Core.Telemetry.Services;
 
@@ -29,19 +30,15 @@ internal sealed class HeartbeatClient : IHeartbeatClient
     public async ValueTask<HttpResponseMessage> SendAsync(CancellationToken cancellationToken)
     {
         var delta = _collector.Current.Take();
-        var requestUri = $"automacao/v1/paineis/{Controlador.PainelId}/controladores/{Controlador.ControladorId}/telemetria";
+        var requestUri =
+            $"automacao/v1/paineis/{Controlador.PainelId}/controladores/{Controlador.ControladorId}/telemetria";
         var teste = JsonConvert.SerializeObject(delta, Formatting.Indented);
-        var response = await _http.PostAsJsonAsync(
-            requestUri,
-            delta,
-            cancellationToken
-        );
+        var response = await _http.PostAsJsonAsync(requestUri, delta, cancellationToken);
 
         if (response?.IsSuccessStatusCode == true)
         {
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                //var json = await response.Content.ReadFromJsonAsync<HeartbeatResponse>(cancellationToken);
                 var json = await response.Content.ReadAsStringAsync();
                 if (!string.IsNullOrWhiteSpace(json))
                 {
@@ -55,12 +52,13 @@ internal sealed class HeartbeatClient : IHeartbeatClient
         }
         else
         {
-            //gravar telemetria localmente para envio posterior
-        }
-
-        if (response?.IsSuccessStatusCode == false)
-        {
-            //gravar telemetria localmente para envio posterior
+            await _store.InsertAsync(
+                new Telemetria(
+                    id: SequentialGuid.NewGuid(),
+                    telemetria: delta,
+                    tipo: Telemetria.tipo.Controlador
+                )
+            );
         }
         return response!;
     }

@@ -159,6 +159,7 @@ public static class SeedData
                     cancellationToken: default
                 );
             }
+            var existeTelemetrias = store.Query<Telemetria>().FirstOrDefault() != null;
         }
         catch { }
     }
@@ -192,7 +193,7 @@ public static class SeedData
             )?.Valor.ToString(),
             out var controladorId
         );
-        Controlador.Master = true;
+        //Controlador.Master = false;
         Controlador.ControladorId = controladorId;
         if (controladorId != Guid.Empty)
         {
@@ -216,28 +217,32 @@ public static class SeedData
         {
             _logger.LogError("Configure um controlador para o processo.");
         }
-
-        if (!Controlador.Master)
+        
+        if (controladores.Count > 0 && !Controlador.Master)
         {
             var config = (MqttConfiguration)mqttLocal.Valor;
             var master = controladores.FirstOrDefault(c => c.Valor.Master);
             var masterHostName = master?.Valor.Conexoes.Host;
-            if (master != null && config.Host != masterHostName)
+            if (master != null && masterHostName != null && config.Host != masterHostName)
             {
-                var data =
-                    store
-                        .FirstOrDefault<Configuracao>(x =>
-                            x.Id == Entity.Keys.Security.CertificateAuthority
-                        )
-                        ?.Valor as Certificate;
-
-                if (
-                    data != null
-                    && data.Subject != masterHostName!.ToLowerInvariant().GetId().ToString()
-                )
+                var certificate = authority.GetCertificateStore(masterHostName)?.Valor as Certificate;
+                if (certificate == null)
                 {
+                    //apagar as configurações e certificado de Mqtt Local
                     await store.DeleteAsync(mqttLocal);
+                    await store.DeleteManyAsync<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttLocal);
+
                     await LoadCertificateAuthorityMaster(token, authority, masterHostName);
+
+                    config.SetHost(masterHostName);
+                    mqttLocal = new Configuracao(
+                        id: id,
+                        configuracao: config,
+                        grupo: Grupo.Mqtt,
+                        tipo: Tipo.Config
+                    );
+                    await store.UpsertAsync(mqttLocal);
+
                     await Task.Delay(1000);
                     Environment.Exit(1);
                     return;
@@ -385,7 +390,7 @@ public static class SeedData
             {
                 var bytes = await response.Content.ReadAsByteArrayAsync();
                 var root = X509CertificateLoader.LoadCertificate(bytes);
-                authority.Save(root, subject: masterHostName.ToLowerInvariant().GetId().ToString());
+                authority.Save(root, subject: masterHostName);
             }
             else
             {

@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Data;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -11,13 +12,13 @@ namespace Toolbox.Industrial.Core.Security;
 
 public interface ICertificateService
 {
-    X509Certificate2 GetCertificate();
+    X509Certificate2 GetCertificate(string subject = "localhost");
 
-    bool IsExpired();
+    bool IsExpired(string subject = "localhost");
 
-    bool NeedsRenew();
+    bool NeedsRenew(string subject = "localhost");
 
-    void Renew();
+    void Renew(string subject = "localhost");
 }
 
 internal record MqttConfig(
@@ -55,7 +56,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         _authorityService = authorityService;
     }
 
-    public X509Certificate2 GetCertificate()
+    public X509Certificate2 GetCertificate(string subject = "localhost")
     {
         ThrowIfDisposed();
 
@@ -64,26 +65,26 @@ internal sealed class CertificateService : ICertificateService, IDisposable
 
         lock (_sync)
         {
-            _certificate ??= LoadOrCreate();
+            _certificate ??= LoadOrCreate(subject);
 
             return _certificate;
         }
     }
 
-    public bool IsExpired() => DateTime.UtcNow >= GetCertificate().NotAfter;
+    public bool IsExpired(string subject = "localhost") => DateTime.UtcNow >= GetCertificate(subject).NotAfter;
 
-    public bool NeedsRenew() =>
-        GetCertificate().NotAfter <= DateTime.UtcNow.AddDays(RenewBeforeExpirationDays);
+    public bool NeedsRenew(string subject = "localhost") =>
+        GetCertificate(subject).NotAfter <= DateTime.UtcNow.AddDays(RenewBeforeExpirationDays);
 
-    public void Renew()
+    public void Renew(string subject = "localhost")
     {
         ThrowIfDisposed();
 
         lock (_sync)
         {
             _logger.LogInformation($"Renewing {_purpose} certificate.");
-            var certificate = CertificateFactory.Create(_purpose, _authorityService);
-            Save(GetId(), certificate);
+            var certificate = CertificateFactory.Create(_purpose, _authorityService, subject);
+            Save(GetId(), certificate, subject);
 
             var old = _certificate;
             _certificate = certificate;
@@ -100,8 +101,10 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             _ => throw new NotSupportedException($"Unsupported certificate purpose: {_purpose}"),
         };
 
-    private X509Certificate2 LoadOrCreate()
+    private X509Certificate2 LoadOrCreate(string subject)
     {
+        subject.ThrowIfNull(nameof(subject));
+
         var id = GetId();
 
         var data = _store.FirstOrDefault<Configuracao>(x => x.Id == id)?.Valor as Certificate;
@@ -110,8 +113,8 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         {
             _logger.LogInformation($"Creating {_purpose} certificate.");
 
-            var certificate2 = CertificateFactory.Create(_purpose, _authorityService);
-            Save(id, certificate2);
+            var certificate2 = CertificateFactory.Create(_purpose, _authorityService, subject);
+            Save(id, certificate2, subject);
 
             return certificate2;
         }
@@ -126,14 +129,14 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             _logger.LogInformation($"{_purpose} certificate will expire soon.");
             certificate.Dispose();
 
-            certificate = CertificateFactory.Create(_purpose, _authorityService);
-            Save(id, certificate);
+            certificate = CertificateFactory.Create(_purpose, _authorityService, subject);
+            Save(id, certificate, subject);
         }
 
         return certificate;
     }
 
-    private void Save(Guid id, X509Certificate2 certificate)
+    private void Save(Guid id, X509Certificate2 certificate, string subject)
     {
         var password = GeneratePassword();
 
@@ -141,6 +144,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
 
         var config = new Certificate
         {
+            Subject = subject,
             Content = content,
             Password = password,
             Thumbprint = certificate.Thumbprint,

@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using LiteDB;
+using Toolbox.Industrial.Core.Security;
 
 namespace Toolbox.Industrial.Core.Data;
 

@@ -224,9 +224,11 @@ namespace Toolbox.Industrial.Core.Setup
                         Purpose.MqttLocal
                     );
 
+                    var subject = (store.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttLocal)?.Valor as Certificate)?.Subject;
+
                     var mqtt = new Mqtt(
                         logger: logger,
-                        certificate: certificateService.GetCertificate(),
+                        certificate: subject != null ? certificateService.GetCertificate(subject!) : certificateService.GetCertificate(),
                         config: (MqttConfiguration?)config ?? new MqttConfiguration()
                     );
 
@@ -252,7 +254,8 @@ namespace Toolbox.Industrial.Core.Setup
                             .FirstOrDefault<Configuracao>(x =>
                                 x.Id == Entity.Keys.Security.CertificateMqttRemoto
                             )
-                            ?.Valor;
+                            ?.Valor as Certificate;
+
                         if (certificate != null)
                         {
                             certificateService =
@@ -263,7 +266,7 @@ namespace Toolbox.Industrial.Core.Setup
 
                         mqtt = new Mqtt(
                             logger: logger,
-                            certificate: certificateService?.GetCertificate(),
+                            certificate: certificate?.Subject != null ? certificateService.GetCertificate(certificate.Subject) : certificateService.GetCertificate(),
                             config: (MqttConfiguration?)config ?? new MqttConfiguration()
                         );
                     }

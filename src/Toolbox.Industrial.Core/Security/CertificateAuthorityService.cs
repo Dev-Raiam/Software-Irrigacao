@@ -1,18 +1,21 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
+using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Data;
-using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Security;
 
-internal interface ICertificateAuthorityService
+internal interface ICertificateAuthorityService : IDisposable
 {
-    X509Certificate2 GetCertificate();
+    X509Certificate2 GetCertificate(string subject = "localhost");
 
-    void Save(X509Certificate2 certificate, string? subject = "localhost");
+    public Configuracao? GetCertificateStore(string subject = "localhost");
+
+    void Save(X509Certificate2 certificate, string subject = "localhost");
 
     X509Certificate2 Sign(
         CertificateRequest request,
@@ -20,16 +23,16 @@ internal interface ICertificateAuthorityService
         DateTimeOffset notAfter
     );
 
-    void Renew(X509Certificate2? certificate = null);
+    void Renew(string subject = "localhost", X509Certificate2? certificate = null);
 }
 
 internal sealed class CertificateAuthorityService : ICertificateAuthorityService
 {
+    public const string fileNameRootCA = "ca.crt";
+    private readonly ConcurrentDictionary<string, X509Certificate2> _cache = new();
     private readonly ILogger<CertificateAuthorityService> _logger;
-    private X509Certificate2? _certificate;
     private readonly object _sync = new();
     private readonly IEntityStore _store;
-    public const string fileNameRootCA = "ca.crt";
 
     public CertificateAuthorityService(
         IEntityStore store,
@@ -40,27 +43,25 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         _logger = logger;
     }
 
-    public X509Certificate2 GetCertificate()
+    public X509Certificate2 GetCertificate(string subject = "localhost")
     {
-        if (_certificate is not null)
-            return _certificate;
-
+        subject.ThrowIfNull(nameof(subject));
         lock (_sync)
         {
-            _certificate ??= LoadOrCreate();
-            return _certificate;
+            return _cache.GetOrAdd(subject, _ => LoadOrCreate(subject));
         }
     }
 
-    private X509Certificate2 LoadOrCreate()
+    public Configuracao? GetCertificateStore(string subject = "localhost")
     {
-        var data =
-            _store
-                .FirstOrDefault<Configuracao>(x =>
-                    x.Id == Entity.Keys.Security.CertificateAuthority
-                )
-                ?.Valor as Certificate;
+        subject.ThrowIfNull(nameof(subject));
+        var id = $"{Entity.Keys.Security.CertificateAuthority}{subject}".GetId();
+        return _store.FirstOrDefault<Configuracao>(x => x.Id == id);
+    }
 
+    private X509Certificate2 LoadOrCreate(string subject)
+    {
+        var data = GetCertificateStore(subject)?.Valor as Certificate;
         if (data is null)
         {
             _logger.LogInformation("Creating Root Certificate Authority.");
@@ -89,16 +90,18 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         return request.Create(certificate, notBefore, notAfter, serial);
     }
 
-    public void Renew(X509Certificate2? certificate = null)
+    public void Renew(string subject = "localhost", X509Certificate2? certificate = null)
     {
         lock (_sync)
         {
-            _logger.LogInformation($"Renewing Root Certificate Authority.");
-            certificate ??= CreateRootCertificate();
-            Save(certificate);
-            var old = _certificate;
-            _certificate = certificate;
-            old?.Dispose();
+            if (_cache.TryGetValue(subject, out var oldCertificate))
+            {
+                _logger.LogInformation($"Renewing Root Certificate Authority.");
+                certificate ??= CreateRootCertificate();
+                Save(certificate, subject: subject);
+                _cache[subject] = certificate;
+                oldCertificate?.Dispose();
+            }
         }
     }
 
@@ -157,7 +160,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         store.Add(certificate);
     }
 
-    public void Save(X509Certificate2 certificate, string? subject = "localhost")
+    public void Save(X509Certificate2 certificate, string subject = "localhost")
     {
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);
@@ -175,17 +178,25 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
             CreatedAt = DateTime.UtcNow,
         };
 
-        _store
-            .UpsertAsync(
-                new Configuracao(
-                    id: Entity.Keys.Security.CertificateAuthority,
-                    configuracao: config,
-                    grupo: Grupo.Api,
-                    tipo: Tipo.Seguranca
+        var data = GetCertificateStore(subject);
+        if (data == null)
+        {
+            _store
+                .InsertAsync(
+                    new Configuracao(
+                        id: $"{Entity.Keys.Security.CertificateAuthority}{subject}".GetId(),
+                        configuracao: config,
+                        grupo: Grupo.Api,
+                        tipo: Tipo.Seguranca
+                    )
                 )
-            )
-            .GetAwaiter()
-            .GetResult();
+                .GetAwaiter()
+                .GetResult();
+
+            return;
+        }
+        data.Atualizar(config);
+        _store.UpdateAsync(data).GetAwaiter().GetResult();
     }
 
     private static string GeneratePassword()
@@ -193,5 +204,14 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         Span<byte> bytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(bytes);
         return Convert.ToBase64String(bytes);
+    }
+
+    public void Dispose()
+    {
+        foreach (var item in _cache)
+        {
+            item.Value?.Dispose();
+        }
+        _cache.Clear();
     }
 }

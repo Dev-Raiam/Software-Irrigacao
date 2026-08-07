@@ -2,6 +2,7 @@
 using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Toolbox.Core.Extensions;
 using static Toolbox.Industrial.Core.Security.Certificate;
 
 namespace Toolbox.Industrial.Core.Security;
@@ -10,9 +11,12 @@ internal static class CertificateFactory
 {
     public static X509Certificate2 Create(
         Purpose purpose,
-        ICertificateAuthorityService authorityService
+        ICertificateAuthorityService authorityService,
+        string subject = "localhost"
     )
     {
+        subject.ThrowIfNull(nameof(subject));
+
         using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
 
         var request = new CertificateRequest(
@@ -51,7 +55,7 @@ internal static class CertificateFactory
 
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(eku, critical: true));
 
-        request.CertificateExtensions.Add(BuildSubjectAlternativeNames());
+        request.CertificateExtensions.Add(BuildSubjectAlternativeNames(subject));
 
         var certificate = authorityService.Sign(
             request,
@@ -69,12 +73,16 @@ internal static class CertificateFactory
         return certificate;
     }
 
-    private static X509Extension BuildSubjectAlternativeNames()
+    private static X509Extension BuildSubjectAlternativeNames(string subject)
     {
         var san = new SubjectAlternativeNameBuilder();
 
-        san.AddDnsName("localhost");
+        if (!subject.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            san.AddDnsName(subject);
+        }
 
+        san.AddDnsName("localhost");
         san.AddDnsName(Environment.MachineName);
 
         try
