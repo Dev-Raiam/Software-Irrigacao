@@ -115,8 +115,8 @@ internal sealed class Heartbeat : BackgroundService
 internal sealed record HeartbeatOptions
 {
     public TimeSpan IntervalHeartbeat { get; init; } = TimeSpan.FromSeconds(10);
-    public TimeSpan IntervalSystemMetrics { get; init; } = TimeSpan.FromSeconds(5);
-    public TimeSpan IntervalProcessMetrics { get; init; } = TimeSpan.FromSeconds(5);
+    public TimeSpan IntervalSystemMetrics { get; init; } = TimeSpan.FromMinutes(2);
+    public TimeSpan IntervalProcessMetrics { get; init; } = TimeSpan.FromMinutes(3);
     public TimeSpan IntervalNetworkMetrics { get; init; } = TimeSpan.FromSeconds(10);
     public TimeSpan IntervalHardwareMetrics { get; init; } = TimeSpan.FromSeconds(30);
     public TimeSpan IntervalIndustrialMetrics { get; init; } = TimeSpan.FromSeconds(10);

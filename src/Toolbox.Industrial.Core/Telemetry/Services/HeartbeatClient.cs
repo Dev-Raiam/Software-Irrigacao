@@ -1,8 +1,5 @@
-﻿using System.Net.Http.Json;
-using System.Numerics;
-using Newtonsoft.Json;
-using Toolbox.Industrial.Core.Communication.Api;
-using Toolbox.Industrial.Core.Communication.RaspIO;
+﻿using Newtonsoft.Json;
+using System.Net.Http.Json;
 using Toolbox.Industrial.Core.Data;
 
 namespace Toolbox.Industrial.Core.Telemetry.Services;
