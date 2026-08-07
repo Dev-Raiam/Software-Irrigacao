@@ -8,5 +8,5 @@ internal sealed record HeartbeatRequest
     public ApplicationProcessMetrics? Process { get; set; }
     public NetworkMetrics? Network { get; set; }
     public HardwareMetrics? Hardware { get; set; }
-    public ApplicationStatusMetrics? Status { get; set; }
+    public HealthCheckMetrics? Status { get; set; }
 }

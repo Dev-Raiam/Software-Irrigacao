@@ -119,5 +119,5 @@ internal sealed record HeartbeatOptions
     public TimeSpan IntervalProcessMetrics { get; init; } = TimeSpan.FromMinutes(3);
     public TimeSpan IntervalNetworkMetrics { get; init; } = TimeSpan.FromSeconds(10);
     public TimeSpan IntervalHardwareMetrics { get; init; } = TimeSpan.FromSeconds(30);
-    public TimeSpan IntervalIndustrialMetrics { get; init; } = TimeSpan.FromSeconds(10);
+    public TimeSpan IntervalHealthCheckMetrics { get; init; } = TimeSpan.FromMinutes(1);
 }

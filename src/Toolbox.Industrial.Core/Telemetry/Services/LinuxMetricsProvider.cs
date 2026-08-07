@@ -85,7 +85,7 @@ internal class LinuxMetricsProvider : IMetricsProvider
                 WorkingSet = ParseLong(values, "working_set"),
                 ThreadCount = (int)ParseLong(values, "threads"),
                 RunningTime = TimeSpan.FromSeconds(ParseLong(values, "running_seconds")),
-                //PrivateMemory = ParseLong(values, "private_memory"),
+                PrivateMemory = ParseLong(values, "private_memory"),
                 AdditionalProperties = IsFirstGetProcess
                     ? new Dictionary<string, object>
                     {
@@ -154,16 +154,16 @@ internal class LinuxMetricsProvider : IMetricsProvider
             return new NetworkMetrics
             {
                 TimestampUtc = DateTime.UtcNow,
-                BytesSent = ParseLong(values, "bytes_sent"),
-                BytesReceived = ParseLong(values, "bytes_received"),
+                //BytesSent = ParseLong(values, "bytes_sent"),
+                //BytesReceived = ParseLong(values, "bytes_received"),
                 InternetAvailable = values.GetValueOrDefault("internet") == "true",
                 AdditionalProperties = IsFirstGetNetwork
                     ? new Dictionary<string, object>
                     {
                         ["hostname"] = values.GetValueOrDefault("hostname", string.Empty),
                         ["ipAddress"] = values.GetValueOrDefault("ip", string.Empty),
-                        ["macAddress"] = values.GetValueOrDefault("mac", string.Empty),
-                        ["interface"] = values.GetValueOrDefault("interface", string.Empty),
+                        //["macAddress"] = values.GetValueOrDefault("mac", string.Empty),
+                        //["interface"] = values.GetValueOrDefault("interface", string.Empty),
                     }
                     : null,
             };

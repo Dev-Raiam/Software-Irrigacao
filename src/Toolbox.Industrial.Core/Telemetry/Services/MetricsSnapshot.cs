@@ -6,8 +6,8 @@ internal sealed class MetricsSnapshot
 {
     private static readonly HeartbeatRequest _lastTake = new();
     private ApplicationProcessMetrics? _process;
-    private ApplicationStatusMetrics? _status;
     private OperationSystemMetrics? _system;
+    private HealthCheckMetrics? _status;
     private HardwareMetrics? _hardware;
     private NetworkMetrics? _network;
 
@@ -19,7 +19,7 @@ internal sealed class MetricsSnapshot
 
     public void Update(NetworkMetrics metrics) => Interlocked.Exchange(ref _network, metrics);
 
-    public void Update(ApplicationStatusMetrics metrics) => Interlocked.Exchange(ref _status, metrics);
+    public void Update(HealthCheckMetrics metrics) => Interlocked.Exchange(ref _status, metrics);
 
     public HeartbeatRequest Take()
     {
