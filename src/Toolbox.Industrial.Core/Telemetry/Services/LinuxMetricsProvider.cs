@@ -17,16 +17,20 @@ internal class LinuxMetricsProvider : IMetricsProvider
         CancellationToken cancellationToken
     )
     {
-        const string script = """
+        var script = """
             LC_ALL=C
             echo "cpu=$(top -bn1 | grep 'Cpu(s)' | awk '{print 100-$8}')"
-            free -b | awk '/^Mem:/{print "mem_usage=" ($2-$7)/$2*100; print "mem_total=" $2; print "mem_available=" $7}'
-            df -B1 / | awk 'NR==2{print "disk_usage=" ($2-$4)/$2*100; print "disk_total=" $2; print "disk_free=" $4}'
+            free -m | awk '/^Mem:/{print "mem_usage=" $2-$7; print "mem_total=" $2; print "mem_available=" $7}'
+            df -B1M / | awk 'NR==2{print "disk_usage=" $2-$4; print "disk_total=" $2; print "disk_free=" $4}'
             echo "uptime=$(awk '{print $1}' /proc/uptime)"
-            echo "os=$(. /etc/os-release; echo "$PRETTY_NAME")"
-            echo "arch=$(uname -m)"
             """;
-
+        if (IsFirstGetSystem)
+        {
+            script += """
+                echo "os=$(. /etc/os-release; echo "$PRETTY_NAME")"
+                echo "arch=$(uname -m)"
+                """;
+        }
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
         try
         {
@@ -68,7 +72,8 @@ internal class LinuxMetricsProvider : IMetricsProvider
     {
         var script = """
             LC_ALL=C
-            ps -o rss=,vsz=,nlwp=,etimes=,pcpu= -p PID_PLACEHOLDER | awk '{print "working_set=" $1*1024; print "private_memory=" $2*1024; print "threads=" $3; print "running_seconds=" $4; print "cpu=" $5}'
+            ps -o nlwp=,etimes=,pcpu= -p PID_PLACEHOLDER | awk '{print "threads=" $1; print "running_seconds=" $2; print "cpu=" $3}'
+            awk -F':[ \t]*' 'BEGIN{w=0;p=0;hasP=0} /^VmRSS:/{w=int($2/1024)} /^RssAnon:/{p=int($2/1024);hasP=1} END{print "working_set=" w; print "private_memory=" (hasP ? p : w)}' /proc/PID_PLACEHOLDER/status
             """.Replace(
             "PID_PLACEHOLDER",
             Environment.ProcessId.ToString(CultureInfo.InvariantCulture)
@@ -89,7 +94,8 @@ internal class LinuxMetricsProvider : IMetricsProvider
                 AdditionalProperties = IsFirstGetProcess
                     ? new Dictionary<string, object>
                     {
-                        ["Version"] = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.0.0",
+                        ["Version"] =
+                            Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.0.0",
                         ["Runtime"] = RuntimeInformation.FrameworkDescription,
                     }
                     : null,
@@ -105,10 +111,8 @@ internal class LinuxMetricsProvider : IMetricsProvider
     {
         const string script = """
             LC_ALL=C
-            echo "cpu_temp=$(awk '{print $1/1000}' /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)"
-            echo "board_temp=$(awk '{print $1/1000}' /sys/class/thermal/thermal_zone1/temp 2>/dev/null || echo 0)"
-            echo "voltage=$(awk 'NF{print $1/1000; exit}' /sys/class/hwmon/hwmon*/in*_input 2>/dev/null)"
-            echo "cpu_freq=$(awk '{print $1/1000}' /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null || awk -F': ' '/cpu MHz/{print $2; exit}' /proc/cpuinfo 2>/dev/null || echo 0)"
+            echo "cpu_temp=$(awk '{printf "%.1f\n", $1/1000}' /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)"
+            echo "cpu_freq=$(awk '{printf "%.0f\n", $1/1000}' /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null || awk -F': ' '/cpu MHz/{printf "%.0f\n", $2; exit}' /proc/cpuinfo 2>/dev/null || echo 0)"
             """;
 
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
@@ -118,14 +122,7 @@ internal class LinuxMetricsProvider : IMetricsProvider
             {
                 TimestampUtc = DateTime.UtcNow,
                 CpuFrequency = ParseDouble(values, "cpu_freq"),
-                CpuTemperature = ParseDouble(values, "cpu_temp"),
-                AdditionalProperties = IsFirstGetHardware
-                    ? new Dictionary<string, object>
-                    {
-                        ["boardTemperature"] = ParseDouble(values, "board_temp"),
-                        ["voltage"] = ParseDouble(values, "voltage"),
-                    }
-                    : null,
+                CpuTemperature = ParseDouble(values, "cpu_temp")
             };
         }
         finally
@@ -136,17 +133,17 @@ internal class LinuxMetricsProvider : IMetricsProvider
 
     public async ValueTask<NetworkMetrics> GetNetworkAsync(CancellationToken cancellationToken)
     {
-        const string script = """
+        var script = """
             LC_ALL=C
-            echo "hostname=$(hostname)"
-            echo "ip=$(ip -o -4 addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]; exit}')"
-            iface=$(ip route get 8.8.8.8 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="dev"){print $(i+1); exit}}')
-            [ -z "$iface" ] && iface=$(ip -o link show up 2>/dev/null | awk -F': ' '$2!="lo"{print $2; exit}')
-            echo "interface=$iface"
-            echo "mac=$(cat /sys/class/net/$iface/address 2>/dev/null)"
-            awk -F'[: ]+' '/:/{if($2!="lo"){rx+=$3; tx+=$11}} END{print "bytes_received="rx; print "bytes_sent="tx}' /proc/net/dev
             ping -c1 -W2 8.8.8.8 >/dev/null 2>&1 && echo "internet=true" || echo "internet=false"
             """;
+        if (IsFirstGetNetwork) 
+        {
+            script += """
+                echo "hostname=$(hostname)"
+                echo "ip=$(ip -o -4 addr show scope global 2>/dev/null | awk '{split($4,a,"/"); print a[1]; exit}')"
+                """;
+        }
 
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
         try
