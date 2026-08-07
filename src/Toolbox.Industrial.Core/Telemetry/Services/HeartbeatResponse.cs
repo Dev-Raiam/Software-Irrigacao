@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using System.Text.Json;
 
 namespace Toolbox.Industrial.Core.Telemetry.Services;
 

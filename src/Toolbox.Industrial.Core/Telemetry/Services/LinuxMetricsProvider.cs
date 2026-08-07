@@ -2,12 +2,19 @@
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Toolbox.Core.Telemetry;
 
 namespace Toolbox.Industrial.Core.Telemetry.Services;
 
 internal class LinuxMetricsProvider : IMetricsProvider
 {
-    public async ValueTask<SystemMetrics> GetSystemAsync(CancellationToken cancellationToken)
+    public static bool IsFirstGetProcess = true;
+    public static bool IsFirstGetSystem = true;
+    public static bool IsFirstGetNetwork = true;
+
+    public async ValueTask<OperationSystemMetrics> GetSystemAsync(
+        CancellationToken cancellationToken
+    )
     {
         const string script = """
             LC_ALL=C
@@ -20,22 +27,43 @@ internal class LinuxMetricsProvider : IMetricsProvider
             """;
 
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
-
-        return new SystemMetrics(
-            ParseDouble(values, "cpu"),
-            ParseDouble(values, "mem_usage"),
-            ParseLong(values, "mem_total"),
-            ParseLong(values, "mem_available"),
-            ParseDouble(values, "disk_usage"),
-            ParseLong(values, "disk_total"),
-            ParseLong(values, "disk_free"),
-            TimeSpan.FromSeconds(ParseDouble(values, "uptime")),
-            values.GetValueOrDefault("os", RuntimeInformation.OSDescription),
-            values.GetValueOrDefault("arch", RuntimeInformation.OSArchitecture.ToString())
-        );
+        try
+        {
+            return new OperationSystemMetrics
+            {
+                TimestampUtc = DateTime.UtcNow,
+                Uptime = TimeSpan.FromSeconds(ParseDouble(values, "uptime")),
+                CpuUsage = ParseDouble(values, "cpu"),
+                MemoryUsage = ParseDouble(values, "mem_usage"),
+                TotalMemory = ParseLong(values, "mem_total"),
+                AvailableMemory = ParseLong(values, "mem_available"),
+                DiskUsage = ParseDouble(values, "disk_usage"),
+                TotalDisk = ParseLong(values, "disk_total"),
+                FreeDisk = ParseLong(values, "disk_free"),
+                AdditionalProperties = IsFirstGetSystem
+                    ? new Dictionary<string, object>
+                    {
+                        ["operatingSystem"] = values.GetValueOrDefault(
+                            "os",
+                            RuntimeInformation.OSDescription
+                        ),
+                        ["architecture"] = values.GetValueOrDefault(
+                            "arch",
+                            RuntimeInformation.OSArchitecture.ToString()
+                        ),
+                    }
+                    : null,
+            };
+        }
+        finally
+        {
+            IsFirstGetSystem = false;
+        }
     }
 
-    public async ValueTask<ProcessMetrics> GetProcessAsync(CancellationToken cancellationToken)
+    public async ValueTask<ApplicationProcessMetrics> GetProcessAsync(
+        CancellationToken cancellationToken
+    )
     {
         var script = """
             LC_ALL=C
@@ -48,16 +76,29 @@ internal class LinuxMetricsProvider : IMetricsProvider
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
 
         var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "0.0.0.0";
-
-        return new ProcessMetrics(
-            version,
-            RuntimeInformation.FrameworkDescription,
-            ParseLong(values, "working_set"),
-            ParseLong(values, "private_memory"),
-            (int)ParseLong(values, "threads"),
-            ParseDouble(values, "cpu"),
-            TimeSpan.FromSeconds(ParseLong(values, "running_seconds"))
-        );
+        try
+        {
+            return new ApplicationProcessMetrics
+            {
+                TimestampUtc = DateTime.UtcNow,
+                CpuUsage = ParseDouble(values, "cpu"),
+                WorkingSet = ParseLong(values, "working_set"),
+                ThreadCount = (int)ParseLong(values, "threads"),
+                RunningTime = TimeSpan.FromSeconds(ParseLong(values, "running_seconds")),
+                AdditionalProperties = IsFirstGetProcess
+                    ? new Dictionary<string, object>
+                    {
+                        ["Version"] = version,
+                        ["Runtime"] = RuntimeInformation.FrameworkDescription,
+                        ["PrivateMemory"] = ParseLong(values, "private_memory"),
+                    }
+                    : null,
+            };
+        }
+        finally
+        {
+            IsFirstGetProcess = false;
+        }
     }
 
     public async ValueTask<HardwareMetrics> GetHardwareAsync(CancellationToken cancellationToken)
@@ -72,12 +113,15 @@ internal class LinuxMetricsProvider : IMetricsProvider
 
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
 
-        return new HardwareMetrics(
-            ParseDouble(values, "cpu_temp"),
-            ParseDouble(values, "board_temp"),
-            ParseDouble(values, "voltage"),
-            ParseDouble(values, "cpu_freq")
-        );
+        return new HardwareMetrics
+        {
+            TimestampUtc = DateTime.UtcNow,
+            CpuFrequency = ParseDouble(values, "cpu_freq"),
+            CpuTemperature = ParseDouble(values, "cpu_temp"),
+            //AdditionalProperties = { },
+            //BoardTemperature = ParseDouble(values, "board_temp"),
+            //Voltage = ParseDouble(values, "voltage"),
+        };
     }
 
     public async ValueTask<NetworkMetrics> GetNetworkAsync(CancellationToken cancellationToken)
@@ -96,15 +140,22 @@ internal class LinuxMetricsProvider : IMetricsProvider
 
         var values = ParseKeyValues(await RunScriptAsync(script, cancellationToken));
 
-        return new NetworkMetrics(
-            values.GetValueOrDefault("hostname", string.Empty),
-            values.GetValueOrDefault("ip", string.Empty),
-            values.GetValueOrDefault("mac", string.Empty),
-            values.GetValueOrDefault("interface", string.Empty),
-            ParseLong(values, "bytes_sent"),
-            ParseLong(values, "bytes_received"),
-            values.GetValueOrDefault("internet") == "true"
-        );
+        return new NetworkMetrics
+        {
+            TimestampUtc = DateTime.UtcNow,
+            BytesSent = ParseLong(values, "bytes_sent"),
+            BytesReceived = ParseLong(values, "bytes_received"),
+            InternetAvailable = values.GetValueOrDefault("internet") == "true",
+            AdditionalProperties = IsFirstGetNetwork
+                ? new Dictionary<string, object>
+                {
+                    ["hostname"] = values.GetValueOrDefault("hostname", string.Empty),
+                    ["ipAddress"] = values.GetValueOrDefault("ip", string.Empty),
+                    ["macAddress"] = values.GetValueOrDefault("mac", string.Empty),
+                    ["interface"] = values.GetValueOrDefault("interface", string.Empty),
+                }
+                : null,
+        };
     }
 
     private static async Task<string> RunScriptAsync(

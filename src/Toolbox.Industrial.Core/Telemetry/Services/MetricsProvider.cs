@@ -1,10 +1,12 @@
-﻿namespace Toolbox.Industrial.Core.Telemetry.Services;
+﻿using Toolbox.Core.Telemetry;
+
+namespace Toolbox.Industrial.Core.Telemetry.Services;
 
 internal interface IMetricsProvider
 {
-    ValueTask<SystemMetrics> GetSystemAsync(CancellationToken cancellationToken);
+    ValueTask<OperationSystemMetrics> GetSystemAsync(CancellationToken cancellationToken);
 
-    ValueTask<ProcessMetrics> GetProcessAsync(CancellationToken cancellationToken);
+    ValueTask<ApplicationProcessMetrics> GetProcessAsync(CancellationToken cancellationToken);
 
     ValueTask<HardwareMetrics> GetHardwareAsync(CancellationToken cancellationToken);
 

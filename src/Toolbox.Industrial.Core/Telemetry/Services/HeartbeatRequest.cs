@@ -1,12 +1,11 @@
-﻿namespace Toolbox.Industrial.Core.Telemetry.Services;
+﻿using Toolbox.Core.Telemetry;
+
+namespace Toolbox.Industrial.Core.Telemetry.Services;
 
 internal sealed record HeartbeatRequest(
-    SystemMetrics? System,
-    ProcessMetrics? Process,
+    OperationSystemMetrics? System,
+    ApplicationProcessMetrics? Process,
     NetworkMetrics? Network,
     HardwareMetrics? Hardware,
-    IndustrialMetrics? Industrial
-)
-{
-    public DateTime TimestampUtc { get; init; } = DateTime.UtcNow;
-}
+    ApplicationStatusMetrics? Status
+);

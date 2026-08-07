@@ -1,24 +1,26 @@
-﻿namespace Toolbox.Industrial.Core.Telemetry.Services;
+﻿using Toolbox.Core.Telemetry;
+
+namespace Toolbox.Industrial.Core.Telemetry.Services;
 
 internal class WindowsMetricsProvider : IMetricsProvider
 {
     public ValueTask<HardwareMetrics> GetHardwareAsync(CancellationToken cancellationToken)
     {
-        return new ValueTask<HardwareMetrics>();
+        return new ValueTask<HardwareMetrics>(new HardwareMetrics());
     }
 
     public ValueTask<NetworkMetrics> GetNetworkAsync(CancellationToken cancellationToken)
     {
-        return new ValueTask<NetworkMetrics>();
+        return new ValueTask<NetworkMetrics>(new NetworkMetrics());
     }
 
-    public ValueTask<ProcessMetrics> GetProcessAsync(CancellationToken cancellationToken)
+    public ValueTask<ApplicationProcessMetrics> GetProcessAsync(CancellationToken cancellationToken)
     {
-        return new ValueTask<ProcessMetrics>();
+        return new ValueTask<ApplicationProcessMetrics>(new ApplicationProcessMetrics());
     }
 
-    public ValueTask<SystemMetrics> GetSystemAsync(CancellationToken cancellationToken)
+    public ValueTask<OperationSystemMetrics> GetSystemAsync(CancellationToken cancellationToken)
     {
-        return new ValueTask<SystemMetrics>();
+        return new ValueTask<OperationSystemMetrics>(new OperationSystemMetrics());
     }
 }
