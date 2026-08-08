@@ -2,7 +2,7 @@ using LiteDB;
 
 namespace Toolbox.Industrial.Core.Data;
 
-public class Telemetria : Entity<Guid, object>
+public class Telemetria : Entity<object>
 {
     protected Telemetria() { }
 

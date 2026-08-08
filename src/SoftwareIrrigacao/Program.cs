@@ -1,8 +1,8 @@
+using System.Diagnostics;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
-using System.Diagnostics;
-using System.Net;
 using Toolbox.Industrial.Core.Data;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);

@@ -1,13 +1,18 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Toolbox.Industrial.Core.Security;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
 
 public sealed record Configuration(string BaseUrl);
 
-public interface IApiClient
+public interface IApiClient : IDisposable
 {
-    Task<Result<T>> SendAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken, HttpClient? httpClient = null);
+    Task<Result<T>> SendAsync<T>(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken,
+        HttpClient? httpClient = null
+    );
 }
 
 public sealed class ApiClient : IApiClient
@@ -16,10 +21,12 @@ public sealed class ApiClient : IApiClient
     internal static string? BaseAddress;
 
     internal const string Anonymous = "anonymous";
+
     //internal const string MasterLocal = "master.local";
     public static bool IsOnline => Online;
 
     private readonly HttpClient _httpClient;
+    private bool _disposed = false;
 
     //private readonly ILogger<ApiClient> _logger;
 
@@ -87,5 +94,14 @@ public sealed class ApiClient : IApiClient
             //_logger.LogError(ex, "Erro inesperado ao chamar {Url}", request.RequestUri);
             return Result<T>.Fail($"Erro inesperado {ex.Message}", ex);
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        _httpClient.Dispose();
     }
 }

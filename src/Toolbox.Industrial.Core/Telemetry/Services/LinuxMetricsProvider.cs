@@ -122,7 +122,7 @@ internal class LinuxMetricsProvider : IMetricsProvider
             {
                 TimestampUtc = DateTime.UtcNow,
                 CpuFrequency = ParseDouble(values, "cpu_freq"),
-                CpuTemperature = ParseDouble(values, "cpu_temp")
+                CpuTemperature = ParseDouble(values, "cpu_temp"),
             };
         }
         finally
@@ -137,7 +137,7 @@ internal class LinuxMetricsProvider : IMetricsProvider
             LC_ALL=C
             ping -c1 -W2 8.8.8.8 >/dev/null 2>&1 && echo "internet=true" || echo "internet=false"
             """;
-        if (IsFirstGetNetwork) 
+        if (IsFirstGetNetwork)
         {
             script += """
                 echo "hostname=$(hostname)"

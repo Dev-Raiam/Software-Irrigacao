@@ -60,7 +60,8 @@ internal static class CertificateFactory
         var certificate = authorityService.Sign(
             request,
             DateTimeOffset.UtcNow.AddDays(-1),
-            DateTimeOffset.UtcNow.AddYears(20)
+            DateTimeOffset.UtcNow.AddYears(20),
+            subject
         );
 
         certificate = certificate.CopyWithPrivateKey(ecdsa);

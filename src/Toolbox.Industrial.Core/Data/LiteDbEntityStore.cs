@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using LiteDB;
-using Toolbox.Industrial.Core.Security;
 
 namespace Toolbox.Industrial.Core.Data;
 
@@ -53,7 +52,7 @@ internal class LiteDbEntityStore : IEntityStore
         Task.FromResult(
             _database
                 .GetCollection<TEntity>(Entity.GetCollection<TEntity>())
-                .Delete(new BsonValue(entity.BsonId))
+                .Delete(new BsonValue(entity.Id))
         );
 
     public Task<int> DeleteManyAsync<TEntity>(Expression<Func<TEntity, bool>> predicate)

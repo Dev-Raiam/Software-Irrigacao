@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
 using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
@@ -13,14 +14,13 @@ internal interface ICertificateAuthorityService : IDisposable
 {
     X509Certificate2 GetCertificate(string subject = "localhost");
 
-    public Configuracao? GetCertificateStore(string subject = "localhost");
-
     void Save(X509Certificate2 certificate, string subject = "localhost");
 
     X509Certificate2 Sign(
         CertificateRequest request,
         DateTimeOffset notBefore,
-        DateTimeOffset notAfter
+        DateTimeOffset notAfter,
+        string subject
     );
 
     void Renew(string subject = "localhost", X509Certificate2? certificate = null);
@@ -52,16 +52,9 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         }
     }
 
-    public Configuracao? GetCertificateStore(string subject = "localhost")
-    {
-        subject.ThrowIfNull(nameof(subject));
-        var id = $"{Entity.Keys.Security.CertificateAuthority}{subject}".GetId();
-        return _store.FirstOrDefault<Configuracao>(x => x.Id == id);
-    }
-
     private X509Certificate2 LoadOrCreate(string subject)
     {
-        var data = GetCertificateStore(subject)?.Valor as Certificate;
+        var data = _store.GetCertificate(Entity.Keys.Security.CertificateAuthority, subject);
         if (data is null)
         {
             _logger.LogInformation("Creating Root Certificate Authority.");
@@ -80,13 +73,14 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
     public X509Certificate2 Sign(
         CertificateRequest request,
         DateTimeOffset notBefore,
-        DateTimeOffset notAfter
+        DateTimeOffset notAfter,
+        string subject
     )
     {
         Span<byte> serial = stackalloc byte[16];
 
         RandomNumberGenerator.Fill(serial);
-        var certificate = GetCertificate();
+        var certificate = GetCertificate(subject);
         return request.Create(certificate, notBefore, notAfter, serial);
     }
 
@@ -178,8 +172,8 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
             CreatedAt = DateTime.UtcNow,
         };
 
-        var data = GetCertificateStore(subject);
-        if (data == null)
+        var certificado = _store.ObterCertificado(Entity.Keys.Security.CertificateAuthority, subject);
+        if (certificado == null)
         {
             _store
                 .InsertAsync(
@@ -195,8 +189,8 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
 
             return;
         }
-        data.Atualizar(config);
-        _store.UpdateAsync(data).GetAwaiter().GetResult();
+        certificado.Atualizar(config);
+        _store.UpdateAsync(certificado).GetAwaiter().GetResult();
     }
 
     private static string GeneratePassword()

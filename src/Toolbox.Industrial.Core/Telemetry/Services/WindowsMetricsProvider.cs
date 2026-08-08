@@ -27,7 +27,9 @@ internal class WindowsMetricsProvider : IMetricsProvider
         return await new ValueTask<NetworkMetrics>(result);
     }
 
-    public async ValueTask<ApplicationProcessMetrics> GetProcessAsync(CancellationToken cancellationToken)
+    public async ValueTask<ApplicationProcessMetrics> GetProcessAsync(
+        CancellationToken cancellationToken
+    )
     {
         var process = Process.GetCurrentProcess();
         var runningTime = DateTime.UtcNow - process.StartTime.ToUniversalTime();
@@ -35,7 +37,8 @@ internal class WindowsMetricsProvider : IMetricsProvider
         {
             TimestampUtc = DateTime.UtcNow,
             ThreadCount = process.Threads.Count,
-            CpuUsage = process.TotalProcessorTime.TotalMilliseconds / runningTime.TotalMilliseconds * 100,
+            CpuUsage =
+                process.TotalProcessorTime.TotalMilliseconds / runningTime.TotalMilliseconds * 100,
             RunningTime = runningTime,
             WorkingSet = process.WorkingSet64,
             PrivateMemory = process.PrivateMemorySize64,
@@ -43,7 +46,9 @@ internal class WindowsMetricsProvider : IMetricsProvider
         return await new ValueTask<ApplicationProcessMetrics>(result);
     }
 
-    public async ValueTask<OperationSystemMetrics> GetSystemAsync(CancellationToken cancellationToken)
+    public async ValueTask<OperationSystemMetrics> GetSystemAsync(
+        CancellationToken cancellationToken
+    )
     {
         var result = new OperationSystemMetrics
         {

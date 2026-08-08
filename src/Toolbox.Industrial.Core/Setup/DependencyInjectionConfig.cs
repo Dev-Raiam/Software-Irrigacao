@@ -22,11 +22,11 @@ using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Security.Cryptography;
 using Toolbox.Industrial.Core.Telemetry;
 using Toolbox.Industrial.Core.Telemetry.Services;
-using static System.Net.WebRequestMethods;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -45,7 +45,7 @@ namespace Toolbox.Industrial.Core.Setup
             {
                 var store = provider.GetRequiredService<IEntityStore>();
                 ApiClient.BaseAddress = store
-                    .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Api.BaseAddress)
+                    .Get<Configuracao>(Entity.Keys.Api.BaseAddress)
                     ?.Valor.ToString();
             }
 
@@ -78,12 +78,6 @@ namespace Toolbox.Industrial.Core.Setup
             params Assembly[] assemblies
         )
         {
-            //services.AddMemoryCache();
-            //services
-            //    .AddJwksManager() // (options => options.Jws = Algorithm.Create(AlgorithmType.ECDsa, JwtType.Jws))
-            //    .PersistKeysInMemory();
-
-            //.PersistKeysToDatabaseStore<AutenticacaoDataContext>();
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
             services.AddSingleton<ICryptography, Cryptography>();
@@ -137,7 +131,7 @@ namespace Toolbox.Industrial.Core.Setup
                 // Application Discriminator (isolamento entre aplicações)
                 .SetApplicationName("Automacao")
                 .PersistKeysToFileSystem(
-                    new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Keys"))
+                    new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys"))
                 );
 
             services.ConfigureHttpJsonOptions(options =>
@@ -155,12 +149,6 @@ namespace Toolbox.Industrial.Core.Setup
                     ContractResolver = new CamelCasePropertyNamesContractResolver(),
                     NullValueHandling = NullValueHandling.Ignore,
                 };
-
-            //services.AddSingleton<HeartbeatOld>();
-
-            //services.AddSingleton<IHeartbeat>(sp => sp.GetRequiredService<HeartbeatOld>());
-
-            //services.AddHostedService(sp => sp.GetRequiredService<HeartbeatOld>());
 
             services.AddSingleton<ISystemMetricsCollector, SystemMetricsCollector>();
             if (OperatingSystem.IsWindows())
@@ -189,10 +177,7 @@ namespace Toolbox.Industrial.Core.Setup
                 {
                     var httpClient = new HttpClient();
                     ConfigureClient(provider, httpClient);
-                    return new ApiClient(
-                        httpClient
-                    //provider.GetRequiredService<ILogger<ApiClient>>()
-                    );
+                    return new ApiClient(httpClient);
                 }
             );
 
@@ -216,20 +201,27 @@ namespace Toolbox.Industrial.Core.Setup
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
                     var logger = provider.GetRequiredService<ILogger<Mqtt>>();
-                    var config = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Local)
-                        ?.Valor;
+                    var config =
+                        store.Get<Configuracao>(Entity.Keys.Mqtt.Local)?.Valor as MqttConfiguration;
 
                     var certificateService = provider.GetRequiredKeyedService<ICertificateService>(
                         Purpose.MqttLocal
                     );
 
-                    var subject = (store.FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttLocal)?.Valor as Certificate)?.Subject;
+                    //var certificate =
+                    //    certificateService
+                    //        .GetCertificateStore(Entity.Keys.Security.CertificateMqttLocal)
+                    //        ?.Valor as Certificate;
 
+                    var certificate = store.GetCertificate(
+                        Entity.Keys.Security.CertificateMqttLocal
+                    );
+
+                    var subject = certificate?.Subject ?? config?.Host ?? "localhost";
                     var mqtt = new Mqtt(
                         logger: logger,
-                        certificate: subject != null ? certificateService.GetCertificate(subject!) : certificateService.GetCertificate(),
-                        config: (MqttConfiguration?)config ?? new MqttConfiguration()
+                        certificate: certificateService.GetCertificate(subject),
+                        config: config ?? new MqttConfiguration()
                     );
 
                     return new MqttManager(mqtt);
@@ -241,32 +233,33 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     Mqtt? mqtt = null;
+
+                    // Apenas o controlador master deve se conectar ao broker remoto
                     if (Controlador.Master)
                     {
-                        ICertificateService? certificateService = null;
                         var logger = provider.GetRequiredService<ILogger<Mqtt>>();
                         var store = provider.GetRequiredService<IEntityStore>();
-                        var config = store
-                            .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Mqtt.Remoto)
-                            ?.Valor;
+                        var certificateService =
+                            provider.GetRequiredKeyedService<ICertificateService>(
+                                Purpose.MqttRemoto
+                            );
 
-                        var certificate = store
-                            .FirstOrDefault<Configuracao>(x =>
-                                x.Id == Entity.Keys.Security.CertificateMqttRemoto
-                            )
-                            ?.Valor as Certificate;
+                        //var certificate =
+                        //    certificateService
+                        //        .GetCertificateStore(Entity.Keys.Security.CertificateMqttRemoto)
+                        //        ?.Valor as Certificate;
 
-                        if (certificate != null)
-                        {
-                            certificateService =
-                                provider.GetRequiredKeyedService<ICertificateService>(
-                                    Purpose.MqttRemoto
-                                );
-                        }
+                        var certificate = store.GetCertificate(
+                            Entity.Keys.Security.CertificateMqttRemoto
+                        );
+
+                        var config = store.Get<Configuracao>(Entity.Keys.Mqtt.Remoto)?.Valor;
+
+                        var subject = certificate?.Subject ?? "localhost";
 
                         mqtt = new Mqtt(
                             logger: logger,
-                            certificate: certificate?.Subject != null ? certificateService.GetCertificate(certificate.Subject) : certificateService.GetCertificate(),
+                            certificate: certificateService.GetCertificate(subject),
                             config: (MqttConfiguration?)config ?? new MqttConfiguration()
                         );
                     }
@@ -309,9 +302,7 @@ namespace Toolbox.Industrial.Core.Setup
                 async (context, provider, config) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
-                    var cfg = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
-                        ?.Valor.ToString();
+                    var cfg = store.Get<Configuracao>(Entity.Keys.Serilog.Config)?.Valor.ToString();
 
                     if (cfg == null)
                     {

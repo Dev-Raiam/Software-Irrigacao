@@ -5,6 +5,7 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security.Cryptography;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -72,43 +73,29 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         #region Verificar reconfiguração
 
-        Guid.TryParse(
-            (
-                await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                    x.Id == Entity.Keys.Auth.ContextoId
-                )
-            )?.Valor.ToString(),
-            out var contextoId
-        );
-
+        //Guid.TryParse(
+        //    (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.ContextoId))?.Valor.ToString(),
+        //    out var contextoId
+        //);
+        var contextoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.Auth.ContextoId);
         var restart = contextoId == Guid.Empty;
         if (contextoId != Guid.Empty)
         {
-            Guid.TryParse(
-                (
-                    await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                        x.Id == Entity.Keys.ControladorId
-                    )
-                )?.Valor.ToString(),
-                out var controladorId
-            );
-
-            Guid.TryParse(
-                (
-                    await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                        x.Id == Entity.Keys.PainelId
-                    )
-                )?.Valor.ToString(),
-                out var painelId
-            );
-
-            Guid.TryParse(
-                (
-                    await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId)
-                )?.Valor.ToString(),
-                out var contaId
-            );
-
+            //Guid.TryParse(
+            //    (await _store.GetAsync<Configuracao>(Entity.Keys.ControladorId))?.Valor.ToString(),
+            //    out var controladorId
+            //);
+            var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
+            //Guid.TryParse(
+            //    (await _store.GetAsync<Configuracao>(Entity.Keys.PainelId))?.Valor.ToString(),
+            //    out var painelId
+            //);
+            var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
+            //Guid.TryParse(
+            //    (await _store.GetAsync<Configuracao>(Entity.Keys.ContaId))?.Valor.ToString(),
+            //    out var contaId
+            //);
+            var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
             if (
                 controladorId != request.ControladorId
                 || contextoId != request.ContextoId

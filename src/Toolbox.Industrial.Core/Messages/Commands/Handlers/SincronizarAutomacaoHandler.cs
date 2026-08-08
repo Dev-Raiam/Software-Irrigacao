@@ -5,6 +5,7 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 
 namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
@@ -31,16 +32,13 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         CancellationToken cancellationToken
     )
     {
+        var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
         if (
-            !Guid.TryParse(
-                (
-                    await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                        x.Id == Entity.Keys.PainelId
-                    )
-                )?.Valor.ToString(),
-                out var painelId
-            )
-            || painelId == Guid.Empty
+             //!Guid.TryParse(
+             //    (await _store.GetAsync<Configuracao>(Entity.Keys.PainelId))?.Valor.ToString(),
+             //    out var painelId
+             //) ||
+            painelId == Guid.Empty
         )
         {
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
@@ -54,17 +52,11 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
 
     private async Task<bool> CredenciaisRegistradasAsync()
     {
-        var chave = (
-            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
-        )?.Valor;
+        var chave = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Chave))?.Valor;
 
-        var segredo = (
-            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
-        )?.Valor;
+        var segredo = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Segredo))?.Valor;
 
-        var contextoId = (
-            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
-        )?.Valor;
+        var contextoId = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.ContextoId))?.Valor;
 
         return chave != null && segredo != null && contextoId != null;
     }

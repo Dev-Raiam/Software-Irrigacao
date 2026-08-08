@@ -3,7 +3,7 @@ using controlador = Toolbox.Industrial.Core.Communication.Api.Contracts.Controla
 
 namespace Toolbox.Industrial.Core.Data;
 
-public class Controlador : Entity<Guid, controlador>
+public class Controlador : Entity<controlador>
 {
     public static bool Master = false;
     public static Guid PainelId = Guid.Empty;

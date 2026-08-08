@@ -3,8 +3,8 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages;
-using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 
 namespace SoftwareIrrigacao.Workes;
 
@@ -53,9 +53,6 @@ public class MqttWorker : BackgroundService
         );
     }
 
-    private async Task<Toolbox.Industrial.Core.Communication.Api.Contracts.Controlador?> ObterControladorMaster() =>
-        (await _store.FirstOrDefaultAsync<Controlador>(c => c.Valor.Master))?.Valor;
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var localStarted = false;
@@ -85,7 +82,7 @@ public class MqttWorker : BackgroundService
                         _logger.LogInformation(
                             $"Conectado ao broker MQTT ({_mqttRemoto.Host}:{_mqttRemoto.Port})"
                         );
-                        var controlador = ObterControladorMaster();
+                        var controlador = await _store.ObterControladorMaster();
 
                         if (controlador != null)
                         {

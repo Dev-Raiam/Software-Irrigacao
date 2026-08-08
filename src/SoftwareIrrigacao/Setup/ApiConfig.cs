@@ -1,7 +1,7 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using SoftwareIrrigacao.Infrastructure.Handlers.Exceptions;
 using SoftwareIrrigacao.Workes;
-using System.Reflection;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Setup;
 
@@ -47,12 +47,10 @@ public static class ApiConfig
 
         services.AddCors(options =>
         {
-            options.AddPolicy("AllRequests",
-                builder =>
-                    builder
-                        .AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader());
+            options.AddPolicy(
+                "AllRequests",
+                builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
+            );
         });
 
         //services.AddHostedService<WorkerRaspIO>();

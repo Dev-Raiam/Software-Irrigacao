@@ -11,9 +11,11 @@ internal sealed class MetricsSnapshot
     private HardwareMetrics? _hardware;
     private NetworkMetrics? _network;
 
-    public void Update(OperationSystemMetrics metrics) => Interlocked.Exchange(ref _system, metrics);
+    public void Update(OperationSystemMetrics metrics) =>
+        Interlocked.Exchange(ref _system, metrics);
 
-    public void Update(ApplicationProcessMetrics metrics) => Interlocked.Exchange(ref _process, metrics);
+    public void Update(ApplicationProcessMetrics metrics) =>
+        Interlocked.Exchange(ref _process, metrics);
 
     public void Update(HardwareMetrics metrics) => Interlocked.Exchange(ref _hardware, metrics);
 
@@ -29,7 +31,7 @@ internal sealed class MetricsSnapshot
             Process = Interlocked.Exchange(ref _process, null),
             Network = Interlocked.Exchange(ref _network, null),
             Hardware = Interlocked.Exchange(ref _hardware, null),
-            Status = Interlocked.Exchange(ref _status, null)
+            Status = Interlocked.Exchange(ref _status, null),
         };
 
         if (result.System != null)
@@ -44,7 +46,7 @@ internal sealed class MetricsSnapshot
             if (result.Process.Equals(_lastTake.Process))
                 result.Process = null;
             else
-                _lastTake.Process = result.Process; 
+                _lastTake.Process = result.Process;
         }
         if (result.Network != null)
         {

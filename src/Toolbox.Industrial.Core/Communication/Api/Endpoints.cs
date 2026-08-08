@@ -1,11 +1,11 @@
 using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Commands;
 using Toolbox.Industrial.Core.Security;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -97,7 +97,7 @@ public static class Endpoints
                 async ([FromServices] IEntityStore store, CancellationToken cancellationToken) =>
                 {
                     var config = store
-                        .FirstOrDefault<Configuracao>(x => x.Id == Entity.Keys.Serilog.Config)
+                        .Get<Configuracao>(Entity.Keys.Serilog.Config)
                         ?.Valor?.ToString();
 
                     if (config == null)
@@ -122,9 +122,7 @@ public static class Endpoints
                 ) =>
                 {
                     var json = System.Text.Json.JsonSerializer.Serialize(cfg);
-                    var config = store.FirstOrDefault<Configuracao>(x =>
-                        x.Id == Entity.Keys.Serilog.Config
-                    );
+                    var config = store.Get<Configuracao>(Entity.Keys.Serilog.Config);
 
                     if (config == null)
                     {
@@ -163,15 +161,20 @@ public static class Endpoints
         app.MapGet(
                 "/system/security/certificate-authority/{id:guid}",
                 async (
-                    [FromServices] ICertificateAuthorityService authority,
+                    [FromServices] IEntityStore store,
                     Guid id,
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    return Results.File(
-                        authority.GetCertificate().Export(X509ContentType.Cert),
-                        "application/pkix-cert"
+                    var result = store.GetCertificate(
+                        Entity.Keys.Security.CertificateAuthority,
+                        subject: "localhost"
                     );
+                    if (result == null)
+                    {
+                        return Results.NotFound();
+                    }
+                    return Results.Ok(result);
                 }
             )
             .RequireHost("*:80")

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
+using Toolbox.Industrial.Core.Extensions;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 
 namespace Toolbox.Industrial.Core.Data;
@@ -45,11 +46,7 @@ public class PythonSettingsExporter : IPythonSettingsExporter
             {
                 Mqtt = MqttConfiguration.PythonSettings(
                     (MqttConfiguration)
-                        (
-                            await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                                x.Id == Entity.Keys.Mqtt.Local
-                            )
-                        ).Valor
+                        (await _store.GetAsync<Configuracao>(Entity.Keys.Mqtt.Local))!.Valor
                 ),
             };
 

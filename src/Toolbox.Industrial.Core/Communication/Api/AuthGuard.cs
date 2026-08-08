@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using NetDevPack.Security.Jwt.Core.Interfaces;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Security.Cryptography;
 
 namespace Toolbox.Industrial.Core.Communication.Api;
@@ -39,14 +40,12 @@ internal class AuthGuard : DelegatingHandler
 
     public async Task<Credentials?> GetCredentials()
     {
-        var chave = (
-            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave)
-        )?.Valor.ToString();
+        var chave = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Chave))?.Valor.ToString();
         var segredo = (
-            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Segredo)
+            await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Segredo)
         )?.Valor.ToString();
         var contextoId = (
-            await _store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.ContextoId)
+            await _store.GetAsync<Configuracao>(Entity.Keys.Auth.ContextoId)
         )?.Valor.ToString();
 
         if (chave == null || segredo == null || contextoId == null)
@@ -64,10 +63,7 @@ internal class AuthGuard : DelegatingHandler
         CancellationToken cancellationToken
     )
     {
-        var request = new HttpRequestMessage(
-            HttpMethod.Post,
-            "autenticacao/v1/autenticar-cliente"
-        );
+        var request = new HttpRequestMessage(HttpMethod.Post, "autenticacao/v1/autenticar-cliente");
 
         request.Content = new StringContent(
             System.Text.Json.JsonSerializer.Serialize(credentials),

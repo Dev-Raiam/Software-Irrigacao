@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http.Timeouts;
 
 namespace Toolbox.Industrial.Core.Data;
 
-public class Configuracao : Entity<Guid, object>
+public class Configuracao : Entity<object>
 {
     protected Configuracao() { }
 

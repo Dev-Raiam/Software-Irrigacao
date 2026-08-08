@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
 using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
@@ -41,7 +42,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
     private readonly object _sync = new();
     private readonly IEntityStore _store;
     private readonly Purpose _purpose;
-    private bool _disposed;
+    private bool _disposed = false;
 
     public CertificateService(
         Purpose purpose,
@@ -71,7 +72,8 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         }
     }
 
-    public bool IsExpired(string subject = "localhost") => DateTime.UtcNow >= GetCertificate(subject).NotAfter;
+    public bool IsExpired(string subject = "localhost") =>
+        DateTime.UtcNow >= GetCertificate(subject).NotAfter;
 
     public bool NeedsRenew(string subject = "localhost") =>
         GetCertificate(subject).NotAfter <= DateTime.UtcNow.AddDays(RenewBeforeExpirationDays);
@@ -106,8 +108,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         subject.ThrowIfNull(nameof(subject));
 
         var id = GetId();
-
-        var data = _store.FirstOrDefault<Configuracao>(x => x.Id == id)?.Valor as Certificate;
+        var data = _store.GetCertificate(id);
 
         if (data is null)
         {
@@ -204,10 +205,8 @@ internal sealed class CertificateService : ICertificateService, IDisposable
                 })
                 .GetAwaiter()
                 .GetResult();
-            
-            Task.Delay(1000)
-                .GetAwaiter()
-                .GetResult();
+
+            Task.Delay(1000).GetAwaiter().GetResult();
 
             Environment.Exit(1);
         }
