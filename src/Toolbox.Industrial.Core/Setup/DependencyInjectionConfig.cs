@@ -39,14 +39,18 @@ namespace Toolbox.Industrial.Core.Setup
 {
     public static class DependencyInjectionConfig
     {
-        private static void ConfigureClient(IServiceProvider provider, HttpClient http)
+        private static void ConfigureClientAsync(IServiceProvider provider, HttpClient http)
         {
             if (ApiClient.BaseAddress == null)
             {
                 var store = provider.GetRequiredService<IEntityStore>();
                 ApiClient.BaseAddress = store
-                    .Get<Configuracao>(Entity.Keys.Api.BaseAddress)
-                    ?.Valor.ToString();
+                    .ObterConfiguracao<string>(Entity.Keys.Api.BaseAddress)
+                    .GetAwaiter()
+                    .GetResult();
+                //ApiClient.BaseAddress = store
+                //    .Get<Configuracao>(Entity.Keys.Api.BaseAddress)
+                //    ?.Valor.ToString();
             }
 
             if (ApiClient.BaseAddress != null)
@@ -167,7 +171,7 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddHttpClient<IHeartbeatClient, HeartbeatClient>(ConfigureHeartbeatClient);
 
             services
-                .AddHttpClient<IApiClient, ApiClient>(ConfigureClient)
+                .AddHttpClient<IApiClient, ApiClient>(ConfigureClientAsync)
                 .AddHttpMessageHandler<AuthGuard>()
                 .AddStandardResilienceHandler();
 
@@ -176,7 +180,7 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     var httpClient = new HttpClient();
-                    ConfigureClient(provider, httpClient);
+                    ConfigureClientAsync(provider, httpClient);
                     return new ApiClient(httpClient);
                 }
             );
@@ -201,19 +205,16 @@ namespace Toolbox.Industrial.Core.Setup
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
                     var logger = provider.GetRequiredService<ILogger<Mqtt>>();
-                    var config =
-                        store.Get<Configuracao>(Entity.Keys.Mqtt.Local)?.Valor as MqttConfiguration;
-
                     var certificateService = provider.GetRequiredKeyedService<ICertificateService>(
                         Purpose.MqttLocal
                     );
 
-                    //var certificate =
-                    //    certificateService
-                    //        .GetCertificateStore(Entity.Keys.Security.CertificateMqttLocal)
-                    //        ?.Valor as Certificate;
+                    var config = store
+                        .ObterConfiguracao<MqttConfiguration>(Entity.Keys.Mqtt.Local)
+                        .GetAwaiter()
+                        .GetResult();
 
-                    var certificate = store.GetCertificate(
+                    var certificate = store.GetCertificate<Certificate>(
                         Entity.Keys.Security.CertificateMqttLocal
                     );
 
@@ -244,23 +245,21 @@ namespace Toolbox.Industrial.Core.Setup
                                 Purpose.MqttRemoto
                             );
 
-                        //var certificate =
-                        //    certificateService
-                        //        .GetCertificateStore(Entity.Keys.Security.CertificateMqttRemoto)
-                        //        ?.Valor as Certificate;
-
-                        var certificate = store.GetCertificate(
+                        var certificate = store.GetCertificate<Certificate>(
                             Entity.Keys.Security.CertificateMqttRemoto
                         );
 
-                        var config = store.Get<Configuracao>(Entity.Keys.Mqtt.Remoto)?.Valor;
+                        var config = store
+                            .ObterConfiguracao<MqttConfiguration>(Entity.Keys.Mqtt.Remoto)
+                            .GetAwaiter()
+                            .GetResult();
 
                         var subject = certificate?.Subject ?? "localhost";
 
                         mqtt = new Mqtt(
                             logger: logger,
                             certificate: certificateService.GetCertificate(subject),
-                            config: (MqttConfiguration?)config ?? new MqttConfiguration()
+                            config: config ?? new MqttConfiguration()
                         );
                     }
 
@@ -302,9 +301,9 @@ namespace Toolbox.Industrial.Core.Setup
                 async (context, provider, config) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
-                    var cfg = store.Get<Configuracao>(Entity.Keys.Serilog.Config)?.Valor.ToString();
+                    var cfg = await store.ObterConfiguracao<string>(Entity.Keys.Serilog.Config);
 
-                    if (cfg == null)
+                    if (string.IsNullOrWhiteSpace(cfg))
                     {
                         cfg = System.Text.Json.JsonSerializer.Serialize(
                             new Configuration

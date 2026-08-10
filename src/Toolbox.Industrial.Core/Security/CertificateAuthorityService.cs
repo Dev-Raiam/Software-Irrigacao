@@ -54,12 +54,15 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
 
     private X509Certificate2 LoadOrCreate(string subject)
     {
-        var data = _store.GetCertificate(Entity.Keys.Security.CertificateAuthority, subject);
+        var data = _store.GetCertificate<Certificate>(
+            Entity.Keys.Security.CertificateAuthority,
+            subject
+        );
         if (data is null)
         {
             _logger.LogInformation("Creating Root Certificate Authority.");
             var certificate = CreateRootCertificate();
-            Save(certificate);
+            Save(certificate, subject: subject);
             return certificate;
         }
 
@@ -159,7 +162,11 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);
         //File.WriteAllBytes("ca.pfx", pfx);
-        CertificateExporter.ExportCertificate(certificate, fileNameRootCA);
+        var isKestrel = subject.Equals(CertificateService.Kestrel, StringComparison.OrdinalIgnoreCase);
+        if (!isKestrel)
+        {
+            CertificateExporter.ExportCertificate(certificate, fileNameRootCA);
+        }
         InstallRootCertificate(certificate);
         var config = new Certificate
         {
@@ -172,7 +179,10 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
             CreatedAt = DateTime.UtcNow,
         };
 
-        var certificado = _store.ObterCertificado(Entity.Keys.Security.CertificateAuthority, subject);
+        var certificado = _store.GetCertificate<Configuracao>(
+            Entity.Keys.Security.CertificateAuthority,
+            subject
+        );
         if (certificado == null)
         {
             _store
@@ -180,7 +190,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
                     new Configuracao(
                         id: $"{Entity.Keys.Security.CertificateAuthority}{subject}".GetId(),
                         configuracao: config,
-                        grupo: Grupo.Api,
+                        grupo: isKestrel ? Grupo.App : Grupo.Api,
                         tipo: Tipo.Seguranca
                     )
                 )

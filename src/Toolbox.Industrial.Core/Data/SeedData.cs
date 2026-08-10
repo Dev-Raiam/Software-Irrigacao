@@ -74,61 +74,67 @@ public static class SeedData
     private static async Task ConfigureApiBaseAddress(IEntityStore store)
     {
         var id = Entity.Keys.Api.BaseAddress;
-        var apiBaseAddress = await store.GetAsync<Configuracao>(id);
-        if (apiBaseAddress?.Valor == null)
+        var apiBaseAddress = await store.ObterConfiguracao<string>(id);
+        if (string.IsNullOrWhiteSpace(apiBaseAddress))
         {
-            apiBaseAddress = new Configuracao(
-                id: id,
-                configuracao: "https://api.toolbox.app.br",
-                grupo: Grupo.Api,
-                tipo: Tipo.Config
+            apiBaseAddress = "https://api.toolbox.app.br";
+            await store.UpsertAsync(
+                new Configuracao(
+                    id: id,
+                    configuracao: apiBaseAddress,
+                    grupo: Grupo.Api,
+                    tipo: Tipo.Config
+                )
             );
-            await store.UpsertAsync(apiBaseAddress);
         }
-        ApiClient.BaseAddress = apiBaseAddress.Valor.ToString();
+        ApiClient.BaseAddress = apiBaseAddress;
     }
 
     private static async Task ConfigureJwtService(IEntityStore store, JwtService jwtService)
     {
-        Guid id = Entity.Keys.Api.Jwt.ValidIssuers;
-        var validIssuers = await store.GetAsync<Configuracao>(id);
-        if (validIssuers?.Valor == null)
+        var id = Entity.Keys.Api.Jwt.ValidIssuers;
+        var validIssuers = await store.ObterConfiguracao<string>(id);
+        if (string.IsNullOrWhiteSpace(validIssuers))
         {
-            validIssuers = new Configuracao(
-                id: id,
-                configuracao: $"{ApiClient.BaseAddress}",
-                grupo: Grupo.Auth,
-                tipo: Tipo.Seguranca
+            validIssuers = $"{ApiClient.BaseAddress}";
+            await store.UpsertAsync(
+                new Configuracao(
+                    id: id,
+                    configuracao: validIssuers,
+                    grupo: Grupo.Auth,
+                    tipo: Tipo.Seguranca
+                )
             );
-            await store.UpsertAsync(validIssuers);
         }
         JwtService.Config.ValidIssuers =
-            validIssuers
-                .Valor.ToString()
-                ?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            ?? [];
+            validIssuers?.Split(
+                ';',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            ) ?? [];
 
         id = Entity.Keys.Api.Jwt.JwksUrl;
-        var jwksUrl = await store.GetAsync<Configuracao>(id);
-        if (jwksUrl?.Valor == null)
+        var jwksUrl = await store.ObterConfiguracao<string>(id);
+        if (string.IsNullOrWhiteSpace(jwksUrl))
         {
-            jwksUrl = new Configuracao(
-                id: id,
-                configuracao: $"{ApiClient.BaseAddress}/autenticacao/jwks",
-                grupo: Grupo.Auth,
-                tipo: Tipo.Seguranca
+            jwksUrl = $"{ApiClient.BaseAddress}/autenticacao/jwks";
+            await store.UpsertAsync(
+                new Configuracao(
+                    id: id,
+                    configuracao: jwksUrl,
+                    grupo: Grupo.Auth,
+                    tipo: Tipo.Seguranca
+                )
             );
-            await store.UpsertAsync(jwksUrl);
         }
-        JwtService.Config.JwksUrl = jwksUrl.Valor.ToString()!;
+        JwtService.Config.JwksUrl = jwksUrl!;
 
         await jwtService.LoadJwksAsync();
         if (!JwtService.Config.KeyStore.SigningKeys.Any())
         {
-            var securityKeys = await store.GetAsync<Configuracao>(Entity.Keys.Api.Jwt.SecKeys);
-            if (securityKeys?.Valor != null)
+            var securityKeys = await store.ObterConfiguracao<string>(Entity.Keys.Api.Jwt.SecKeys);
+            if (!string.IsNullOrWhiteSpace(securityKeys))
             {
-                await jwtService.LoadJwksAsync(securityKeys.Valor.ToString()!);
+                await jwtService.LoadJwksAsync(securityKeys!);
             }
         }
     }
@@ -137,10 +143,6 @@ public static class SeedData
     {
         try
         {
-            //Guid.TryParse(
-            //    (await store.GetAsync<Configuracao>(Entity.Keys.PainelId))?.Valor.ToString(),
-            //    out var painelId
-            //);
             var painelId = await store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
             Controlador.PainelId = painelId;
             if (painelId != Guid.Empty)
@@ -162,7 +164,7 @@ public static class SeedData
     )
     {
         Guid id = Entity.Keys.Mqtt.Local;
-        var mqttLocal = await store.GetAsync<Configuracao>(id);
+        var mqttLocal = await store.ObterConfiguracao<Configuracao>(id);
         if (mqttLocal?.Valor == null)
         {
             var config = new MqttConfiguration();
@@ -176,10 +178,7 @@ public static class SeedData
         }
 
         var controladores = store.Query<Controlador>().ToList();
-        //Guid.TryParse(
-        //    (await store.GetAsync<Configuracao>(Entity.Keys.ControladorId))?.Valor.ToString(),
-        //    out var controladorId
-        //);
+
         var controladorId = await store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
         //Controlador.Master = false;
         Controlador.ControladorId = controladorId;
@@ -213,8 +212,7 @@ public static class SeedData
             var masterHostName = master?.Valor.Conexoes.Host;
             if (master != null && masterHostName != null && config.Host != masterHostName)
             {
-                //authority.GetCertificateStore(masterHostName)?.Valor as Certificate;
-                var certificate = store.GetCertificate(
+                var certificate = store.GetCertificate<Certificate>(
                     Entity.Keys.Security.CertificateAuthority,
                     masterHostName
                 );
@@ -417,7 +415,7 @@ public static class SeedData
     private static async Task ConfigureMqttRemoto(IEntityStore store)
     {
         Guid id = Entity.Keys.Mqtt.Remoto;
-        if ((await store.GetAsync<Configuracao>(id))?.Valor == null)
+        if ((await store.ObterConfiguracao<Configuracao>(id)) == null)
         {
             var config = new MqttConfiguration(host: "broker.freemqtt.com")
             {

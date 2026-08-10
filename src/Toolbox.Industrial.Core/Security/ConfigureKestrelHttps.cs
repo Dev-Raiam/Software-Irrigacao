@@ -24,7 +24,7 @@ internal sealed class ConfigureKestrelHttps : IConfigureOptions<KestrelServerOpt
             443,
             listen =>
             {
-                listen.UseHttps(_certificateService.GetCertificate());
+                listen.UseHttps(_certificateService.GetCertificate(CertificateService.Kestrel));
             }
         );
     }

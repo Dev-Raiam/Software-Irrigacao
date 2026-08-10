@@ -40,13 +40,9 @@ internal class AuthGuard : DelegatingHandler
 
     public async Task<Credentials?> GetCredentials()
     {
-        var chave = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Chave))?.Valor.ToString();
-        var segredo = (
-            await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Segredo)
-        )?.Valor.ToString();
-        var contextoId = (
-            await _store.GetAsync<Configuracao>(Entity.Keys.Auth.ContextoId)
-        )?.Valor.ToString();
+        var chave = (await _store.ObterConfiguracao<string>(Entity.Keys.Auth.Chave));
+        var segredo = (await _store.ObterConfiguracao<string>(Entity.Keys.Auth.Segredo));
+        var contextoId = (await _store.ObterConfiguracao<string>(Entity.Keys.Auth.ContextoId));
 
         if (chave == null || segredo == null || contextoId == null)
             return null;

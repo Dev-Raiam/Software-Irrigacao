@@ -11,7 +11,7 @@ using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Toolbox.Industrial.Core.Security;
 
-public interface ICertificateService
+internal interface ICertificateService
 {
     X509Certificate2 GetCertificate(string subject = "localhost");
 
@@ -38,6 +38,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
     private readonly ICertificateAuthorityService _authorityService;
     private readonly ILogger<CertificateService> _logger;
     private const int RenewBeforeExpirationDays = 90;
+    internal const string Kestrel = "kestrel";
     private X509Certificate2? _certificate;
     private readonly object _sync = new();
     private readonly IEntityStore _store;
@@ -108,7 +109,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         subject.ThrowIfNull(nameof(subject));
 
         var id = GetId();
-        var data = _store.GetCertificate(id);
+        var data = _store.GetCertificate<Certificate>(id, subject: null); 
 
         if (data is null)
         {
@@ -137,6 +138,15 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         return certificate;
     }
 
+    private Grupo ObterGrupo() =>
+    _purpose switch
+    {
+        Purpose.MqttLocal => Grupo.Mqtt,
+        Purpose.MqttRemoto => Grupo.Mqtt,
+        Purpose.HttpsLocal => Grupo.App,
+        _ => throw new NotSupportedException($"Unsupported certificate purpose: {_purpose}"),
+    };
+
     private void Save(Guid id, X509Certificate2 certificate, string subject)
     {
         var password = GeneratePassword();
@@ -153,12 +163,13 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             NotAfter = certificate.NotAfter,
             CreatedAt = DateTime.UtcNow,
         };
+            
         Task.Run(() =>
                 _store.UpsertAsync(
                     new Configuracao(
                         id: id,
                         configuracao: config,
-                        grupo: Grupo.Api,
+                        grupo: ObterGrupo(),
                         tipo: Tipo.Seguranca
                     )
                 )

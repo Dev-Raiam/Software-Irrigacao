@@ -96,11 +96,9 @@ public static class Endpoints
                 "/configuracao/logs",
                 async ([FromServices] IEntityStore store, CancellationToken cancellationToken) =>
                 {
-                    var config = store
-                        .Get<Configuracao>(Entity.Keys.Serilog.Config)
-                        ?.Valor?.ToString();
+                    var config = await store.ObterConfiguracao<string>(Entity.Keys.Serilog.Config);
 
-                    if (config == null)
+                    if (string.IsNullOrWhiteSpace(config))
                     {
                         return Results.Ok(new SerilogConfig());
                     }
@@ -122,7 +120,9 @@ public static class Endpoints
                 ) =>
                 {
                     var json = System.Text.Json.JsonSerializer.Serialize(cfg);
-                    var config = store.Get<Configuracao>(Entity.Keys.Serilog.Config);
+                    var config = await store.ObterConfiguracao<Configuracao>(
+                        Entity.Keys.Serilog.Config
+                    );
 
                     if (config == null)
                     {
@@ -166,7 +166,7 @@ public static class Endpoints
                     CancellationToken cancellationToken
                 ) =>
                 {
-                    var result = store.GetCertificate(
+                    var result = store.GetCertificate<Certificate>(
                         Entity.Keys.Security.CertificateAuthority,
                         subject: "localhost"
                     );

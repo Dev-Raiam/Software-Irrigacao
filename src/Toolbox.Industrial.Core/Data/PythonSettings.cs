@@ -46,7 +46,7 @@ public class PythonSettingsExporter : IPythonSettingsExporter
             {
                 Mqtt = MqttConfiguration.PythonSettings(
                     (MqttConfiguration)
-                        (await _store.GetAsync<Configuracao>(Entity.Keys.Mqtt.Local))!.Valor
+                        (await _store.ObterConfiguracao<MqttConfiguration>(Entity.Keys.Mqtt.Local))!
                 ),
             };
 

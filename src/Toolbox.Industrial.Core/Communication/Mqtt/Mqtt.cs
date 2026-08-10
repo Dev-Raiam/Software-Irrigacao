@@ -69,16 +69,6 @@ public sealed class Mqtt : IMqtt
                 tls.UseTls();
                 tls.WithCertificateValidationHandler(context =>
                 {
-                    Console.WriteLine(context.SslPolicyErrors);
-
-                    if (context.Chain != null)
-                    {
-                        foreach (var status in context.Chain.ChainStatus)
-                        {
-                            Console.WriteLine($"{status.Status} - {status.StatusInformation}");
-                        }
-                    }
-
                     if (context.Certificate == null)
                         return false;
 
@@ -87,17 +77,27 @@ public sealed class Mqtt : IMqtt
                     using var chain = new X509Chain();
 
                     chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                    chain.ChainPolicy.CustomTrustStore.Clear();
                     chain.ChainPolicy.CustomTrustStore.Add(ca);
                     chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
                     chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
                     chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
                     chain.ChainPolicy.DisableCertificateDownloads = true;
-                    chain.ChainPolicy.VerificationFlags =
-                        X509VerificationFlags.IgnoreEndRevocationUnknown
-                        | X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown
-                        | X509VerificationFlags.IgnoreRootRevocationUnknown;
+                    //chain.ChainPolicy.VerificationFlags =
+                    //    X509VerificationFlags.IgnoreEndRevocationUnknown
+                    //    | X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown
+                    //    | X509VerificationFlags.IgnoreRootRevocationUnknown;
 
-                    return chain.Build(certificate);
+                    var valid = chain.Build(certificate);
+                    if (!valid)
+                    {
+                        foreach (var status in chain.ChainStatus)
+                        {
+                            Console.WriteLine(
+                                $"MQTT TLS: {status.Status} - {status.StatusInformation}");
+                        }
+                    }
+                    return valid;
                 });
 
                 tls.WithClientCertificates([certificate]);

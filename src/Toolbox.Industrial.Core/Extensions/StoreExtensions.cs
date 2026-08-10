@@ -38,16 +38,39 @@ namespace Toolbox.Industrial.Core.Extensions
             return await store.FirstOrDefaultAsync(predicate);
         }
 
-        public static async Task<T?> ObterConfiguracao<T>(this IEntityStore store, Guid id)
+        public static async Task<TResult?> ObterConfiguracao<TResult>(
+            this IEntityStore store,
+            Guid id
+        )
         {
             var config = await store.GetAsync<Configuracao>(id);
-            if (config?.Valor == null)
-                return default;
+            try
+            {
+                if (typeof(TResult) == typeof(Configuracao))
+                {
+                    if (config == null)
+                        return default;
 
-            if (typeof(T) == typeof(Guid))
-                return (T)(object)Guid.Parse(config.Valor.ToString()!);
+                    return (TResult)(object)config;
+                }
 
-            return (T)Convert.ChangeType(config.Valor, typeof(T));
+                if (config?.Valor == null)
+                    return default;
+
+                if (typeof(TResult) == typeof(Guid))
+                    return (TResult)(object)Guid.Parse(config.Valor.ToString()!);
+
+                return (TResult)Convert.ChangeType(config.Valor, typeof(TResult));
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public static async Task<Controlador?> ObterControlador(this IEntityStore store, Guid id)
+        {
+            return (await store.FirstOrDefaultAsync<Data.Controlador>(x => x.Id == id))?.Valor;
         }
 
         public static async Task<Controlador?> ObterControladorMaster(this IEntityStore store)
@@ -57,7 +80,7 @@ namespace Toolbox.Industrial.Core.Extensions
 
         #region Uso interno
 
-        internal static Certificate? GetCertificate(
+        internal static TResult? GetCertificate<TResult>(
             this IEntityStore store,
             Guid id,
             string? subject = null
@@ -67,20 +90,19 @@ namespace Toolbox.Industrial.Core.Extensions
             {
                 id = $"{id}{subject}".GetId();
             }
-            return store.FirstOrDefault<Configuracao>(x => x.Id == id)?.Valor as Certificate;
-        }
+            var config = store.FirstOrDefault<Configuracao>(x => x.Id == id);
 
-        internal static Configuracao? ObterCertificado(
-            this IEntityStore store,
-            Guid id,
-            string? subject = null
-        )
-        {
-            if (!string.IsNullOrWhiteSpace(subject))
+            if (config == null)
+                return default;
+
+            if (typeof(TResult) == typeof(Configuracao))
             {
-                id = $"{id}{subject}".GetId();
+                return (TResult)(object)config;
             }
-            return store.FirstOrDefault<Configuracao>(x => x.Id == id);
+            if (config.Valor == null)
+                return default;
+
+            return (TResult)(object)config.Valor;
         }
 
         #endregion Uso interno

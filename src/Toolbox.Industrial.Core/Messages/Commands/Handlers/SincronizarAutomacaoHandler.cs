@@ -52,11 +52,9 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
 
     private async Task<bool> CredenciaisRegistradasAsync()
     {
-        var chave = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Chave))?.Valor;
-
-        var segredo = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.Segredo))?.Valor;
-
-        var contextoId = (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.ContextoId))?.Valor;
+        var chave = await _store.ObterConfiguracao<string>(Entity.Keys.Auth.Chave);
+        var segredo = await _store.ObterConfiguracao<string>(Entity.Keys.Auth.Segredo);
+        var contextoId = await _store.ObterConfiguracao<string>(Entity.Keys.Auth.ContextoId);
 
         return chave != null && segredo != null && contextoId != null;
     }
