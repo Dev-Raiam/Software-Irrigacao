@@ -242,10 +242,10 @@ namespace Toolbox.Industrial.Core.Setup
                     {
                         var logger = provider.GetRequiredService<ILogger<Mqtt>>();
                         var store = provider.GetRequiredService<IEntityStore>();
-                        var certificateService =
-                            provider.GetRequiredKeyedService<ICertificateService>(
-                                Purpose.MqttRemoto
-                            );
+                        //var certificateService =
+                        //    provider.GetRequiredKeyedService<ICertificateService>(
+                        //        Purpose.MqttRemoto
+                        //    );
 
                         var certificate = store.GetCertificate<Certificate>(
                             Entity.Keys.Security.CertificateMqttRemoto
@@ -262,7 +262,7 @@ namespace Toolbox.Industrial.Core.Setup
                             provider: provider,
                             logger: logger,
                             purpose: Mqtt.Remoto,
-                            certificate: certificateService.GetCertificate(subject),
+                            certificate: null, //certificateService.GetCertificate(subject),
                             config: config ?? new MqttConfiguration()
                         );
                     }
