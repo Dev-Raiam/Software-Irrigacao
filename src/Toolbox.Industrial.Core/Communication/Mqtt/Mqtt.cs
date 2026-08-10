@@ -248,10 +248,6 @@ public sealed class Mqtt : IMqtt
         }
         catch (MqttCommunicationException ex)
         {
-            //_logger.LogError(
-            //    ex,
-            //    $"Falha ao conectar ao broker MQTT ({_host}:{_port}): {ex.ResultCode} - {ex.Message}"
-            //);
             if (ex.Message.Contains("remote certificate was rejected", StringComparison.OrdinalIgnoreCase))
             {
                 if (_purpose == Local)
@@ -268,6 +264,10 @@ public sealed class Mqtt : IMqtt
                     Environment.Exit(1);
                 }
             }
+            _logger.LogError(
+                ex,
+                $"Falha ao conectar ao broker MQTT ({_host}:{_port}): {ex.HResult} - {ex.Message}"
+            );
             if (!_connectGuard.Enabled)
             {
                 _connectGuard.Interval = 1000;
