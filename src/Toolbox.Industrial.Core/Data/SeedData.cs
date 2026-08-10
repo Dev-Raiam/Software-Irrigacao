@@ -355,7 +355,7 @@ public static class SeedData
         File.WriteAllLines(path, lines);
     }
 
-    private static async Task LoadCertificateAuthorityMaster(
+    internal static async Task LoadCertificateAuthorityMaster(
         Token token,
         ICertificateAuthorityService authority,
         string masterHostName

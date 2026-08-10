@@ -220,7 +220,9 @@ namespace Toolbox.Industrial.Core.Setup
 
                     var subject = certificate?.Subject ?? config?.Host ?? "localhost";
                     var mqtt = new Mqtt(
+                        provider: provider,
                         logger: logger,
+                        purpose: Mqtt.Local,
                         certificate: certificateService.GetCertificate(subject),
                         config: config ?? new MqttConfiguration()
                     );
@@ -257,7 +259,9 @@ namespace Toolbox.Industrial.Core.Setup
                         var subject = certificate?.Subject ?? "localhost";
 
                         mqtt = new Mqtt(
+                            provider: provider,
                             logger: logger,
+                            purpose: Mqtt.Remoto,
                             certificate: certificateService.GetCertificate(subject),
                             config: config ?? new MqttConfiguration()
                         );

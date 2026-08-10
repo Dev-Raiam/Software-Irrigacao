@@ -1,11 +1,16 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MQTTnet;
+using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Timers;
-using Microsoft.Extensions.Logging;
-using MQTTnet;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
+using Toolbox.Industrial.Core.Communication.Api.Contracts;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Security;
 using Timer = System.Timers.Timer;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
@@ -17,13 +22,16 @@ public sealed class Mqtt : IMqtt
     private X509Certificate2? _certificate;
     private readonly List<MqttTopicFilter> _topics;
     private readonly MqttClientOptions _options;
+    private readonly IServiceProvider _provider;
     private readonly IMqttClient _mqttClient;
     private Action<string, string>? _handler;
     private readonly ILogger<Mqtt> _logger;
     private readonly Timer _connectGuard;
     private bool _reconnecting = false;
+    private readonly string _purpose;
     private readonly string _host;
     private readonly int _port;
+
     private bool _disposed;
 
     internal X509Certificate2? Certificate
@@ -40,14 +48,20 @@ public sealed class Mqtt : IMqtt
     public bool IsConnected => _mqttClient.IsConnected;
 
     public Action<string, string>? Handler => _handler;
+    public string Purpose => _purpose;
+    public IServiceProvider Provider => _provider;
 
     public Mqtt(
+        IServiceProvider provider,
+        string purpose,
         Configuration config,
         ILogger<Mqtt> logger,
         X509Certificate2? certificate = null,
         IEnumerable<MqttTopicFilter>? topics = null
     )
     {
+        _provider = provider;
+        _purpose = purpose;
         _host = config.Host;
         _port = config.Port;
         _logger = logger;
@@ -230,6 +244,34 @@ public sealed class Mqtt : IMqtt
                     _connectGuard.Interval = 1000;
                     _connectGuard.Start();
                 }
+            }
+        }
+        catch (MqttCommunicationException ex)
+        {
+            //_logger.LogError(
+            //    ex,
+            //    $"Falha ao conectar ao broker MQTT ({_host}:{_port}): {ex.ResultCode} - {ex.Message}"
+            //);
+            if (ex.Message.Contains("remote certificate was rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                if (_purpose == Local)
+                {
+                    var store = _provider.GetRequiredService<IEntityStore>();
+                    var token = _provider.GetRequiredService<Token>();
+                    var authority = _provider.GetRequiredService<ICertificateAuthorityService>();
+                    await store.DeleteManyAsync<Configuracao>(x =>
+                        x.Id == Entity.Keys.Security.CertificateMqttLocal
+                    );
+                    await SeedData.LoadCertificateAuthorityMaster(token, authority, _host);
+
+                    await Task.Delay(1000);
+                    Environment.Exit(1);
+                }
+            }
+            if (!_connectGuard.Enabled)
+            {
+                _connectGuard.Interval = 1000;
+                _connectGuard.Start();
             }
         }
         catch (Exception ex)
@@ -418,16 +460,19 @@ public sealed class MqttManager
         var logger = _current.Logger;
         var topics = _current.Topics.ToList();
         var handler = _current.Handler;
+        var purpose = _current.Purpose;
+        var provider = _current.Provider;
         var connected = _current.IsConnected;
         var certificate = _current.Certificate;
-
         _current.Certificate = null;
         _current.Dispose();
 
         _current = new Mqtt(
+            provider: provider,
             config: config,
             logger: logger,
             topics: topics,
+            purpose: purpose,
             certificate: certificate
         );
         _current.SetHandler(handler);
