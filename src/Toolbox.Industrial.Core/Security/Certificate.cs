@@ -7,6 +7,7 @@ internal sealed class Certificate
         //Grpc,
         MqttLocal,
         MqttRemoto,
+        MqttInterno,
         HttpsLocal,
         //OpcUa,
     }

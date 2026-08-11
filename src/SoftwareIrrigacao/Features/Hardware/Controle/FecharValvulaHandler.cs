@@ -11,7 +11,7 @@ public class FecharValvulaHandler : ICommandHandler<FecharValvula>
 {
     private readonly IMqtt _mqtt;
 
-    public FecharValvulaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public FecharValvulaHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

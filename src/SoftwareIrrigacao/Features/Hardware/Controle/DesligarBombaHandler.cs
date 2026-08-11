@@ -11,7 +11,7 @@ public class DesligarBombaHandler : ICommandHandler<DesligarBomba>
 {
     private readonly IMqtt _mqtt;
 
-    public DesligarBombaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public DesligarBombaHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

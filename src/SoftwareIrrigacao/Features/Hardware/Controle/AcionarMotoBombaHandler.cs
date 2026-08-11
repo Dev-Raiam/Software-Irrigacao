@@ -11,7 +11,7 @@ public class AcionarMotoBombaHandler : ICommandHandler<AcionarMotoBomba>
 {
     private readonly IMqtt _mqtt;
 
-    public AcionarMotoBombaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public AcionarMotoBombaHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

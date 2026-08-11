@@ -11,7 +11,7 @@ public class LerSensorPressaoHandler : ICommandHandler<LerSensorPressao>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorPressaoHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public LerSensorPressaoHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

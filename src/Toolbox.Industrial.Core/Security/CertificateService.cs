@@ -98,6 +98,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
     private Guid GetId() =>
         _purpose switch
         {
+            Purpose.MqttInterno => Entity.Keys.Security.CertificateMqttInterno,
             Purpose.MqttLocal => Entity.Keys.Security.CertificateMqttLocal,
             Purpose.MqttRemoto => Entity.Keys.Security.CertificateMqttRemoto,
             Purpose.HttpsLocal => Entity.Keys.Security.CertificateHttpsLocal,
@@ -141,6 +142,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
     private Grupo ObterGrupo() =>
     _purpose switch
     {
+        Purpose.MqttInterno => Grupo.Mqtt,
         Purpose.MqttLocal => Grupo.Mqtt,
         Purpose.MqttRemoto => Grupo.Mqtt,
         Purpose.HttpsLocal => Grupo.App,
@@ -177,7 +179,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             .GetAwaiter()
             .GetResult();
 
-        if (_purpose == Purpose.MqttLocal)
+        if (_purpose == Purpose.MqttInterno)
         {
             //File.WriteAllBytes("certificate.pfx", content);
             Task.Run(async () =>

@@ -11,7 +11,7 @@ public class LerSensorDistanciaHandler : ICommandHandler<LerSensorDistancia>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorDistanciaHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public LerSensorDistanciaHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

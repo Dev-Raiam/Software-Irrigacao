@@ -3,7 +3,6 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages;
 
 namespace SoftwareIrrigacao.Workes;
@@ -14,16 +13,18 @@ public class MqttWorker : BackgroundService
     private readonly IEntityStore _store;
     private readonly MqttManager _mqttLocal;
     private readonly MqttManager _mqttRemoto;
+    private readonly MqttManager _mqttInterno;
     private readonly ILogger<MqttWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly JsonSerializerSettings _mqttLocalSerializer;
     private readonly JsonSerializerSettings _mqttRemotoSerializer;
+    private readonly JsonSerializerSettings _mqttInternoSerializer;
 
     public MqttWorker(
+        [FromKeyedServices(Mqtt.Interno)] MqttManager mqttInterno,
         [FromKeyedServices(Mqtt.Local)] MqttManager mqttLocal,
         [FromKeyedServices(Mqtt.Remoto)] MqttManager mqttRemoto,
-        ILogger<MqttWorker> logger,
         IServiceProvider serviceProvider,
+        ILogger<MqttWorker> logger,
         IEntityStore store
     )
     {
@@ -31,11 +32,19 @@ public class MqttWorker : BackgroundService
         _logger = logger;
         _mqttLocal = mqttLocal;
         _mqttRemoto = mqttRemoto;
+        _mqttInterno = mqttInterno;
         _serviceProvider = serviceProvider;
 
-        _mqttLocalSerializer = JsonConvert.DefaultSettings!.Invoke();
-        _mqttLocalSerializer.Formatting = Formatting.Indented;
-        _mqttLocalSerializer.TypeNameHandling = TypeNameHandling.Objects;
+        _mqttInternoSerializer = JsonConvert.DefaultSettings!.Invoke();
+        _mqttInternoSerializer.Formatting = Formatting.Indented;
+        _mqttInternoSerializer.TypeNameHandling = TypeNameHandling.Objects;
+        _mqttInterno.Current?.SetHandler(
+            async (topic, payload) =>
+            {
+                await ProcessarMensagemLocalAsync(topic, payload);
+            }
+        );
+
         _mqttLocal.Current?.SetHandler(
             async (topic, payload) =>
             {
@@ -57,10 +66,24 @@ public class MqttWorker : BackgroundService
     {
         var localStarted = false;
         var remoteStarted = false;
+        var internalStarted = false;
         while (!_disposed && !stoppingToken.IsCancellationRequested)
         {
             try
             {
+                if (!internalStarted && _mqttInterno.Current != null)
+                {
+                    await _mqttInterno.Current.ConnectAsync();
+                    if (_mqttInterno.Current.IsConnected)
+                    {
+                        _logger.LogInformation(
+                            $"Conectado ao broker MQTT ({_mqttInterno.Host}:{_mqttInterno.Port})"
+                        );
+                        //await _mqttLocal.Current.SubscribeAsync("topic", qos: 0);
+                        internalStarted = true;
+                    }
+                }
+
                 if (!localStarted && _mqttLocal.Current != null)
                 {
                     await _mqttLocal.Current.ConnectAsync();
@@ -124,7 +147,7 @@ public class MqttWorker : BackgroundService
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            var mensagem = JsonConvert.DeserializeObject(payload, _mqttLocalSerializer)!;
+            var mensagem = JsonConvert.DeserializeObject(payload, _mqttInternoSerializer)!;
 
             if (mensagem is Toolbox.Core.Messages.Command command)
             {
@@ -162,12 +185,16 @@ public class MqttWorker : BackgroundService
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
+        if (_disposed)
+            return;
+
         _disposed = true;
         await Task.Delay(10);
         try
         {
             _mqttLocal.Current?.Dispose();
             _mqttRemoto.Current?.Dispose();
+            _mqttInterno.Current?.Dispose();
         }
         finally
         {

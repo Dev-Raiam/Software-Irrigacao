@@ -11,7 +11,7 @@ public class DefinirFrequenciaInversorHandler : ICommandHandler<DefinirFrequenci
 {
     private readonly IMqtt _mqtt;
 
-    public DefinirFrequenciaInversorHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public DefinirFrequenciaInversorHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

@@ -30,7 +30,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
 {
     public const string fileNameRootCA = "ca.crt";
     private readonly ConcurrentDictionary<string, X509Certificate2> _cache = new();
-    private readonly ILogger<CertificateAuthorityService> _logger;
+    //private readonly ILogger<CertificateAuthorityService> _logger;
     private readonly object _sync = new();
     private readonly IEntityStore _store;
 
@@ -40,7 +40,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
     )
     {
         _store = store;
-        _logger = logger;
+        //_logger = logger;
     }
 
     public X509Certificate2 GetCertificate(string subject = "localhost")
@@ -60,7 +60,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         );
         if (data is null)
         {
-            _logger.LogInformation("Creating Root Certificate Authority.");
+            //_logger.LogInformation("Creating Root Certificate Authority.");
             var certificate = CreateRootCertificate();
             Save(certificate, subject: subject);
             return certificate;
@@ -93,7 +93,7 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
         {
             if (_cache.TryGetValue(subject, out var oldCertificate))
             {
-                _logger.LogInformation($"Renewing Root Certificate Authority.");
+                //_logger.LogInformation($"Renewing Root Certificate Authority.");
                 certificate ??= CreateRootCertificate();
                 Save(certificate, subject: subject);
                 _cache[subject] = certificate;
@@ -161,11 +161,15 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
     {
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);
-        //File.WriteAllBytes("ca.pfx", pfx);
         var isKestrel = subject.Equals(CertificateService.Kestrel, StringComparison.OrdinalIgnoreCase);
         if (!isKestrel)
         {
-            CertificateExporter.ExportCertificate(certificate, fileNameRootCA);
+            var fileName = subject.ToLowerInvariant() switch
+            {
+                "localhost" => "mqttinterno.ca",
+                _ => "mqttlocal.ca",
+            };
+            CertificateExporter.ExportCertificate(certificate, fileName);
         }
         InstallRootCertificate(certificate);
         var config = new Certificate

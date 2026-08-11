@@ -76,6 +76,11 @@ namespace Toolbox.Industrial.Core.Data
             public static class Mqtt
             {
                 /// <summary>
+                /// 
+                /// </summary>
+                public static Guid Interno = "Mqtt.Interno".GetId();
+
+                /// <summary>
                 /// d7166437-954a-4065-051c-95c6d3a06b70
                 /// </summary>
                 public static Guid Local = "Mqtt.Local".GetId();
@@ -116,6 +121,7 @@ namespace Toolbox.Industrial.Core.Data
             {
                 public static Guid CertificateAuthority = "Security.Certificate.Authority".GetId();
                 public static Guid CertificateMqttLocal = "Security.Certificate.Mqtt.Local".GetId();
+                public static Guid CertificateMqttInterno = "Security.Certificate.Mqtt.Interno".GetId();
                 public static Guid CertificateMqttRemoto =
                     "Security.Certificate.Mqtt.Remoto".GetId();
                 public static Guid CertificateHttpsLocal =

@@ -11,7 +11,7 @@ public class LerSensorPhHandler : ICommandHandler<LerSensorPh>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorPhHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public LerSensorPhHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

@@ -11,7 +11,7 @@ public class LerSensorCorrenteHandler : ICommandHandler<LerSensorCorrente>
 {
     private readonly IMqtt _mqtt;
 
-    public LerSensorCorrenteHandler([FromKeyedServices(Mqtt.Local)] IMqtt mqtt)
+    public LerSensorCorrenteHandler([FromKeyedServices(Mqtt.Interno)] IMqtt mqtt)
     {
         _mqtt = mqtt;
     }

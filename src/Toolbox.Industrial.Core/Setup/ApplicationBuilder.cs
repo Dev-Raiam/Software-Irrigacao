@@ -33,7 +33,6 @@ public static class ApplicationBuilder
         ApplicationSeedData? applicationSeedData = null
     )
     {
-
         try
         {
             using var scope = app
@@ -71,7 +70,7 @@ public static class ApplicationBuilder
         await ConfigureJwtService(store, provider.GetRequiredService<JwtService>());
         await SynchronizeData(store, provider.GetRequiredService<IMediator>());
         await ConfigureMqttRemoto(store);
-        await ConfigureMqttLocal(
+        await ConfigureMqtt(
             store,
             provider.GetRequiredService<Token>(),
             provider.GetRequiredService<ICertificateAuthorityService>()
@@ -164,24 +163,24 @@ public static class ApplicationBuilder
         catch { }
     }
 
-    private static async Task ConfigureMqttLocal(
+    private static async Task ConfigureMqtt(
         IEntityStore store,
         Token token,
         ICertificateAuthorityService authority
     )
     {
-        Guid id = Entity.Keys.Mqtt.Local;
-        var mqttLocal = await store.ObterConfiguracao<Configuracao>(id);
-        if (mqttLocal?.Valor == null)
+        Configuracao? mqttLocal = null;
+        var mqttInterno = await store.ObterConfiguracao<Configuracao>(Entity.Keys.Mqtt.Interno);
+        if (mqttInterno?.Valor == null)
         {
             var config = new MqttConfiguration();
-            mqttLocal = new Configuracao(
-                id: id,
+            mqttInterno = new Configuracao(
+                id: Entity.Keys.Mqtt.Interno,
                 configuracao: config,
                 grupo: Grupo.Mqtt,
                 tipo: Tipo.Config
             );
-            await store.UpsertAsync(mqttLocal);
+            await store.UpsertAsync(mqttInterno);
         }
 
         var controladores = store.Query<Controlador>().ToList();
@@ -214,6 +213,18 @@ public static class ApplicationBuilder
 
         if (controladores.Count > 0 && !Controlador.Master)
         {
+            mqttLocal = await store.ObterConfiguracao<Configuracao>(Entity.Keys.Mqtt.Local);
+            if (mqttLocal?.Valor == null)
+            {
+                mqttLocal = new Configuracao(
+                    id: Entity.Keys.Mqtt.Local,
+                    configuracao: new MqttConfiguration(),
+                    grupo: Grupo.Mqtt,
+                    tipo: Tipo.Config
+                );
+                await store.UpsertAsync(mqttLocal);
+            }
+
             var config = (MqttConfiguration)mqttLocal.Valor;
             var master = controladores.FirstOrDefault(c => c.Valor.Master);
             var masterHostName = master?.Valor.Conexoes.Host;
@@ -248,7 +259,7 @@ public static class ApplicationBuilder
 
                 config.SetHost(master.Valor.Conexoes.Host);
                 mqttLocal = new Configuracao(
-                    id: id,
+                    id: mqttLocal.Id,
                     configuracao: config,
                     grupo: Grupo.Mqtt,
                     tipo: Tipo.Config
@@ -398,9 +409,6 @@ public static class ApplicationBuilder
                         subject: masterHostName
                     );
                 }
-                //var bytes = await response.Content.ReadAsByteArrayAsync();
-                //var root = X509CertificateLoader.LoadCertificate(bytes);
-                //authority.Save(root, subject: masterHostName);
             }
             else
             {

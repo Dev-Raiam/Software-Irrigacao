@@ -18,6 +18,7 @@ namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public sealed class Mqtt : IMqtt
 {
+    public const string Interno = "interno";
     public const string Local = "local";
     public const string Remoto = "remoto";
     private X509Certificate2? _certificate;
