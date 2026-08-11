@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+systemctl disable irrigacao.service || true
+systemctl disable irrigacao-atualizador.timer || true
+
+systemctl daemon-reload || true

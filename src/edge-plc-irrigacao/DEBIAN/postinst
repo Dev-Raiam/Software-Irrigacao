@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+chmod +x /opt/edge-plc/irrigacao
+chmod +x /opt/edge-plc/irrigacao-atualizador.sh
+
+systemctl daemon-reload
+
+systemctl enable irrigacao.service
+systemctl enable irrigacao-atualizador.timer
+
+systemctl start irrigacao.service
+systemctl start irrigacao-atualizador.timer

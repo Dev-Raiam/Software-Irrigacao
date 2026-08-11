@@ -1,0 +1,10 @@
+Package: edge-plc-irrigacao
+Version: 1.0.0
+Section: misc
+Priority: optional
+Architecture: arm64
+Depends: curl, unzip
+Maintainer: Desenvolvimento <raiam@gerpos.com.br>
+Description: Aplicativo Edge para controle de irrigação via PLC
+ Gerenciamento e automação de irrigação industrial através de
+ controladores lógicos programáveis (PLC) em ambiente edge.
