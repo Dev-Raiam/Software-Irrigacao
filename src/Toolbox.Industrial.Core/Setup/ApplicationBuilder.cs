@@ -1,37 +1,40 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
+using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security;
-using Toolbox.Industrial.Core.Setup;
+using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
-namespace Toolbox.Industrial.Core.Data;
+namespace Toolbox.Industrial.Core.Setup;
 
 public delegate Task ApplicationSeedData(IServiceProvider serviceProvider, IEntityStore store);
 
-public static class SeedData
+public static class ApplicationBuilder
 {
+    public static Stopwatch Stopwatch = new Stopwatch();
     private static ILogger<IApplicationBuilder> _logger = null!;
 
-    public static async Task EnsureSeedData(
-        this IApplicationBuilder app,
+    public static async Task RunAsync(
+        this WebApplication app,
         ApplicationSeedData? applicationSeedData = null
     )
     {
         using var scope = app
-            .ApplicationServices.GetRequiredService<IServiceScopeFactory>()
+            .Services.GetRequiredService<IServiceScopeFactory>()
             .CreateScope();
 
         try
@@ -55,6 +58,9 @@ public static class SeedData
         {
             _logger.LogError(ex, "Erro ao inicializar dados");
         }
+        Stopwatch.Stop();
+        Log.Information("Aplicação inicializada. Tempo Decorrido({Elapsed})", Stopwatch.Elapsed);
+        await app.RunAsync();
     }
 
     private static async Task InternalSeedData(IServiceProvider provider, IEntityStore store)

@@ -216,7 +216,7 @@ namespace Toolbox.Industrial.Core.Setup
                     var topics = new List<MqttTopicFilter>() 
                     {
                         new MqttTopicFilterBuilder()
-                        .WithTopic($"geral/heartbeat")
+                        .WithTopic($"heartbeats")
                         .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                         .Build(),
                     };
@@ -330,17 +330,17 @@ namespace Toolbox.Industrial.Core.Setup
         private static void Register(this List<MqttTopicFilter> topics, Guid controladorId)
         {
             topics.Add(new MqttTopicFilterBuilder()
-                .WithTopic($"controlador/{controladorId}/comando")
+                .WithTopic($"controladores/{controladorId}/comando")
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                 .Build()
             );
             topics.Add(new MqttTopicFilterBuilder()
-                .WithTopic($"controlador/{controladorId}/comando/resposta")
+                .WithTopic($"controladores/{controladorId}/comando/resposta")
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                 .Build()
             );
             topics.Add(new MqttTopicFilterBuilder()
-                .WithTopic($"controlador/{controladorId}/telemetria")
+                .WithTopic($"controladores/{controladorId}/telemetria")
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
                 .Build()
             );

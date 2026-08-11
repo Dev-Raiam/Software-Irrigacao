@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Setup;
+using ApplicationBuilder = Toolbox.Industrial.Core.Setup.ApplicationBuilder;
 
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 Log.Logger = new LoggerConfiguration()
@@ -11,11 +13,9 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
     .CreateBootstrapLogger();
 
-//Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
-
 try
 {
-    var cronometro = Stopwatch.StartNew();
+    ApplicationBuilder.Stopwatch = Stopwatch.StartNew();
     var hostName = Dns.GetHostEntry(Environment.MachineName).HostName;
 
     Log.Information($"Inicializando aplicação {hostName}");
@@ -26,19 +26,7 @@ try
     var app = builder.Build();
     app.UseConfig();
 
-    //using (var scope = app.Services.CreateScope())
-    //{
-    //    var sincronizar = scope.ServiceProvider.GetRequiredService<ISincronizarControladores>();
-
-    //    var configuracao = scope.ServiceProvider.GetRequiredService<IGerenciadorConfiguracao>();
-
-    //    var painelId = configuracao.ObterCredencialPainel();
-
-    //    if (painelId != Guid.Empty)
-    //        await sincronizar.ExecutarAsync(painelId, CancellationToken.None);
-    //}
-
-    await app.EnsureSeedData(
+    await app.RunAsync(
         (provider, store) =>
         {
             //exemplos de uso
@@ -49,10 +37,6 @@ try
             return Task.CompletedTask;
         }
     );
-
-    cronometro.Stop();
-    Log.Information("Aplicação inicializada. Tempo Decorrido({Elapsed})", cronometro.Elapsed);
-    await app.RunAsync();
 }
 catch (Exception ex)
 {

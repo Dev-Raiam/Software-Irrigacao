@@ -11,6 +11,7 @@ using System.Timers;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security;
+using Toolbox.Industrial.Core.Setup;
 using Timer = System.Timers.Timer;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
@@ -258,7 +259,7 @@ public sealed class Mqtt : IMqtt
                     await store.DeleteManyAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.Security.CertificateMqttLocal
                     );
-                    await SeedData.LoadCertificateAuthorityMaster(token, authority, _host);
+                    await ApplicationBuilder.LoadCertificateAuthorityMaster(token, authority, _host);
 
                     await Task.Delay(1000);
                     Environment.Exit(1);
