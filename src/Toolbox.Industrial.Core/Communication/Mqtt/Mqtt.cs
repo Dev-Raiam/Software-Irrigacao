@@ -55,7 +55,6 @@ public sealed class Mqtt : IMqtt
         IServiceProvider provider,
         string purpose,
         Configuration config,
-        ILogger<Mqtt> logger,
         X509Certificate2? certificate = null,
         IEnumerable<MqttTopicFilter>? topics = null
     )
@@ -64,7 +63,8 @@ public sealed class Mqtt : IMqtt
         _purpose = purpose;
         _host = config.Host;
         _port = config.Port;
-        _logger = logger;
+        _logger = provider.GetRequiredService<ILogger<Mqtt>>();
+
         _topics = new List<MqttTopicFilter>(topics ?? []);
         _certificate = certificate;
 
@@ -457,7 +457,6 @@ public sealed class MqttManager
         if (_current == null)
             return;
 
-        var logger = _current.Logger;
         var topics = _current.Topics.ToList();
         var handler = _current.Handler;
         var purpose = _current.Purpose;
@@ -470,7 +469,6 @@ public sealed class MqttManager
         _current = new Mqtt(
             provider: provider,
             config: config,
-            logger: logger,
             topics: topics,
             purpose: purpose,
             certificate: certificate

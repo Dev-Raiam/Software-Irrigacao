@@ -69,7 +69,7 @@ public class MqttWorker : BackgroundService
                         _logger.LogInformation(
                             $"Conectado ao broker MQTT ({_mqttLocal.Host}:{_mqttLocal.Port})"
                         );
-                        await _mqttLocal.Current.SubscribeAsync("topic", qos: 0);
+                        //await _mqttLocal.Current.SubscribeAsync("topic", qos: 0);
                         localStarted = true;
                     }
                 }
@@ -82,20 +82,20 @@ public class MqttWorker : BackgroundService
                         _logger.LogInformation(
                             $"Conectado ao broker MQTT ({_mqttRemoto.Host}:{_mqttRemoto.Port})"
                         );
-                        var controlador = await _store.ObterControladorMaster();
+                        //var controlador = await _store.ObterControladorMaster();
 
-                        if (controlador != null)
-                        {
-                            await _mqttRemoto.Current.SubscribeAsync(
-                                $"comando/{controlador.Id}",
-                                qos: 0
-                            );
-                        }
+                        //if (controlador != null)
+                        //{
+                        //    await _mqttRemoto.Current.SubscribeAsync(
+                        //        $"comando/{controlador.Id}",
+                        //        qos: 0
+                        //    );
+                        //}
 
-                        await _mqttRemoto.Current.SubscribeAsync(
-                            $"comando/4fcb13a6-7e9d-4dd1-ab6f-2a87c9f36b76",
-                            qos: 0
-                        );
+                        //await _mqttRemoto.Current.SubscribeAsync(
+                        //    $"comando/4fcb13a6-7e9d-4dd1-ab6f-2a87c9f36b76",
+                        //    qos: 0
+                        //);
                         remoteStarted = true;
                     }
                 }

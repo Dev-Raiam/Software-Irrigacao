@@ -1,9 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
-using LiteDB;
+﻿using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,9 +8,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MQTTnet;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -48,9 +51,6 @@ namespace Toolbox.Industrial.Core.Setup
                     .ObterConfiguracao<string>(Entity.Keys.Api.BaseAddress)
                     .GetAwaiter()
                     .GetResult();
-                //ApiClient.BaseAddress = store
-                //    .Get<Configuracao>(Entity.Keys.Api.BaseAddress)
-                //    ?.Valor.ToString();
             }
 
             if (ApiClient.BaseAddress != null)
@@ -204,7 +204,6 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
-                    var logger = provider.GetRequiredService<ILogger<Mqtt>>();
                     var certificateService = provider.GetRequiredKeyedService<ICertificateService>(
                         Purpose.MqttLocal
                     );
@@ -214,6 +213,28 @@ namespace Toolbox.Industrial.Core.Setup
                         .GetAwaiter()
                         .GetResult();
 
+                    var topics = new List<MqttTopicFilter>() 
+                    {
+                        new MqttTopicFilterBuilder()
+                        .WithTopic($"geral/heartbeat")
+                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                        .Build(),
+                    };
+
+                    if (Controlador.Master)
+                    {
+                        var controladores = store.Query<Controlador>().ToList();
+                        foreach (var controlador in controladores)
+                        {
+                            topics.Register(controlador.Id);
+                        }
+
+                    }
+                    else
+                    {
+                        topics.Register(Controlador.ControladorId);
+                    }
+
                     var certificate = store.GetCertificate<Certificate>(
                         Entity.Keys.Security.CertificateMqttLocal
                     );
@@ -221,10 +242,10 @@ namespace Toolbox.Industrial.Core.Setup
                     var subject = certificate?.Subject ?? config?.Host ?? "localhost";
                     var mqtt = new Mqtt(
                         provider: provider,
-                        logger: logger,
                         purpose: Mqtt.Local,
-                        certificate: certificateService.GetCertificate(subject),
-                        config: config ?? new MqttConfiguration()
+                        topics: topics,
+                        config: config ?? new MqttConfiguration(),
+                        certificate: certificateService.GetCertificate(subject)
                     );
 
                     return new MqttManager(mqtt);
@@ -240,7 +261,6 @@ namespace Toolbox.Industrial.Core.Setup
                     // Apenas o controlador master deve se conectar ao broker remoto
                     if (Controlador.Master)
                     {
-                        var logger = provider.GetRequiredService<ILogger<Mqtt>>();
                         var store = provider.GetRequiredService<IEntityStore>();
                         //var certificateService =
                         //    provider.GetRequiredKeyedService<ICertificateService>(
@@ -256,14 +276,28 @@ namespace Toolbox.Industrial.Core.Setup
                             .GetAwaiter()
                             .GetResult();
 
+                        var topics = new List<MqttTopicFilter>();
+                        if (Controlador.Master)
+                        {
+                            var controladores = store.Query<Controlador>().ToList();
+                            foreach (var controlador in controladores)
+                            {
+                                topics.Register(controlador.Id);
+                            }
+                        }
+                        else
+                        {
+                            topics.Register(Controlador.ControladorId);
+                        }
+
                         var subject = certificate?.Subject ?? "localhost";
 
                         mqtt = new Mqtt(
                             provider: provider,
-                            logger: logger,
                             purpose: Mqtt.Remoto,
-                            certificate: null, //certificateService.GetCertificate(subject),
-                            config: config ?? new MqttConfiguration()
+                            topics: topics,
+                            config: config ?? new MqttConfiguration(),
+                            certificate: null //certificateService.GetCertificate(subject),
                         );
                     }
 
@@ -291,6 +325,25 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddSingleton<JwtService>();
             services.AddMediator([typeof(DependencyInjectionConfig).Assembly, .. assemblies]);
             return services;
+        }
+
+        private static void Register(this List<MqttTopicFilter> topics, Guid controladorId)
+        {
+            topics.Add(new MqttTopicFilterBuilder()
+                .WithTopic($"controlador/{controladorId}/comando")
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                .Build()
+            );
+            topics.Add(new MqttTopicFilterBuilder()
+                .WithTopic($"controlador/{controladorId}/comando/resposta")
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                .Build()
+            );
+            topics.Add(new MqttTopicFilterBuilder()
+                .WithTopic($"controlador/{controladorId}/telemetria")
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                .Build()
+            );
         }
 
         public static IServiceCollection AddLiteDbEntityStore(
