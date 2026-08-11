@@ -33,25 +33,26 @@ public static class ApplicationBuilder
         ApplicationSeedData? applicationSeedData = null
     )
     {
-        using var scope = app
-            .Services.GetRequiredService<IServiceScopeFactory>()
-            .CreateScope();
 
         try
         {
+            using var scope = app
+                .Services.GetRequiredService<IServiceScopeFactory>()
+                .CreateScope();
+
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
 
-            await InternalSeedData(scope.ServiceProvider, store);
+            await EnsureSeedData(scope.ServiceProvider, store);
 
             var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
-            if (!exporter.Exported)
-            {
-                await exporter.ExportAsync();
-            }
             if (applicationSeedData != null)
             {
                 await applicationSeedData.Invoke(scope.ServiceProvider, store);
+            }
+            if (!exporter.Exported)
+            {
+                await exporter.ExportAsync();
             }
         }
         catch (Exception ex)
@@ -63,7 +64,7 @@ public static class ApplicationBuilder
         await app.RunAsync();
     }
 
-    private static async Task InternalSeedData(IServiceProvider provider, IEntityStore store)
+    private static async Task EnsureSeedData(IServiceProvider provider, IEntityStore store)
     {
         //Manter a sequencia de execução porque a execução depende do processo anterior
         await ConfigureApiBaseAddress(store);

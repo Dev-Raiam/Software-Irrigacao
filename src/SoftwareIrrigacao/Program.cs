@@ -4,15 +4,14 @@ using SoftwareIrrigacao.Setup;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Setup;
 
+Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
+    .CreateBootstrapLogger();
+
 try
 {
-    Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-
-    Log.Logger = new LoggerConfiguration()
-        .WriteTo.Console()
-        .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
-        .CreateBootstrapLogger();
-
     Log.Information($"Inicializando aplicação");
     var builder = WebApplication.CreateBuilder(args);
 
