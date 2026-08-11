@@ -1,24 +1,19 @@
-using System.Diagnostics;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Serilog;
 using SoftwareIrrigacao.Setup;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Setup;
-using ApplicationBuilder = Toolbox.Industrial.Core.Setup.ApplicationBuilder;
-
-Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
-    .CreateBootstrapLogger();
 
 try
 {
-    ApplicationBuilder.Stopwatch = Stopwatch.StartNew();
-    var hostName = Dns.GetHostEntry(Environment.MachineName).HostName;
+    Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-    Log.Information($"Inicializando aplicação {hostName}");
+    Log.Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
+        .CreateBootstrapLogger();
+
+    Log.Information($"Inicializando aplicação");
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddApiConfiguration(builder);

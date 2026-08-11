@@ -25,7 +25,7 @@ public delegate Task ApplicationSeedData(IServiceProvider serviceProvider, IEnti
 
 public static class ApplicationBuilder
 {
-    public static Stopwatch Stopwatch = new Stopwatch();
+    public static Stopwatch Stopwatch = Stopwatch.StartNew();
     private static ILogger<IApplicationBuilder> _logger = null!;
 
     public static async Task RunAsync(
@@ -45,13 +45,13 @@ public static class ApplicationBuilder
             await InternalSeedData(scope.ServiceProvider, store);
 
             var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
-            if (applicationSeedData != null)
-            {
-                await applicationSeedData.Invoke(scope.ServiceProvider, store);
-            }
             if (!exporter.Exported)
             {
                 await exporter.ExportAsync();
+            }
+            if (applicationSeedData != null)
+            {
+                await applicationSeedData.Invoke(scope.ServiceProvider, store);
             }
         }
         catch (Exception ex)
