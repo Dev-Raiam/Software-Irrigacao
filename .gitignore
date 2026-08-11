@@ -29,3 +29,8 @@ Logs/
 # IDE
 .vs/
 .vscode/
+
+
+src/edge-plc-irrigacao/opt/edge-plc/irrigacao
+src/edge-plc-irrigacao/opt/edge-plc/*.dll
+src/edge-plc-irrigacao/opt/edge-plc/*.so

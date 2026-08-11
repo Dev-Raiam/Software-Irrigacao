@@ -1,0 +1,15 @@
+[Unit]
+Description=Serviço de controle de irrigação
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/edge-plc/irrigacao
+WorkingDirectory=/opt/edge-plc
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
