@@ -5,7 +5,6 @@ using SoftwareIrrigacao.Setup;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Setup;
 
-
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 if (args.Length > 0 && (args[0] == "--version" || args[0] == "-v"))
 {
@@ -18,7 +17,6 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.LiteDB(ApiConfig.ConnectionString, logCollectionName: "logs")
     .CreateBootstrapLogger();
-
 
 try
 {

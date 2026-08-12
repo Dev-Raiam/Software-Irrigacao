@@ -230,13 +230,10 @@ internal sealed class CertificateService : ICertificateService, IDisposable
 
             Environment.Exit(1);
         }
-        
+
         if (_purpose == Purpose.MqttLocal)
         {
-            CertificateExporter.Export(
-                certificate,
-                _purpose.ToString().ToLowerInvariant()
-            );
+            CertificateExporter.Export(certificate, _purpose.ToString().ToLowerInvariant());
 
             _logger.LogWarning(
                 $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"

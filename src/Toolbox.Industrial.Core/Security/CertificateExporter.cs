@@ -18,20 +18,15 @@ internal static class CertificateExporter
         File.WriteAllText(path, pem);
     }
 
-    public static void ExportPrivateKey(
-        X509Certificate2 certificate,
-        string path)
+    public static void ExportPrivateKey(X509Certificate2 certificate, string path)
     {
         if (!certificate.HasPrivateKey)
         {
-            throw new CryptographicException(
-                "O certificado não possui chave privada.");
+            throw new CryptographicException("O certificado não possui chave privada.");
         }
         if (certificate.GetECDsaPrivateKey() is ECDsa ecdsa)
         {
-            var pem = PemEncoding.Write(
-                "PRIVATE KEY",
-                ecdsa.ExportPkcs8PrivateKey());
+            var pem = PemEncoding.Write("PRIVATE KEY", ecdsa.ExportPkcs8PrivateKey());
 
             File.WriteAllText(path, pem);
 
@@ -40,17 +35,14 @@ internal static class CertificateExporter
 
         if (certificate.GetRSAPrivateKey() is RSA rsa)
         {
-            var pem = PemEncoding.Write(
-                "PRIVATE KEY",
-                rsa.ExportPkcs8PrivateKey());
+            var pem = PemEncoding.Write("PRIVATE KEY", rsa.ExportPkcs8PrivateKey());
 
             File.WriteAllText(path, pem);
 
             return;
         }
 
-        throw new NotSupportedException(
-            "Unsupported private key algorithm.");
+        throw new NotSupportedException("Unsupported private key algorithm.");
     }
 
     //public static void ExportPrivateKey(X509Certificate2 certificate, string path)

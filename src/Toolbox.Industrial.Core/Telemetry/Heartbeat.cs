@@ -128,7 +128,7 @@ internal sealed class Heartbeat : BackgroundService
                     //Tomar ação caso esteja fazendo algum processo.
                 }
             }
-            catch 
+            catch
             {
                 //Tomar ação caso esteja fazendo algum processo.
             }

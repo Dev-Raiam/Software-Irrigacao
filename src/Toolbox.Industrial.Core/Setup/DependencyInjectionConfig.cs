@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -76,6 +77,7 @@ namespace Toolbox.Industrial.Core.Setup
                 );
             }
         }
+
         // Metodo de Extensão para o Atualizador
         public static IServiceCollection AddLiteDbEntityStore(
             this IServiceCollection services,
@@ -86,8 +88,11 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddSingleton<IEntityStore, LiteDbEntityStore>();
             return services;
         }
+
         // Metodo de Extensão para o Atualizador
-        public static IServiceCollection AddIndustrialCoreAtualizador(this IServiceCollection services) 
+        public static IServiceCollection AddIndustrialCoreAtualizador(
+            this IServiceCollection services
+        )
         {
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
@@ -117,6 +122,7 @@ namespace Toolbox.Industrial.Core.Setup
 
             return services;
         }
+
         public static IServiceCollection AddIndustrialCore(
             this IServiceCollection services,
             params Assembly[] assemblies
@@ -326,14 +332,12 @@ namespace Toolbox.Industrial.Core.Setup
                         Entity.Keys.Security.CertificateMqttInterno
                     );
                     var subject = certificate?.Subject ?? config?.Host ?? "localhost";
-                    var rootCertificate = certificateService.AuthorityService.GetCertificate(subject);
 
                     var mqtt = new Mqtt(
                         provider: provider,
                         purpose: Mqtt.Interno,
                         topics: topics,
                         config: config ?? new MqttConfiguration(),
-                        rootCertificate: rootCertificate,
                         certificate: certificateService.GetCertificate(subject)
                     );
 
@@ -392,13 +396,11 @@ namespace Toolbox.Industrial.Core.Setup
                         );
 
                         var subject = certificate?.Subject ?? config?.Host ?? "localhost";
-                        var rootCertificate = certificateService.AuthorityService.GetCertificate(subject);
                         mqtt = new Mqtt(
                             provider: provider,
                             purpose: Mqtt.Local,
                             topics: topics,
                             config: config ?? new MqttConfiguration(),
-                            rootCertificate: rootCertificate,
                             certificate: certificateService.GetCertificate(subject)
                         );
                     }
@@ -412,11 +414,6 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
-                    var certificateService =
-                        provider.GetRequiredKeyedService<ICertificateService>(
-                            Purpose.MqttRemoto
-                        );
-
                     var certificate = store.GetCertificate<Certificate>(
                         Entity.Keys.Security.CertificateMqttRemoto
                     );
@@ -444,16 +441,24 @@ namespace Toolbox.Industrial.Core.Setup
                             );
                         }
                     }
-
+                    config ??= new MqttConfiguration();
                     var subject = certificate?.Subject ?? "localhost";
-                    //var rootCertificate = certificateService.AuthorityService.GetCertificate(subject);
+                    X509Certificate2? certificado = null;
+                    if (config.Port == 8883)
+                    {
+                        var certificateService =
+                            provider.GetRequiredKeyedService<ICertificateService>(
+                                Purpose.MqttRemoto
+                            );
+                        certificado = certificateService.GetCertificate(subject);
+                    }
+
                     var mqtt = new Mqtt(
                         provider: provider,
                         purpose: Mqtt.Remoto,
                         topics: topics,
-                        config: config ?? new MqttConfiguration(),
-                        rootCertificate: null, // rootCertificate,
-                        certificate: null //certificateService.GetCertificate(subject),
+                        config: config,
+                        certificate: certificado
                     );
                     return new MqttManager(mqtt);
                 }

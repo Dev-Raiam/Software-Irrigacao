@@ -1,3 +1,7 @@
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -5,10 +9,6 @@ using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Serilog;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
@@ -22,7 +22,6 @@ public sealed class Mqtt : IMqtt
     public const string Interno = "mqttinterno";
     public const string Local = "mqttlocal";
     public const string Remoto = "mqttremoto";
-    private X509Certificate2? _rootCertificate;
     private X509Certificate2? _certificate;
     private readonly List<MqttTopicFilter> _topics;
     private readonly MqttClientOptions _options;
@@ -45,12 +44,6 @@ public sealed class Mqtt : IMqtt
         set { _certificate = value; }
     }
 
-    internal X509Certificate2? RootCertificate
-    {
-        get { return _rootCertificate; }
-        set { _rootCertificate = value; }
-    }
-
     internal ILogger<Mqtt> Logger => _logger;
     internal string Host => _host;
     internal int Port => _port;
@@ -67,7 +60,6 @@ public sealed class Mqtt : IMqtt
         IServiceProvider provider,
         string purpose,
         Configuration config,
-        X509Certificate2? rootCertificate,
         X509Certificate2? certificate = null,
         IEnumerable<MqttTopicFilter>? topics = null
     )
@@ -79,7 +71,6 @@ public sealed class Mqtt : IMqtt
         _logger = provider.GetRequiredService<ILogger<Mqtt>>();
         _topics = new List<MqttTopicFilter>(topics ?? []);
         _certificate = certificate;
-        _rootCertificate = rootCertificate;
 
         var options = new MqttClientOptionsBuilder()
             .WithClientId(config.ClientId)
@@ -117,12 +108,14 @@ public sealed class Mqtt : IMqtt
                     {
                         foreach (var status in chain.ChainStatus)
                         {
-                            if (status.Status == X509ChainStatusFlags.NotSignatureValid && Purpose == Local)
+                            if (
+                                status.Status == X509ChainStatusFlags.NotSignatureValid
+                                && Purpose == Local
+                            )
                             {
                                 ReloadCertificateMaster();
                             }
-                            Log.Error(
-                                $"MQTT TLS: {status.Status} - {status.StatusInformation}");
+                            Log.Error($"MQTT TLS: {status.Status} - {status.StatusInformation}");
                         }
                     }
                     return valid;
@@ -155,9 +148,7 @@ public sealed class Mqtt : IMqtt
             }
             if (_initializing)
             {
-                _logger.LogInformation(
-                    $"Conectado ao broker MQTT ({_host}:{_port})"
-                );
+                _logger.LogInformation($"Conectado ao broker MQTT ({_host}:{_port})");
             }
             foreach (var topic in _topics)
             {
@@ -198,10 +189,14 @@ public sealed class Mqtt : IMqtt
         var store = _provider.GetRequiredService<IEntityStore>();
         var token = _provider.GetRequiredService<Token>();
         var authority = _provider.GetRequiredService<ICertificateAuthorityService>();
-        store.DeleteManyAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.Security.CertificateMqttLocal
-        ).GetAwaiter().GetResult();
-        ApplicationBuilder.LoadCertificateAuthorityMaster(token, authority, _host).GetAwaiter().GetResult();
+        store
+            .DeleteManyAsync<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttLocal)
+            .GetAwaiter()
+            .GetResult();
+        ApplicationBuilder
+            .LoadCertificateAuthorityMaster(token, authority, _host)
+            .GetAwaiter()
+            .GetResult();
         _logger.LogWarning(
             $"A aplicação será finalizada para completar a reimplantação do certificado do {_host}"
         );
@@ -260,14 +255,13 @@ public sealed class Mqtt : IMqtt
         }
     }
 
-    public async Task ConnectAsync()
+    public async Task<bool> ConnectAsync()
     {
         if (_mqttClient.IsConnected || _connectGuard.Enabled)
-            return;
+            return _mqttClient.IsConnected;
 
         try
         {
-            //_logger.LogInformation($"Conectando ao broker MQTT ({_host}:{_port})");
             var result = await _mqttClient.ConnectAsync(_options);
             if (result.ResultCode != MqttClientConnectResultCode.Success)
             {
@@ -279,13 +273,19 @@ public sealed class Mqtt : IMqtt
                     _connectGuard.Interval = 1000;
                     _connectGuard.Start();
                 }
-                return;
+                return _mqttClient.IsConnected;
             }
             _initializing = false;
+            return _mqttClient.IsConnected;
         }
         catch (MqttCommunicationException ex)
         {
-            if (ex.Message.Contains("remote certificate was rejected", StringComparison.OrdinalIgnoreCase))
+            if (
+                ex.Message.Contains(
+                    "remote certificate was rejected",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             {
                 if (_purpose == Local)
                 {
@@ -295,8 +295,11 @@ public sealed class Mqtt : IMqtt
 
             if (ex.HResult == -2146233088)
             {
-                await ConnectAsync();
-                return;
+                //Tratar erro An unknown chain building error occurred
+                //Na primeira conexão com o broker.
+                //System.Security.Cryptography.CryptographicException: An unknown chain building error occurred.
+                //System.Security.Cryptography.X509Certificates.X509Chain.Build(X509Certificate2 certificate, Boolean throwOnException) at System.Net.Security.SslStream.SelectClientCertificate()
+                return await ConnectAsync();
             }
             _logger.LogError(
                 ex,
@@ -317,6 +320,7 @@ public sealed class Mqtt : IMqtt
                 _connectGuard.Start();
             }
         }
+        return _mqttClient.IsConnected;
     }
 
     public async Task DisconnectAsync()
@@ -456,7 +460,6 @@ public sealed class Mqtt : IMqtt
         {
             _disposed = true;
             _certificate?.Dispose();
-            _rootCertificate?.Dispose();
             if (_mqttClient.IsConnected)
             {
                 _mqttClient.DisconnectAsync().GetAwaiter().GetResult();
@@ -498,7 +501,6 @@ public sealed class MqttManager
         var provider = _current.Provider;
         var connected = _current.IsConnected;
         var certificate = _current.Certificate;
-        var rootCertificate = _current.RootCertificate;
         _current.Certificate = null;
         _current.Dispose();
 
@@ -507,8 +509,7 @@ public sealed class MqttManager
             config: config,
             topics: topics,
             purpose: purpose,
-            certificate: certificate,
-            rootCertificate: rootCertificate
+            certificate: certificate
         );
         _current.SetHandler(handler);
         if (connected)
