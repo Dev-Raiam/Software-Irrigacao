@@ -260,8 +260,13 @@ public sealed class Mqtt : IMqtt
                     await store.DeleteManyAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.Security.CertificateMqttLocal
                     );
+                    //await store.DeleteManyAsync<Configuracao>(x =>
+                    //    x.Id == Entity.Keys.Security.CertificateMqttLocal
+                    //);
                     await ApplicationBuilder.LoadCertificateAuthorityMaster(token, authority, _host);
-
+                    _logger.LogWarning(
+                        $"A aplicação será finalizada para completar a reimplantação do certificado do {_host}"
+                    );
                     await Task.Delay(1000);
                     Environment.Exit(1);
                 }

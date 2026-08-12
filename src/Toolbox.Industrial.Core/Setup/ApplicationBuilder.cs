@@ -1,12 +1,12 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Serilog;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -14,6 +14,7 @@ using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security;
+using static Toolbox.Industrial.Core.Security.Certificate;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
@@ -234,8 +235,6 @@ public static class ApplicationBuilder
                 );
                 if (certificate == null)
                 {
-                    //apagar as configurações e certificado de Mqtt Local
-                    // await store.DeleteAsync(mqttLocal);
                     await store.DeleteManyAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.Security.CertificateMqttLocal
                     );
@@ -249,7 +248,9 @@ public static class ApplicationBuilder
                     //    tipo: Tipo.Config
                     //);
                     await store.UpsertAsync(mqttLocal);
-
+                    _logger.LogWarning(
+                        $"A aplicação será finalizada para completar a implantação do certificado do {masterHostName}"
+                    );
                     await Task.Delay(1000);
                     Environment.Exit(1);
                     return;
@@ -263,6 +264,9 @@ public static class ApplicationBuilder
                     tipo: Tipo.Config
                 );
                 await store.UpsertAsync(mqttLocal);
+                _logger.LogWarning(
+                    $"A aplicação será finalizada para completar a configuração do certificado do {masterHostName}"
+                );
                 await Task.Delay(1000);
                 Environment.Exit(1);
                 return;

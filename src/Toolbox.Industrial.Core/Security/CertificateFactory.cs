@@ -56,7 +56,7 @@ internal static class CertificateFactory
 
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(eku, critical: true));
 
-        request.CertificateExtensions.Add(BuildSubjectAlternativeNames(subject));
+        request.CertificateExtensions.Add(BuildSubjectAlternativeNames(purpose, subject));
 
         var certificate = authorityService.Sign(
             request,
@@ -75,16 +75,19 @@ internal static class CertificateFactory
         return certificate;
     }
 
-    private static X509Extension BuildSubjectAlternativeNames(string subject)
+    private static X509Extension BuildSubjectAlternativeNames(Purpose purpose, string subject)
     {
         var san = new SubjectAlternativeNameBuilder();
-
         if (
             !subject.Equals("localhost", StringComparison.OrdinalIgnoreCase)
             && !subject.Equals(CertificateService.Kestrel, StringComparison.OrdinalIgnoreCase)
         )
         {
             san.AddDnsName(subject);
+            if (purpose == Purpose.MqttLocal) 
+            {
+                return san.Build();
+            }
         }
 
         san.AddDnsName("localhost");

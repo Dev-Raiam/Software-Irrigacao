@@ -346,13 +346,13 @@ namespace Toolbox.Industrial.Core.Setup
                         );
 
                         var certificate = store.GetCertificate<Certificate>(
-                            Entity.Keys.Security.CertificateMqttInterno
+                            Entity.Keys.Security.CertificateMqttLocal
                         );
 
                         var subject = certificate?.Subject ?? config?.Host ?? "localhost";
                         mqtt = new Mqtt(
                             provider: provider,
-                            purpose: Mqtt.Interno,
+                            purpose: Mqtt.Local,
                             topics: topics,
                             config: config ?? new MqttConfiguration(),
                             certificate: certificateService.GetCertificate(subject)

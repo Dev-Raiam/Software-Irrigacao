@@ -219,8 +219,25 @@ internal sealed class CertificateService : ICertificateService, IDisposable
                 .GetAwaiter()
                 .GetResult();
 
+            _logger.LogWarning(
+                $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"
+            );
             Task.Delay(1000).GetAwaiter().GetResult();
 
+            Environment.Exit(1);
+        }
+        
+        if (_purpose == Purpose.MqttLocal)
+        {
+            CertificateExporter.Export(
+                certificate,
+                _purpose.ToString().ToLowerInvariant()
+            );
+
+            _logger.LogWarning(
+                $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"
+            );
+            Task.Delay(1000).GetAwaiter().GetResult();
             Environment.Exit(1);
         }
     }

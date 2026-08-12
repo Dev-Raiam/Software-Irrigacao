@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Serilog;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
@@ -139,6 +140,9 @@ public static class Endpoints
                     }
                     await store.UpsertAsync(config);
 
+                    Log.Warning(
+                        $"Aplicação será reiniciada para completar a configuração dos logs."
+                    );
                     await Task.Delay(1000);
                     Environment.Exit(1);
                     return Results.Accepted(
@@ -200,6 +204,9 @@ public static class Endpoints
                 "/system/restart",
                 async (CancellationToken cancellationToken) =>
                 {
+                    Log.Warning(
+                        $"Aplicação será reiniciada através de uma solicitação."
+                    );
                     await Task.Delay(1000);
                     Environment.Exit(1);
                     return Results.Accepted(value: "Aplicação será reiniciada.");
@@ -215,6 +222,9 @@ public static class Endpoints
                     var result = Results.NoContent();
                     _ = Task.Run(async () =>
                     {
+                        Log.Warning(
+                            $"O dispositivo será reiniciado através de uma solicitação."
+                        );
                         await Task.Delay(1000);
                         Process? process = null;
                         if (OperatingSystem.IsWindows())
@@ -266,6 +276,9 @@ public static class Endpoints
                     var result = Results.NoContent();
                     _ = Task.Run(async () =>
                     {
+                        Log.Warning(
+                            $"O dispositivo será desligado através de uma solicitação."
+                        );
                         await Task.Delay(1000);
                         Process? process = null;
                         if (OperatingSystem.IsWindows())
