@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.MarkedNet;
 using MQTTnet;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -13,6 +14,7 @@ using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
 using Timer = System.Timers.Timer;
+using Token = Toolbox.Industrial.Core.Communication.Api.Contracts.Token;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
@@ -109,6 +111,21 @@ public sealed class Mqtt : IMqtt
                     {
                         foreach (var status in chain.ChainStatus)
                         {
+                            if (status.Status == X509ChainStatusFlags.NotSignatureValid && Purpose == Local)
+                            {
+                                var store = _provider.GetRequiredService<IEntityStore>();
+                                var token = _provider.GetRequiredService<Token>();
+                                var authority = _provider.GetRequiredService<ICertificateAuthorityService>();
+                                store.DeleteManyAsync<Configuracao>(x =>
+                                    x.Id == Entity.Keys.Security.CertificateMqttLocal
+                                ).GetAwaiter().GetResult();
+                                ApplicationBuilder.LoadCertificateAuthorityMaster(token, authority, _host).GetAwaiter().GetResult();
+                                _logger.LogWarning(
+                                    $"A aplicação será finalizada para completar a reimplantação do certificado do {_host}"
+                                );
+                                Task.Delay(1000).GetAwaiter().GetResult();
+                                Environment.Exit(1);
+                            }
                             Console.WriteLine(
                                 $"MQTT TLS: {status.Status} - {status.StatusInformation}");
                         }

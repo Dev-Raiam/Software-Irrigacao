@@ -146,9 +146,9 @@ public class MqttWorker : BackgroundService
         {
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
             var mensagem = JsonConvert.DeserializeObject(payload, _mqttInternoSerializer)!;
 
+            Console.WriteLine($"Mensagem recebida [LOCAL]: {topic} => {mensagem.GetType().Name} => {payload}");
             if (mensagem is Toolbox.Core.Messages.Command command)
             {
                 await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
@@ -173,6 +173,8 @@ public class MqttWorker : BackgroundService
     {
         try
         {
+            Console.WriteLine($"Mensagem recebida [REMOTO]: {topic} => {payload}");
+
             using var scope = _serviceProvider.CreateScope();
             var dispatcher = scope.ServiceProvider.GetRequiredService<CommandDispatcher>();
             await dispatcher.DispatchAsync(payload);
