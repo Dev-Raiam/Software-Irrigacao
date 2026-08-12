@@ -285,13 +285,15 @@ namespace Toolbox.Industrial.Core.Setup
                     var certificate = store.GetCertificate<Certificate>(
                         Entity.Keys.Security.CertificateMqttInterno
                     );
-
                     var subject = certificate?.Subject ?? config?.Host ?? "localhost";
+                    var rootCertificate = certificateService.AuthorityService.GetCertificate(subject);
+
                     var mqtt = new Mqtt(
                         provider: provider,
                         purpose: Mqtt.Interno,
                         topics: topics,
                         config: config ?? new MqttConfiguration(),
+                        rootCertificate: rootCertificate,
                         certificate: certificateService.GetCertificate(subject)
                     );
 
@@ -350,11 +352,13 @@ namespace Toolbox.Industrial.Core.Setup
                         );
 
                         var subject = certificate?.Subject ?? config?.Host ?? "localhost";
+                        var rootCertificate = certificateService.AuthorityService.GetCertificate(subject);
                         mqtt = new Mqtt(
                             provider: provider,
                             purpose: Mqtt.Local,
                             topics: topics,
                             config: config ?? new MqttConfiguration(),
+                            rootCertificate: rootCertificate,
                             certificate: certificateService.GetCertificate(subject)
                         );
                     }
@@ -368,10 +372,10 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     var store = provider.GetRequiredService<IEntityStore>();
-                    //var certificateService =
-                    //    provider.GetRequiredKeyedService<ICertificateService>(
-                    //        Purpose.MqttRemoto
-                    //    );
+                    var certificateService =
+                        provider.GetRequiredKeyedService<ICertificateService>(
+                            Purpose.MqttRemoto
+                        );
 
                     var certificate = store.GetCertificate<Certificate>(
                         Entity.Keys.Security.CertificateMqttRemoto
@@ -402,12 +406,13 @@ namespace Toolbox.Industrial.Core.Setup
                     }
 
                     var subject = certificate?.Subject ?? "localhost";
-
+                    //var rootCertificate = certificateService.AuthorityService.GetCertificate(subject);
                     var mqtt = new Mqtt(
                         provider: provider,
                         purpose: Mqtt.Remoto,
                         topics: topics,
                         config: config ?? new MqttConfiguration(),
+                        rootCertificate: null, // rootCertificate,
                         certificate: null //certificateService.GetCertificate(subject),
                     );
                     return new MqttManager(mqtt);

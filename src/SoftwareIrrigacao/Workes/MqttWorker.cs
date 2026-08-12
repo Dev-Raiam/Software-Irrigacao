@@ -76,9 +76,9 @@ public class MqttWorker : BackgroundService
                     await _mqttInterno.Current.ConnectAsync();
                     if (_mqttInterno.Current.IsConnected)
                     {
-                        _logger.LogInformation(
-                            $"Conectado ao broker MQTT ({_mqttInterno.Host}:{_mqttInterno.Port})"
-                        );
+                        //_logger.LogInformation(
+                        //    $"Conectado ao broker MQTT ({_mqttInterno.Host}:{_mqttInterno.Port})"
+                        //);
                         //await _mqttLocal.Current.SubscribeAsync("topic", qos: 0);
                         internalStarted = true;
                     }
@@ -89,9 +89,9 @@ public class MqttWorker : BackgroundService
                     await _mqttLocal.Current.ConnectAsync();
                     if (_mqttLocal.Current.IsConnected)
                     {
-                        _logger.LogInformation(
-                            $"Conectado ao broker MQTT ({_mqttLocal.Host}:{_mqttLocal.Port})"
-                        );
+                        //_logger.LogInformation(
+                        //    $"Conectado ao broker MQTT ({_mqttLocal.Host}:{_mqttLocal.Port})"
+                        //);
                         //await _mqttLocal.Current.SubscribeAsync("topic", qos: 0);
                         localStarted = true;
                     }
@@ -102,9 +102,9 @@ public class MqttWorker : BackgroundService
                     await _mqttRemoto.Current.ConnectAsync();
                     if (_mqttRemoto.Current.IsConnected)
                     {
-                        _logger.LogInformation(
-                            $"Conectado ao broker MQTT ({_mqttRemoto.Host}:{_mqttRemoto.Port})"
-                        );
+                        //_logger.LogInformation(
+                        //    $"Conectado ao broker MQTT ({_mqttRemoto.Host}:{_mqttRemoto.Port})"
+                        //);
                         //var controlador = await _store.ObterControladorMaster();
 
                         //if (controlador != null)

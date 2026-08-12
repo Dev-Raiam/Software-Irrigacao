@@ -13,6 +13,8 @@ namespace Toolbox.Industrial.Core.Security;
 
 internal interface ICertificateService
 {
+    ICertificateAuthorityService AuthorityService { get; }
+
     X509Certificate2 GetCertificate(string subject = "localhost");
 
     bool IsExpired(string subject = "localhost");
@@ -57,6 +59,8 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         _purpose = purpose;
         _authorityService = authorityService;
     }
+
+    public ICertificateAuthorityService AuthorityService => _authorityService;
 
     public X509Certificate2 GetCertificate(string subject = "localhost")
     {

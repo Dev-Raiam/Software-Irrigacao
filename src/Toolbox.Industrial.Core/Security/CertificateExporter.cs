@@ -18,23 +18,58 @@ internal static class CertificateExporter
         File.WriteAllText(path, pem);
     }
 
-    public static void ExportPrivateKey(X509Certificate2 certificate, string path)
+    public static void ExportPrivateKey(
+        X509Certificate2 certificate,
+        string path)
     {
-        char[] pem;
-
+        if (!certificate.HasPrivateKey)
+        {
+            throw new CryptographicException(
+                "O certificado não possui chave privada.");
+        }
         if (certificate.GetECDsaPrivateKey() is ECDsa ecdsa)
         {
-            pem = PemEncoding.Write("PRIVATE KEY", ecdsa.ExportPkcs8PrivateKey());
-        }
-        else if (certificate.GetRSAPrivateKey() is RSA rsa)
-        {
-            pem = PemEncoding.Write("PRIVATE KEY", rsa.ExportPkcs8PrivateKey());
-        }
-        else
-        {
-            throw new NotSupportedException("Unsupported private key algorithm.");
+            var pem = PemEncoding.Write(
+                "PRIVATE KEY",
+                ecdsa.ExportPkcs8PrivateKey());
+
+            File.WriteAllText(path, pem);
+
+            return;
         }
 
-        File.WriteAllText(path, pem);
+        if (certificate.GetRSAPrivateKey() is RSA rsa)
+        {
+            var pem = PemEncoding.Write(
+                "PRIVATE KEY",
+                rsa.ExportPkcs8PrivateKey());
+
+            File.WriteAllText(path, pem);
+
+            return;
+        }
+
+        throw new NotSupportedException(
+            "Unsupported private key algorithm.");
     }
+
+    //public static void ExportPrivateKey(X509Certificate2 certificate, string path)
+    //{
+    //    char[] pem;
+
+    //    if (certificate.GetECDsaPrivateKey() is ECDsa ecdsa)
+    //    {
+    //        pem = PemEncoding.Write("PRIVATE KEY", ecdsa.ExportPkcs8PrivateKey());
+    //    }
+    //    else if (certificate.GetRSAPrivateKey() is RSA rsa)
+    //    {
+    //        pem = PemEncoding.Write("PRIVATE KEY", rsa.ExportPkcs8PrivateKey());
+    //    }
+    //    else
+    //    {
+    //        throw new NotSupportedException("Unsupported private key algorithm.");
+    //    }
+
+    //    File.WriteAllText(path, pem);
+    //}
 }
