@@ -5,10 +5,6 @@ if systemctl list-units --type=service --all | grep -q "irrigacao.service"; then
     systemctl stop irrigacao.service || true
 fi
 
-if systemctl list-units --type=service --all | grep -q "irrigacao-atualizador.timer"; then
-    systemctl stop irrigacao-atualizador.timer || true
-fi
-
 if systemctl list-units --type=service --all | grep -q "irrigacao-atualizador.service"; then
     systemctl stop irrigacao-atualizador.service || true
 fi

@@ -2,6 +2,6 @@
 set -e
 
 systemctl disable irrigacao.service || true
-systemctl disable irrigacao-atualizador.timer || true
+systemctl disable irrigacao-atualizador.service || true
 
 systemctl daemon-reload || true
