@@ -76,7 +76,47 @@ namespace Toolbox.Industrial.Core.Setup
                 );
             }
         }
+        // Metodo de Extensão para o Atualizador
+        public static IServiceCollection AddLiteDbEntityStore(
+            this IServiceCollection services,
+            string connectionString
+        )
+        {
+            services.AddSingleton<ILiteDatabase>(sp => new LiteDatabase(connectionString));
+            services.AddSingleton<IEntityStore, LiteDbEntityStore>();
+            return services;
+        }
+        // Metodo de Extensão para o Atualizador
+        public static IServiceCollection AddIndustrialCoreAtualizador(this IServiceCollection services) 
+        {
+            services.AddSingleton<Token>();
+            services.AddSingleton<EntityConfiguration>();
+            services.AddSingleton<ICryptography, Cryptography>();
+            services.AddTransient<AuthGuard>();
+            services
+                .AddDataProtection()
+                // Application Discriminator (isolamento entre aplicações)
+                .SetApplicationName("Automacao")
+                .PersistKeysToFileSystem(
+                    new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys"))
+                );
+            services
+                .AddHttpClient<IApiClient, ApiClient>(ConfigureClientAsync)
+                .AddHttpMessageHandler<AuthGuard>()
+                .AddStandardResilienceHandler();
 
+            services.AddKeyedTransient<IApiClient, ApiClient>(
+                ApiClient.Anonymous,
+                (provider, key) =>
+                {
+                    var httpClient = new HttpClient();
+                    ConfigureClientAsync(provider, httpClient);
+                    return new ApiClient(httpClient);
+                }
+            );
+
+            return services;
+        }
         public static IServiceCollection AddIndustrialCore(
             this IServiceCollection services,
             params Assembly[] assemblies
