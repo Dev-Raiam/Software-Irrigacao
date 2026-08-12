@@ -79,8 +79,10 @@ internal static class CertificateFactory
     {
         var san = new SubjectAlternativeNameBuilder();
 
-        if (!subject.Equals("localhost", StringComparison.OrdinalIgnoreCase) &&
-            !subject.Equals(CertificateService.Kestrel, StringComparison.OrdinalIgnoreCase))
+        if (
+            !subject.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            && !subject.Equals(CertificateService.Kestrel, StringComparison.OrdinalIgnoreCase)
+        )
         {
             san.AddDnsName(subject);
         }

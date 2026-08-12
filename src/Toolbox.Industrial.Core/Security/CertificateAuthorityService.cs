@@ -28,8 +28,9 @@ internal interface ICertificateAuthorityService : IDisposable
 
 internal sealed class CertificateAuthorityService : ICertificateAuthorityService
 {
-    public const string fileNameRootCA = "ca.crt";
+    //public const string fileNameRootCA = "ca.crt";
     private readonly ConcurrentDictionary<string, X509Certificate2> _cache = new();
+
     //private readonly ILogger<CertificateAuthorityService> _logger;
     private readonly object _sync = new();
     private readonly IEntityStore _store;
@@ -161,13 +162,16 @@ internal sealed class CertificateAuthorityService : ICertificateAuthorityService
     {
         var password = GeneratePassword();
         var content = certificate.Export(X509ContentType.Pfx, password);
-        var isKestrel = subject.Equals(CertificateService.Kestrel, StringComparison.OrdinalIgnoreCase);
+        var isKestrel = subject.Equals(
+            CertificateService.Kestrel,
+            StringComparison.OrdinalIgnoreCase
+        );
         if (!isKestrel)
         {
             var fileName = subject.ToLowerInvariant() switch
             {
-                "localhost" => "mqttinterno.ca",
-                _ => "mqttlocal.ca",
+                "localhost" => "mqttinterno.cer",
+                _ => "mqttlocal.cer",
             };
             CertificateExporter.ExportCertificate(certificate, fileName);
         }

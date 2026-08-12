@@ -18,9 +18,9 @@ namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public sealed class Mqtt : IMqtt
 {
-    public const string Interno = "interno";
-    public const string Local = "local";
-    public const string Remoto = "remoto";
+    public const string Interno = "mqttinterno";
+    public const string Local = "mqttlocal";
+    public const string Remoto = "mqttremoto";
     private X509Certificate2? _certificate;
     private readonly List<MqttTopicFilter> _topics;
     private readonly MqttClientOptions _options;
@@ -80,7 +80,7 @@ public sealed class Mqtt : IMqtt
         {
             options = options.WithTlsOptions(tls =>
             {
-                var ca = X509CertificateLoader.LoadCertificateFromFile("ca.crt");
+                var ca = X509CertificateLoader.LoadCertificateFromFile($"{_purpose}.cer");
 
                 tls.UseTls();
                 tls.WithCertificateValidationHandler(context =>

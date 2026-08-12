@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Serilog;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -35,9 +35,7 @@ public static class ApplicationBuilder
     {
         try
         {
-            using var scope = app
-                .Services.GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
+            using var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
 
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
