@@ -7,7 +7,7 @@ public interface IMqtt : IDisposable
 {
     bool IsConnected { get; }
 
-    Task ConnectAsync();
+    Task<bool> ConnectAsync();
 
     Task DisconnectAsync();
 

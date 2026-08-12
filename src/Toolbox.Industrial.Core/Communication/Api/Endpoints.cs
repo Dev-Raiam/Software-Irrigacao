@@ -205,9 +205,7 @@ public static class Endpoints
                 "/system/restart",
                 async (CancellationToken cancellationToken, [FromServices] IHostApplicationLifetime _lifetime) =>
                 {
-                    Log.Warning(
-                        $"Aplicação será reiniciada através de uma solicitação."
-                    );
+                    Log.Warning($"Aplicação será reiniciada através de uma solicitação.");
                     await Task.Delay(1000);
                     _lifetime.StopApplication();
                     //Environment.Exit(1);
@@ -224,9 +222,7 @@ public static class Endpoints
                     var result = Results.NoContent();
                     _ = Task.Run(async () =>
                     {
-                        Log.Warning(
-                            $"O dispositivo será reiniciado através de uma solicitação."
-                        );
+                        Log.Warning($"O dispositivo será reiniciado através de uma solicitação.");
                         await Task.Delay(1000);
                         Process? process = null;
                         if (OperatingSystem.IsWindows())
@@ -278,9 +274,7 @@ public static class Endpoints
                     var result = Results.NoContent();
                     _ = Task.Run(async () =>
                     {
-                        Log.Warning(
-                            $"O dispositivo será desligado através de uma solicitação."
-                        );
+                        Log.Warning($"O dispositivo será desligado através de uma solicitação.");
                         await Task.Delay(1000);
                         Process? process = null;
                         if (OperatingSystem.IsWindows())

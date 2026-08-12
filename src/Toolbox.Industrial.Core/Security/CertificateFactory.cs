@@ -84,7 +84,7 @@ internal static class CertificateFactory
         )
         {
             san.AddDnsName(subject);
-            if (purpose == Purpose.MqttLocal) 
+            if (purpose == Purpose.MqttLocal)
             {
                 return san.Build();
             }
