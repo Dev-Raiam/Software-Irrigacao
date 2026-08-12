@@ -1,7 +1,0 @@
-[Unit]
-Description=Atualizador do software de irrigação
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/bin/bash /opt/edge-plc/irrigacao-atualizador.sh

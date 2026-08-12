@@ -1,4 +1,4 @@
-Package: edge-plc-irrigacao
+Package: edge-plc-irrigacao-arm64
 Version: 1.0.0
 Section: misc
 Priority: optional

@@ -2,12 +2,12 @@
 set -e
 
 chmod +x /opt/edge-plc/irrigacao
-chmod +x /opt/edge-plc/irrigacao-atualizador.sh
+chmod +x /opt/edge-plc/irrigacao-atualizador
 
 systemctl daemon-reload
 
 systemctl enable irrigacao.service
-systemctl enable irrigacao-atualizador.timer
+systemctl enable irrigacao-atualizador.service
 
 systemctl start irrigacao.service
-systemctl start irrigacao-atualizador.timer
+systemctl start irrigacao-atualizador.service

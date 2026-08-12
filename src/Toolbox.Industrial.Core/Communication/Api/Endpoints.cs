@@ -1,9 +1,10 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using Serilog;
+using System.Diagnostics;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
@@ -202,7 +203,7 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/restart",
-                async (CancellationToken cancellationToken) =>
+                async (CancellationToken cancellationToken, [FromServices] IHostApplicationLifetime _lifetime) =>
                 {
                     Log.Warning($"Aplicação será reiniciada através de uma solicitação.");
                     await Application.Restart();

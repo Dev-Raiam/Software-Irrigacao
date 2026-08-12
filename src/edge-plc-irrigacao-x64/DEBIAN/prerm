@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+systemctl stop irrigacao.service || true
+systemctl stop irrigacao-atualizador.service || true
