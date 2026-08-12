@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Telemetry.Services;
 
@@ -8,10 +11,12 @@ namespace Toolbox.Industrial.Core.Telemetry;
 
 internal sealed class Heartbeat : BackgroundService
 {
+    private readonly JsonSerializerSettings _mqttSerializer;
     public static HeartbeatOptions Options = new();
     public event EventHandler<bool>? StatusChanged;
     private readonly ILogger<Heartbeat> _logger;
     private readonly IHeartbeatClient _client;
+    private readonly IMqtt? _mqtt;
     private int _successCount;
     private int _failureCount;
 
@@ -28,15 +33,37 @@ internal sealed class Heartbeat : BackgroundService
     /// </summary>
     public int FailureThreshold { get; init; } = 3;
 
-    public Heartbeat(IHeartbeatClient client, ILogger<Heartbeat> logger)
+    public Heartbeat(
+        [FromKeyedServices(Mqtt.Local)] IMqtt? mqtt,
+        IHeartbeatClient client,
+        ILogger<Heartbeat> logger
+    )
     {
         _client = client;
         _logger = logger;
+        _mqtt = mqtt;
+
+        _mqttSerializer = JsonConvert.DefaultSettings!.Invoke();
+        _mqttSerializer.TypeNameHandling = TypeNameHandling.Objects;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(Options.IntervalHeartbeat);
+        if (_mqtt != null && !Controlador.Master && Controlador.ControladorId != Guid.Empty)
+        {
+            await Task.WhenAll(
+                RunSlaveHeartbeatLoop(stoppingToken),
+                RunOnlineHeartbeatLoop(stoppingToken)
+            );
+
+            return;
+        }
+        await RunOnlineHeartbeatLoop(stoppingToken);
+    }
+
+    private async Task RunOnlineHeartbeatLoop(CancellationToken stoppingToken)
+    {
+        using var timer = new PeriodicTimer(Options.IntervalOnlineHeartbeat);
 
         do
         {
@@ -74,6 +101,45 @@ internal sealed class Heartbeat : BackgroundService
         } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
+    private async Task RunSlaveHeartbeatLoop(CancellationToken stoppingToken)
+    {
+        if (_mqtt == null)
+        {
+            return;
+        }
+
+        using var timer = new PeriodicTimer(Options.IntervalSlaveHeartbeat);
+        do
+        {
+            try
+            {
+                //Slave deve enviar um pulso ao Master
+                //informando que está em operação.
+                if (_mqtt.IsConnected)
+                {
+                    var heartbeat = JsonConvert.SerializeObject(
+                        new SlaveHeartbeat { Id = Controlador.ControladorId },
+                        _mqttSerializer
+                    );
+                    await _mqtt.PublishAsync("heartbeats", heartbeat);
+                }
+                else
+                {
+                    //Tomar ação caso esteja fazendo algum processo.
+                }
+            }
+            catch 
+            {
+                //Tomar ação caso esteja fazendo algum processo.
+            }
+
+            if (timer.Period.CompareTo(Options.IntervalSlaveHeartbeat) != 0)
+            {
+                timer.Period = Options.IntervalSlaveHeartbeat;
+            }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+
     private async Task<bool> CheckAsync(PeriodicTimer timer, CancellationToken stoppingToken)
     {
         try
@@ -86,9 +152,9 @@ internal sealed class Heartbeat : BackgroundService
                 {
                     using var result = await _client.SendAsync(stoppingToken);
                     ApiClient.Online = result.IsSuccessStatusCode;
-                    if (timer.Period.CompareTo(Options.IntervalHeartbeat) != 0)
+                    if (timer.Period.CompareTo(Options.IntervalOnlineHeartbeat) != 0)
                     {
-                        timer.Period = Options.IntervalHeartbeat;
+                        timer.Period = Options.IntervalOnlineHeartbeat;
                     }
                     return result.IsSuccessStatusCode;
                 }
@@ -114,10 +180,16 @@ internal sealed class Heartbeat : BackgroundService
 
 internal sealed record HeartbeatOptions
 {
-    public TimeSpan IntervalHeartbeat { get; init; } = TimeSpan.FromSeconds(10);
+    public TimeSpan IntervalOnlineHeartbeat { get; init; } = TimeSpan.FromSeconds(10);
+    public TimeSpan IntervalSlaveHeartbeat { get; init; } = TimeSpan.FromSeconds(5);
     public TimeSpan IntervalSystemMetrics { get; init; } = TimeSpan.FromMinutes(2);
     public TimeSpan IntervalProcessMetrics { get; init; } = TimeSpan.FromMinutes(3);
     public TimeSpan IntervalNetworkMetrics { get; init; } = TimeSpan.FromSeconds(10);
     public TimeSpan IntervalHardwareMetrics { get; init; } = TimeSpan.FromSeconds(30);
     public TimeSpan IntervalHealthCheckMetrics { get; init; } = TimeSpan.FromMinutes(1);
+}
+
+internal sealed record SlaveHeartbeat
+{
+    public required Guid Id { get; init; }
 }

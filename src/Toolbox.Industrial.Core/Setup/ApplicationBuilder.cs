@@ -14,6 +14,7 @@ using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security;
+using static Toolbox.Industrial.Core.Security.Certificate;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
@@ -35,9 +36,7 @@ public static class ApplicationBuilder
     {
         try
         {
-            using var scope = app
-                .Services.GetRequiredService<IServiceScopeFactory>()
-                .CreateScope();
+            using var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
 
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
@@ -236,8 +235,6 @@ public static class ApplicationBuilder
                 );
                 if (certificate == null)
                 {
-                    //apagar as configurações e certificado de Mqtt Local
-                    // await store.DeleteAsync(mqttLocal);
                     await store.DeleteManyAsync<Configuracao>(x =>
                         x.Id == Entity.Keys.Security.CertificateMqttLocal
                     );
@@ -251,7 +248,9 @@ public static class ApplicationBuilder
                     //    tipo: Tipo.Config
                     //);
                     await store.UpsertAsync(mqttLocal);
-
+                    _logger.LogWarning(
+                        $"A aplicação será finalizada para completar a implantação do certificado do {masterHostName}"
+                    );
                     await Task.Delay(1000);
                     Environment.Exit(1);
                     return;
@@ -265,6 +264,9 @@ public static class ApplicationBuilder
                     tipo: Tipo.Config
                 );
                 await store.UpsertAsync(mqttLocal);
+                _logger.LogWarning(
+                    $"A aplicação será finalizada para completar a configuração do certificado do {masterHostName}"
+                );
                 await Task.Delay(1000);
                 Environment.Exit(1);
                 return;

@@ -1,4 +1,9 @@
-﻿using LiteDB;
+﻿using System.Net.Http.Headers;
+using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -14,11 +19,6 @@ using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -142,6 +142,44 @@ namespace Toolbox.Industrial.Core.Setup
                 }
             );
 
+            services.AddKeyedSingleton<ICertificateService>(
+                Purpose.MqttInterno,
+                (provider, purpose) =>
+                {
+                    return new CertificateService(
+                        (Purpose)purpose,
+                        provider.GetRequiredService<IEntityStore>(),
+                        provider.GetRequiredService<ILogger<CertificateService>>(),
+                        provider.GetRequiredService<ICertificateAuthorityService>()
+                    );
+                }
+            );
+
+            services.AddKeyedSingleton<ICertificateService>(
+                Purpose.MqttLocal,
+                (provider, purpose) =>
+                {
+                    return new CertificateService(
+                        (Purpose)purpose,
+                        provider.GetRequiredService<IEntityStore>(),
+                        provider.GetRequiredService<ILogger<CertificateService>>(),
+                        provider.GetRequiredService<ICertificateAuthorityService>()
+                    );
+                }
+            );
+
+            services.AddKeyedSingleton<ICertificateService>(
+                Purpose.MqttRemoto,
+                (provider, purpose) =>
+                {
+                    return new CertificateService(
+                        (Purpose)purpose,
+                        provider.GetRequiredService<IEntityStore>(),
+                        provider.GetRequiredService<ILogger<CertificateService>>(),
+                        provider.GetRequiredService<ICertificateAuthorityService>()
+                    );
+                }
+            );
 
             services.AddTransient<AuthGuard>();
             services
@@ -218,45 +256,6 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) => provider.GetRequiredKeyedService<MqttManager>(key).Current!
             );
 
-            services.AddKeyedSingleton<ICertificateService>(
-                Purpose.MqttLocal,
-                (provider, purpose) =>
-                {
-                    return new CertificateService(
-                        (Purpose)purpose,
-                        provider.GetRequiredService<IEntityStore>(),
-                        provider.GetRequiredService<ILogger<CertificateService>>(),
-                        provider.GetRequiredService<ICertificateAuthorityService>()
-                    );
-                }
-            );
-
-            services.AddKeyedSingleton<ICertificateService>(
-                Purpose.MqttInterno,
-                (provider, purpose) =>
-                {
-                    return new CertificateService(
-                        (Purpose)purpose,
-                        provider.GetRequiredService<IEntityStore>(),
-                        provider.GetRequiredService<ILogger<CertificateService>>(),
-                        provider.GetRequiredService<ICertificateAuthorityService>()
-                    );
-                }
-            );
-
-            services.AddKeyedSingleton<ICertificateService>(
-                Purpose.MqttRemoto,
-                (provider, purpose) =>
-                {
-                    return new CertificateService(
-                        (Purpose)purpose,
-                        provider.GetRequiredService<IEntityStore>(),
-                        provider.GetRequiredService<ILogger<CertificateService>>(),
-                        provider.GetRequiredService<ICertificateAuthorityService>()
-                    );
-                }
-            );
-
             services.AddKeyedSingleton<MqttManager>(
                 Mqtt.Interno,
                 (provider, key) =>
@@ -277,16 +276,21 @@ namespace Toolbox.Industrial.Core.Setup
                         if (Controlador.Master)
                         {
                             //Saber se os Slaves estão comunicando.
-                            topics.Add(new MqttTopicFilterBuilder()
-                                .WithTopic($"heartbeats")
-                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                                .Build());
+                            topics.Add(
+                                new MqttTopicFilterBuilder()
+                                    .WithTopic($"heartbeats")
+                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                    .Build()
+                            );
 
                             //receber resposta dos comandos (python/módulos)
-                            topics.Add(new MqttTopicFilterBuilder()
-                                .WithTopic($"controladores/{Controlador.ControladorId}/comando/resposta")
-                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                                .Build()
+                            topics.Add(
+                                new MqttTopicFilterBuilder()
+                                    .WithTopic(
+                                        $"controladores/{Controlador.ControladorId}/comando/resposta"
+                                    )
+                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                    .Build()
                             );
 
                             var controladores = store.Query<Controlador>().ToList();
@@ -294,20 +298,26 @@ namespace Toolbox.Industrial.Core.Setup
                             {
                                 //receber dados de telemetria interno (python/módulos) bem como telemetria dos slaves
                                 //publicar no Remoto/LiteDB a telemetria interna.
-                                topics.Add(new MqttTopicFilterBuilder()
-                                    .WithTopic($"controladores/{controlador.Id}/telemetria")
-                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                                    .Build()
+                                topics.Add(
+                                    new MqttTopicFilterBuilder()
+                                        .WithTopic($"controladores/{controlador.Id}/telemetria")
+                                        .WithQualityOfServiceLevel(
+                                            MqttQualityOfServiceLevel.AtMostOnce
+                                        )
+                                        .Build()
                                 );
                             }
                         }
                         else
                         {
                             //receber dados de telemetria (python/módulos) e publicar no Remoto/LiteDB
-                            topics.Add(new MqttTopicFilterBuilder()
-                                .WithTopic($"controladores/{Controlador.ControladorId}/telemetria")
-                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                                .Build()
+                            topics.Add(
+                                new MqttTopicFilterBuilder()
+                                    .WithTopic(
+                                        $"controladores/{Controlador.ControladorId}/telemetria"
+                                    )
+                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                    .Build()
                             );
                         }
                     }
@@ -337,9 +347,10 @@ namespace Toolbox.Industrial.Core.Setup
                     if (!Controlador.Master && Controlador.ControladorId != Guid.Empty)
                     {
                         var store = provider.GetRequiredService<IEntityStore>();
-                        var certificateService = provider.GetRequiredKeyedService<ICertificateService>(
-                            Purpose.MqttLocal
-                        );
+                        var certificateService =
+                            provider.GetRequiredKeyedService<ICertificateService>(
+                                Purpose.MqttLocal
+                            );
 
                         var config = store
                             .ObterConfiguracao<MqttConfiguration>(Entity.Keys.Mqtt.Local)
@@ -349,34 +360,39 @@ namespace Toolbox.Industrial.Core.Setup
                         var topics = new List<MqttTopicFilter>();
 
                         //receber comandos do master ou internamente para execução.
-                        topics.Add(new MqttTopicFilterBuilder()
-                            .WithTopic($"controladores/{Controlador.ControladorId}/comando")
-                            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                            .Build()
+                        topics.Add(
+                            new MqttTopicFilterBuilder()
+                                .WithTopic($"controladores/{Controlador.ControladorId}/comando")
+                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                .Build()
                         );
 
                         //receber resposta do python/módulo e publicar para o master quando necessário
-                        topics.Add(new MqttTopicFilterBuilder()
-                            .WithTopic($"controladores/{Controlador.ControladorId}/comando/resposta")
-                            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                            .Build()
+                        topics.Add(
+                            new MqttTopicFilterBuilder()
+                                .WithTopic(
+                                    $"controladores/{Controlador.ControladorId}/comando/resposta"
+                                )
+                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                .Build()
                         );
                         //receber dados de telemetria interno (python/módulos) e publicar no Remoto/LiteDB,
                         //bem como publicar para o master quando necessário.
-                        topics.Add(new MqttTopicFilterBuilder()
-                            .WithTopic($"controladores/{Controlador.ControladorId}/telemetria")
-                            .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                            .Build()
+                        topics.Add(
+                            new MqttTopicFilterBuilder()
+                                .WithTopic($"controladores/{Controlador.ControladorId}/telemetria")
+                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                .Build()
                         );
 
                         var certificate = store.GetCertificate<Certificate>(
-                            Entity.Keys.Security.CertificateMqttInterno
+                            Entity.Keys.Security.CertificateMqttLocal
                         );
 
                         var subject = certificate?.Subject ?? config?.Host ?? "localhost";
                         mqtt = new Mqtt(
                             provider: provider,
-                            purpose: Mqtt.Interno,
+                            purpose: Mqtt.Local,
                             topics: topics,
                             config: config ?? new MqttConfiguration(),
                             certificate: certificateService.GetCertificate(subject)
@@ -416,10 +432,11 @@ namespace Toolbox.Industrial.Core.Setup
                             //Receber comandos externos (Master e Slaves),
                             //e publicar para os slaves os comandos destinados a eles
                             //após passar por validação se é possivel executar o comando.
-                            topics.Add(new MqttTopicFilterBuilder()
-                                .WithTopic($"controladores/{controlador.Id}/comando")
-                                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                                .Build()
+                            topics.Add(
+                                new MqttTopicFilterBuilder()
+                                    .WithTopic($"controladores/{controlador.Id}/comando")
+                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                    .Build()
                             );
                         }
                     }

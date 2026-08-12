@@ -110,7 +110,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         subject.ThrowIfNull(nameof(subject));
 
         var id = GetId();
-        var data = _store.GetCertificate<Certificate>(id, subject: null); 
+        var data = _store.GetCertificate<Certificate>(id, subject: null);
 
         if (data is null)
         {
@@ -140,14 +140,14 @@ internal sealed class CertificateService : ICertificateService, IDisposable
     }
 
     private Grupo ObterGrupo() =>
-    _purpose switch
-    {
-        Purpose.MqttInterno => Grupo.Mqtt,
-        Purpose.MqttLocal => Grupo.Mqtt,
-        Purpose.MqttRemoto => Grupo.Mqtt,
-        Purpose.HttpsLocal => Grupo.App,
-        _ => throw new NotSupportedException($"Unsupported certificate purpose: {_purpose}"),
-    };
+        _purpose switch
+        {
+            Purpose.MqttInterno => Grupo.Mqtt,
+            Purpose.MqttLocal => Grupo.Mqtt,
+            Purpose.MqttRemoto => Grupo.Mqtt,
+            Purpose.HttpsLocal => Grupo.App,
+            _ => throw new NotSupportedException($"Unsupported certificate purpose: {_purpose}"),
+        };
 
     private void Save(Guid id, X509Certificate2 certificate, string subject)
     {
@@ -165,7 +165,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             NotAfter = certificate.NotAfter,
             CreatedAt = DateTime.UtcNow,
         };
-            
+
         Task.Run(() =>
                 _store.UpsertAsync(
                     new Configuracao(
@@ -219,8 +219,25 @@ internal sealed class CertificateService : ICertificateService, IDisposable
                 .GetAwaiter()
                 .GetResult();
 
+            _logger.LogWarning(
+                $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"
+            );
             Task.Delay(1000).GetAwaiter().GetResult();
 
+            Environment.Exit(1);
+        }
+        
+        if (_purpose == Purpose.MqttLocal)
+        {
+            CertificateExporter.Export(
+                certificate,
+                _purpose.ToString().ToLowerInvariant()
+            );
+
+            _logger.LogWarning(
+                $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"
+            );
+            Task.Delay(1000).GetAwaiter().GetResult();
             Environment.Exit(1);
         }
     }
@@ -417,16 +434,17 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         const string user = "mosquitto";
         const string group = "root";
 
+        var ca = $"{_purpose}.cer".ToLowerInvariant();
         var crt = $"{_purpose}.crt".ToLowerInvariant();
         var key = $"{_purpose}.key".ToLowerInvariant();
 
         if (OperatingSystem.IsLinux())
         {
+            await Chmod(ca, "644");
             await Chmod(crt, "644");
-            await Chmod(CertificateAuthorityService.fileNameRootCA, "644");
             await Chmod(key, "600");
 
-            await Chown(CertificateAuthorityService.fileNameRootCA, user, group);
+            await Chown(ca, user, group);
             await Chown(crt, user, group);
             await Chown(key, user, group);
 
@@ -486,7 +504,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
         var config = new MqttConfig(
             ListenerPort: 8883,
             AllowAnonymous: false,
-            CaFile: Path.Combine(path, CertificateAuthorityService.fileNameRootCA),
+            CaFile: Path.Combine(path, $"{fileName}.cer"),
             CertFile: Path.Combine(path, $"{fileName}.crt"),
             KeyFile: Path.Combine(path, $"{fileName}.key"),
             RequireCertificate: true,
