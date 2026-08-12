@@ -9,6 +9,7 @@ using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Commands;
 using Toolbox.Industrial.Core.Security;
+using Toolbox.Industrial.Core.Setup;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using SerilogConfig = Toolbox.Industrial.Core.Setup.Configuration;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
@@ -143,8 +144,7 @@ public static class Endpoints
                     Log.Warning(
                         $"Aplicação será reiniciada para completar a configuração dos logs."
                     );
-                    await Task.Delay(1000);
-                    Environment.Exit(1);
+                    await Application.Restart();
                     return Results.Accepted(
                         value: new string[]
                         {
@@ -205,8 +205,7 @@ public static class Endpoints
                 async (CancellationToken cancellationToken) =>
                 {
                     Log.Warning($"Aplicação será reiniciada através de uma solicitação.");
-                    await Task.Delay(1000);
-                    Environment.Exit(1);
+                    await Application.Restart();
                     return Results.Accepted(value: "Aplicação será reiniciada.");
                 }
             )

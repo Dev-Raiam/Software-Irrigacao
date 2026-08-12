@@ -193,15 +193,14 @@ public sealed class Mqtt : IMqtt
             .DeleteManyAsync<Configuracao>(x => x.Id == Entity.Keys.Security.CertificateMqttLocal)
             .GetAwaiter()
             .GetResult();
-        ApplicationBuilder
+        Application
             .LoadCertificateAuthorityMaster(token, authority, _host)
             .GetAwaiter()
             .GetResult();
         _logger.LogWarning(
             $"A aplicação será finalizada para completar a reimplantação do certificado do {_host}"
         );
-        Task.Delay(1000).GetAwaiter().GetResult();
-        Environment.Exit(1);
+        Application.Restart().GetAwaiter().GetResult();
     }
 
     private async void Reconnect(object source, ElapsedEventArgs e)

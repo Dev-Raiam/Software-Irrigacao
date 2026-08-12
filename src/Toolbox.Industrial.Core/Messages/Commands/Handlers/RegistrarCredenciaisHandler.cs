@@ -8,6 +8,7 @@ using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security.Cryptography;
+using Toolbox.Industrial.Core.Setup;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
@@ -160,8 +161,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
                 "A aplicação será finalizada para completar o ciclo de reconfiguração."
             );
 
-            await Task.Delay(1000);
-            Environment.Exit(1);
+            await Application.Restart();
         }
 
         return NoContent();

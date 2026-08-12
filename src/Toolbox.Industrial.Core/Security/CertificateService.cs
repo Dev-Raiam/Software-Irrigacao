@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Toolbox.Core.Extensions;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
+using Toolbox.Industrial.Core.Setup;
 using static Toolbox.Industrial.Core.Security.Certificate;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
@@ -226,9 +227,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             _logger.LogWarning(
                 $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"
             );
-            Task.Delay(1000).GetAwaiter().GetResult();
-
-            Environment.Exit(1);
+            Application.Restart().GetAwaiter().GetResult();
         }
 
         if (_purpose == Purpose.MqttLocal)
@@ -238,8 +237,7 @@ internal sealed class CertificateService : ICertificateService, IDisposable
             _logger.LogWarning(
                 $"A aplicação será finalizada para completar a configuração do certificado {_purpose}"
             );
-            Task.Delay(1000).GetAwaiter().GetResult();
-            Environment.Exit(1);
+            Application.Restart().GetAwaiter().GetResult();
         }
     }
 

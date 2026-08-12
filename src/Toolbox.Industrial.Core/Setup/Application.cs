@@ -1,12 +1,14 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Serilog;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -24,16 +26,18 @@ namespace Toolbox.Industrial.Core.Setup;
 
 public delegate Task ApplicationSeedData(IServiceProvider serviceProvider, IEntityStore store);
 
-public static class ApplicationBuilder
+public static class Application
 {
     public static Stopwatch Stopwatch = Stopwatch.StartNew();
     private static ILogger<IApplicationBuilder> _logger = null!;
+    private static IApplicationBuilder _app = null!;
 
     public static async Task RunAsync(
         this WebApplication app,
         ApplicationSeedData? applicationSeedData = null
     )
     {
+        _app = app;
         try
         {
             using var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
@@ -60,6 +64,24 @@ public static class ApplicationBuilder
         Stopwatch.Stop();
         Log.Information("Aplicação inicializada. Tempo Decorrido({Elapsed})", Stopwatch.Elapsed);
         await app.RunAsync();
+    }
+
+    public static async Task Restart()
+    {
+        //"architecture":"aarch64"
+        // var architecture = RuntimeInformation.OSArchitecture.ToString();
+        //"operatingSystem":"Debian GNU/Linux 12 (bookworm)"
+        var operatingSystem = RuntimeInformation.OSDescription;
+        if (operatingSystem.Contains("Debian", StringComparison.OrdinalIgnoreCase) ||
+            operatingSystem.Contains("Windows", StringComparison.OrdinalIgnoreCase))
+        {
+            await Task.Delay(1000);
+            Environment.Exit(1);
+            return;
+        }
+        var lifetime = _app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+        await Task.Delay(1000);
+        lifetime.StopApplication();
     }
 
     private static async Task EnsureSeedData(IServiceProvider provider, IEntityStore store)
@@ -251,8 +273,7 @@ public static class ApplicationBuilder
                     _logger.LogWarning(
                         $"A aplicação será finalizada para completar a implantação do certificado do {masterHostName}"
                     );
-                    await Task.Delay(1000);
-                    Environment.Exit(1);
+                    await Application.Restart();
                     return;
                 }
 
@@ -267,8 +288,7 @@ public static class ApplicationBuilder
                 _logger.LogWarning(
                     $"A aplicação será finalizada para completar a configuração do certificado do {masterHostName}"
                 );
-                await Task.Delay(1000);
-                Environment.Exit(1);
+                await Application.Restart();
                 return;
             }
         }
@@ -417,15 +437,15 @@ public static class ApplicationBuilder
                 _logger.LogError(
                     "Falha ao obter certificado da autoridade certificadora do controlador master"
                 );
-                await Task.Delay(1000);
-                Environment.Exit(1);
+                await Application.Restart();
+                return;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError($"Ocorreu um erro ao obter certificado do controlador master: {ex}");
-            await Task.Delay(1000);
-            Environment.Exit(1);
+            await Application.Restart();
+            return;
         }
     }
 
