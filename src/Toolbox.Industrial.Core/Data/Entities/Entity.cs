@@ -43,6 +43,11 @@ namespace Toolbox.Industrial.Core.Data
             public static Guid PainelId = "Padrao.PainelId".GetId();
 
             /// <summary>
+            /// 
+            /// </summary>
+            public static Guid IntegracaoId = "Padrao.IntegracaoId".GetId();
+
+            /// <summary>
             ///
             /// </summary>
             public static Guid ControladorId = "Padrao.ControladorId".GetId();

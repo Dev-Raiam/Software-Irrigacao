@@ -47,6 +47,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         if (
             string.IsNullOrWhiteSpace(request.Segredo)
             || string.IsNullOrWhiteSpace(request.Chave)
+            || request.IntegracaoId == Guid.Empty
             || request.ContextoId == Guid.Empty
             || request.PainelId == Guid.Empty
             || request.ContaId == Guid.Empty
@@ -74,31 +75,17 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         #region Verificar reconfiguração
 
-        //Guid.TryParse(
-        //    (await _store.GetAsync<Configuracao>(Entity.Keys.Auth.ContextoId))?.Valor.ToString(),
-        //    out var contextoId
-        //);
         var contextoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.Auth.ContextoId);
         var restart = contextoId == Guid.Empty;
         if (contextoId != Guid.Empty)
         {
-            //Guid.TryParse(
-            //    (await _store.GetAsync<Configuracao>(Entity.Keys.ControladorId))?.Valor.ToString(),
-            //    out var controladorId
-            //);
             var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
-            //Guid.TryParse(
-            //    (await _store.GetAsync<Configuracao>(Entity.Keys.PainelId))?.Valor.ToString(),
-            //    out var painelId
-            //);
+            var integracaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.IntegracaoId);
             var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
-            //Guid.TryParse(
-            //    (await _store.GetAsync<Configuracao>(Entity.Keys.ContaId))?.Valor.ToString(),
-            //    out var contaId
-            //);
             var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
             if (
                 controladorId != request.ControladorId
+                || integracaoId != request.IntegracaoId
                 || contextoId != request.ContextoId
                 || painelId != request.PainelId
                 || contaId != request.ContaId
@@ -129,6 +116,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             ),
             new(Entity.Keys.ContaId, $"{request.ContaId}", grupo: Grupo.App, tipo: Tipo.Config),
             new(Entity.Keys.PainelId, $"{request.PainelId}", grupo: Grupo.App, tipo: Tipo.Config),
+            new(Entity.Keys.IntegracaoId, $"{request.IntegracaoId}", grupo: Grupo.App, tipo: Tipo.Config),
         ];
         if (request.ControladorId != null)
         {
