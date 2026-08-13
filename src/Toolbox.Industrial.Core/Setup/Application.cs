@@ -1,14 +1,15 @@
-﻿using System.Diagnostics;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
+﻿using LiteDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -16,7 +17,6 @@ using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Security;
-using static Toolbox.Industrial.Core.Security.Certificate;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using MqttConfiguration = Toolbox.Industrial.Core.Communication.Mqtt.Configuration;
@@ -30,10 +30,17 @@ public static class Application
 {
     public static Stopwatch Stopwatch = Stopwatch.StartNew();
     private static ILogger<IApplicationBuilder> _logger = null!;
-    private static IApplicationBuilder _app = null!;
+    private static IHost _app = null!;
+
+    public static void UpdateRun(HostApplicationBuilder builder, string connectionString)
+    {
+        builder.Services.AddIndustrialCoreAtualizador().AddLiteDbEntityStore(connectionString);
+        _app = builder.Build();
+        _app.Run();
+    }
 
     public static async Task RunAsync(
-        this WebApplication app,
+        WebApplication app,
         ApplicationSeedData? applicationSeedData = null
     )
     {
@@ -81,7 +88,7 @@ public static class Application
             Environment.Exit(1);
             return;
         }
-        var lifetime = _app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
+        var lifetime = _app.Services.GetRequiredService<IHostApplicationLifetime>();
         await Task.Delay(1000);
         //Environment.FailFast(("");
         lifetime.StopApplication();

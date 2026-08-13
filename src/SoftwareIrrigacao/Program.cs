@@ -28,7 +28,8 @@ try
     var app = builder.Build();
     app.UseConfig();
 
-    await app.RunAsync(
+    await Application.RunAsync(
+        app,
         (provider, store) =>
         {
             //exemplos de uso

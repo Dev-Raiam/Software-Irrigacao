@@ -7,10 +7,4 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddHostedService<Atualizador>();
 
-const string ConnectionString =
-    $"Filename=irrigacao.db;Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared";
-
-builder.Services.AddIndustrialCoreAtualizador().AddLiteDbEntityStore(ConnectionString);
-
-var host = builder.Build();
-host.Run();
+Application.UpdateRun(builder, $"Filename=irrigacao.db;Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared");
