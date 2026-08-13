@@ -11,26 +11,13 @@
     <NoWarn>CS8981,IDE1006</NoWarn>
     <UserSecretsId>9f6b9367-ffcc-4737-bbcd-d4f16e150b14</UserSecretsId>
   </PropertyGroup>
-  <PropertyGroup>
-    <!-- RELEASE — Linux x64  -->
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
-    <AssemblyName>irrigacao</AssemblyName>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <Optimize>true</Optimize>
-    <PublishTrimmed>false</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
-  <!-- RELEASE — Linux ARM64 -->
   <PropertyGroup>
     <AssemblyName>irrigacao</AssemblyName>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

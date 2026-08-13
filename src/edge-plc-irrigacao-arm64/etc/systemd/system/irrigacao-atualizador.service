@@ -6,8 +6,8 @@ After=network.target
 Type=simple
 ExecStart=/opt/edge-plc/irrigacao-atualizador
 WorkingDirectory=/opt/edge-plc
-Restart=always
-RestartSec=2s
+Restart=on-failure
+RestartSec=5s
 StandardOutput=journal
 StandardError=journal
 

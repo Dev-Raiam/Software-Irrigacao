@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Toolbox.Core.Mediator;
@@ -314,6 +315,11 @@ public static class Application
             && !host.HostName.Equals(hostName, StringComparison.OrdinalIgnoreCase)
         )
         {
+            var currentArchitecture = RuntimeInformation.OSArchitecture;
+
+            if (currentArchitecture == Architecture.X64)
+                return;
+
             if (OperatingSystem.IsLinux())
             {
                 using var process = new Process();
@@ -383,6 +389,7 @@ public static class Application
 
     private static void UpdateEtcHosts(string hostName)
     {
+        return;
         var path = "/etc/hosts";
         var lines = File.ReadAllLines(path).ToList();
 
