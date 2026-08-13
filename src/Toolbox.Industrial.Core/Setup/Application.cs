@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -72,8 +72,10 @@ public static class Application
         // var architecture = RuntimeInformation.OSArchitecture.ToString();
         //"operatingSystem":"Debian GNU/Linux 12 (bookworm)"
         var operatingSystem = RuntimeInformation.OSDescription;
-        if (operatingSystem.Contains("Debian", StringComparison.OrdinalIgnoreCase) ||
-            operatingSystem.Contains("Windows", StringComparison.OrdinalIgnoreCase))
+        if (
+            operatingSystem.Contains("Debian", StringComparison.OrdinalIgnoreCase)
+            || operatingSystem.Contains("Windows", StringComparison.OrdinalIgnoreCase)
+        )
         {
             await Task.Delay(1000);
             Environment.Exit(1);
@@ -81,7 +83,9 @@ public static class Application
         }
         var lifetime = _app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
         await Task.Delay(1000);
+        //Environment.FailFast(("");
         lifetime.StopApplication();
+
     }
 
     private static async Task EnsureSeedData(IServiceProvider provider, IEntityStore store)
