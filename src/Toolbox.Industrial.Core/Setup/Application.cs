@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Toolbox.Core.Mediator;
@@ -36,11 +36,19 @@ public static class Application
     private static Guid _integracaoId = Guid.Empty;
     private static IHost _app = null!;
 
-    public static void UpdateRun(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
+    public static async Task UpdateRun(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
     {
         _integracaoId = integracaoId;
         builder.Services.AddIndustrialCoreAtualizador().AddLiteDbEntityStore(connectionString);
         _app = builder.Build();
+
+        using var scope = _app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
+        _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
+        var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
+
+        await ConfigureApiBaseAddress(store);
+        //await ConfigureJwtService(store, scope.ServiceProvider.GetRequiredService<JwtService>());
+
         _app.Run();
     }
 
@@ -106,6 +114,7 @@ public static class Application
     private static async Task EnsureSeedData(IServiceProvider provider, IEntityStore store)
     {
         //Manter a sequencia de execução porque a execução depende do processo anterior
+        await ConfigureVersion(store);
         await ConfigureApiBaseAddress(store);
         await ConfigureJwtService(store, provider.GetRequiredService<JwtService>());
         await SynchronizeData(store, provider.GetRequiredService<IMediator>());
@@ -135,7 +144,27 @@ public static class Application
         }
         ApiClient.BaseAddress = apiBaseAddress;
     }
+    private static async Task ConfigureVersion(IEntityStore store)
+    {
+        var id = Entity.Keys.VersaoAtual;
+        var version = await store.ObterConfiguracao<string>(id);
+        if (version == null)
+        {
+            var versionString = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 
+            if(versionString != null) 
+            {
+                await store.UpsertAsync(
+                    new Configuracao(
+                        id: id,
+                        configuracao: versionString,
+                        grupo: Grupo.App,
+                        tipo: Tipo.Config
+                    )
+                );
+            }
+        }
+    }
     private static async Task ConfigureJwtService(IEntityStore store, JwtService jwtService)
     {
         var id = Entity.Keys.Api.Jwt.ValidIssuers;

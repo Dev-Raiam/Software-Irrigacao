@@ -7,9 +7,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-Irrigacao.Atualizador-98b6b398-aeb8-4419-b40b-bb14eaeaee0f</UserSecretsId>
+    <BaseOutputPath>D:\Desenvolvimento\Backend\SoftwareIrrigacao\src\SoftwareIrrigacao\bin</BaseOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <AssemblyName>irrigacao-atualizador</AssemblyName>

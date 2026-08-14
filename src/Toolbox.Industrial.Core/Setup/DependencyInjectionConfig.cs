@@ -103,7 +103,7 @@ namespace Toolbox.Industrial.Core.Setup
                 // Application Discriminator (isolamento entre aplicações)
                 .SetApplicationName("Automacao")
                 .PersistKeysToFileSystem(
-                    new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys"))
+                    new DirectoryInfo("keys")
                 );
             services
                 .AddHttpClient<IApiClient, ApiClient>(ConfigureClientAsync)

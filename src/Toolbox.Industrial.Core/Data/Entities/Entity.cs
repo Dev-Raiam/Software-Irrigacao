@@ -30,7 +30,7 @@ namespace Toolbox.Industrial.Core.Data
             );
         }
 
-        internal class Keys
+        public class Keys
         {
             /// <summary>
             /// c8327b74-9333-45fc-f5b0-1235a2c1fd1a
@@ -51,6 +51,10 @@ namespace Toolbox.Industrial.Core.Data
             ///
             /// </summary>
             public static Guid ControladorId = "Padrao.ControladorId".GetId();
+            /// <summary>
+            /// d640e94a-0d64-4c80-b0b2-0e0bd5421316
+            /// </summary>
+            public static Guid VersaoAtual = "Padrao.VersaoAtual".GetId();  
 
             public static class Serilog
             {
