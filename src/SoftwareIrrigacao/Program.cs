@@ -21,7 +21,6 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information($"Inicializando aplicação");
-    Log.Information($"Atualizada Agora Nova Versão");
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddApiConfiguration(builder);

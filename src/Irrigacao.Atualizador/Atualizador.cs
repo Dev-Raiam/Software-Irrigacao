@@ -46,24 +46,22 @@ namespace Irrigacao.Atualizador
             "https://api.github.com/repos/Dev-Raiam/Software-Irrigacao/releases/latest";
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            _logger.LogInformation("Atualizador Iniciado: {time}", DateTimeOffset.Now);
-
-            try
+        {   
+            while (!stoppingToken.IsCancellationRequested)
             {
-                while (!stoppingToken.IsCancellationRequested)
+                try
                 {
                     var newUpdate = await UpdateChecker(stoppingToken);
 
                     if (newUpdate)
                         await UpdateInstaller(stoppingToken);
-
-                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
                 }
-            }
-            catch
-            {
-                _logger.LogError("Erro inesperado na execução do serviço");
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro inesperado na execução do serviço");
+                }
+
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
 
@@ -79,7 +77,6 @@ namespace Irrigacao.Atualizador
             if (!response.Success)
             {
                 _logger.LogWarning(response.Error);
-
                 return false;
             }
 
@@ -138,12 +135,6 @@ namespace Irrigacao.Atualizador
             if (!binaryCompatible)
                 return;
 
-            //if (!File.Exists(_binaryPath))
-            //{
-            //    _logger.LogError("Binário não encontrado em {binaryPath}", _binaryPath);
-            //    return;
-            //}
-
             if (StopService("irrigacao"))
             {
                 var backupPath = "/opt/edge-plc-backup";
@@ -154,16 +145,9 @@ namespace Irrigacao.Atualizador
 
                     if (MoveNewBinary(newBinaryPath, _binaryPath))
                     {
-                        if (StartService("irrigacao"))
-                        {
-                            _logger.LogInformation("Atualização concluída com sucesso para versão");
-                        }
+                        StartService("irrigacao");
                     }
                 }
-            }
-            else
-            {
-                _logger.LogInformation("Falha na Atualização");
             }
         }
 
@@ -364,7 +348,6 @@ namespace Irrigacao.Atualizador
             );
             File.Copy(sourcePath, destinationPath, true);
 
-            // Dar permissão de execução
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
