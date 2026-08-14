@@ -20,8 +20,8 @@ namespace Toolbox.Industrial.Core.Messages.Commands
         [Required(ErrorMessage = "PainelId é obrigatório")]
         public Guid PainelId { get; init; }
 
-        [Required(ErrorMessage = "IntegracaoId é obrigatório")]
-        public Guid IntegracaoId { get; init; }
+        //[Required(ErrorMessage = "IntegracaoId é obrigatório")]
+        //public Guid IntegracaoId { get; init; }
 
         public Guid? ControladorId { get; init; }
     }
