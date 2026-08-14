@@ -8,13 +8,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-Irrigacao.Atualizador-98b6b398-aeb8-4419-b40b-bb14eaeaee0f</UserSecretsId>
   </PropertyGroup>
-  <PropertyGroup>
-    <!-- RELEASE — Linux x64  -->
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <AssemblyName>irrigacao-atualizador</AssemblyName>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -22,20 +22,6 @@
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
-  <!-- RELEASE — Linux ARM64 -->
-  <PropertyGroup>
-    <AssemblyName>irrigacao-atualizador</AssemblyName>
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <Optimize>true</Optimize>
-    <PublishTrimmed>false</PublishTrimmed>
-    <PublishReadyToRun>true</PublishReadyToRun>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.11" />
