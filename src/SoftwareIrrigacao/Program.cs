@@ -30,6 +30,7 @@ try
 
     await Application.RunAsync(
         app,
+        integracaoId: Guid.Parse("2eb57304-1df3-4883-8f81-29b3e9426f6c"),
         (provider, store) =>
         {
             //exemplos de uso

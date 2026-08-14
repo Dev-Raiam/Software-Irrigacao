@@ -29,12 +29,16 @@ public delegate Task ApplicationSeedData(IServiceProvider serviceProvider, IEnti
 
 public static class Application
 {
+    public static Guid IntegracaoId => _integracaoId;
+
     public static Stopwatch Stopwatch = Stopwatch.StartNew();
     private static ILogger<IApplicationBuilder> _logger = null!;
+    private static Guid _integracaoId = Guid.Empty;
     private static IHost _app = null!;
 
-    public static void UpdateRun(HostApplicationBuilder builder, string connectionString)
+    public static void UpdateRun(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
     {
+        _integracaoId = integracaoId;
         builder.Services.AddIndustrialCoreAtualizador().AddLiteDbEntityStore(connectionString);
         _app = builder.Build();
         _app.Run();
@@ -42,9 +46,12 @@ public static class Application
 
     public static async Task RunAsync(
         WebApplication app,
+        Guid integracaoId,
         ApplicationSeedData? applicationSeedData = null
     )
     {
+        _integracaoId = integracaoId;
+
         _app = app;
         try
         {
