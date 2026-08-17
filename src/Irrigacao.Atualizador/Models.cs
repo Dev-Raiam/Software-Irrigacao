@@ -24,5 +24,6 @@ public record UpdateInstallationConfig(
     string BinaryName,
     string ServiceName,
     string UpdateDirectory,
-    string BackupPath
+    string BackupPath,
+    string Url
 );
