@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
+using Toolbox.Industrial.Core.Setup;
 
 namespace Irrigacao.Atualizador;
 
@@ -30,42 +31,12 @@ public class Atualizador : BackgroundService
         _logger = logger;
     }
 
-    private const string UrlAtualizacao =
-        "/automacao/v1/integracoes/2eb57304-1df3-4883-8f81-29b3e9426f6c/atualizacao-disponivel";
+    private string UrlAtualizacao =
+        $"/automacao/v1/integracoes/{Application.IntegracaoId}/atualizacao-disponivel";
 
     private bool _containsRequisition = false;
 
     #region Repository
-    private async Task<bool> ExisteCredenciais()
-    {
-        var contaId = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId);
-        var painelId = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId);
-        var controladorId = await _store.AnyAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.ControladorId
-        );
-        var versao = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.VersaoAtual);
-
-        var chaveExiste = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave);
-        var segredoExiste = await _store.AnyAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.Auth.Segredo
-        );
-        var contextoIdExiste = await _store.AnyAsync<Configuracao>(x =>
-            x.Id == Entity.Keys.Auth.ContextoId
-        );
-
-        if (
-            contaId
-            && painelId
-            && controladorId
-            && versao
-            && chaveExiste
-            && segredoExiste
-            && contextoIdExiste
-        )
-            return true;
-
-        return false;
-    }
 
     private async Task<AtualizacaoDisponivel> ObterModeloRequest()
     {
@@ -106,7 +77,7 @@ public class Atualizador : BackgroundService
                 }
                 else
                 {
-                    if (await ExisteCredenciais())
+                    if (Application.HasCredentials)
                     {
                         request = await ObterModeloRequest();
                         _containsRequisition = true;

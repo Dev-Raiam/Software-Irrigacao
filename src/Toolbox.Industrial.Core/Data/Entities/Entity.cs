@@ -43,18 +43,24 @@ namespace Toolbox.Industrial.Core.Data
             public static Guid PainelId = "Padrao.PainelId".GetId();
 
             /// <summary>
-            /// 
-            /// </summary>
-            public static Guid IntegracaoId = "Padrao.IntegracaoId".GetId();
-
-            /// <summary>
             ///
             /// </summary>
             public static Guid ControladorId = "Padrao.ControladorId".GetId();
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static Guid AtualizacaoId = "Padrao.AtualizacaoId".GetId();  
+
             /// <summary>
             /// d640e94a-0d64-4c80-b0b2-0e0bd5421316
             /// </summary>
             public static Guid VersaoAtual = "Padrao.VersaoAtual".GetId();  
+           
+            /// <summary>
+            /// 
+            /// </summary>
+            public static Guid DataVersaoAtual = "Padrao.DataVersaoAtual".GetId();  
 
             public static class Serilog
             {

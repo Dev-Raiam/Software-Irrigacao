@@ -17,7 +17,7 @@ builder.Services.AddSingleton(
 builder.Services.AddSingleton<Updater>();
 builder.Services.AddHostedService<Atualizador>();
 
-await Application.UpdateRun(
+await Application.RunAsync(
     builder,
     integracaoId: Guid.Parse("2eb57304-1df3-4883-8f81-29b3e9426f6c"),
     connectionString: $"Filename=irrigacao.db;Collation=pt-BR/IgnoreCase,IgnoreNonSpace;Connection=Shared"

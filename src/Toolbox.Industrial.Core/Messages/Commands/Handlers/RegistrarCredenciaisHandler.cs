@@ -1,6 +1,4 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NetDevPack.Security.Jwt.Core.Interfaces;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -47,7 +45,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         if (
             string.IsNullOrWhiteSpace(request.Segredo)
             || string.IsNullOrWhiteSpace(request.Chave)
-            //|| request.IntegracaoId == Guid.Empty
             || request.ContextoId == Guid.Empty
             || request.PainelId == Guid.Empty
             || request.ContaId == Guid.Empty
@@ -80,12 +77,10 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         if (contextoId != Guid.Empty)
         {
             var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
-            //var integracaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.IntegracaoId);
             var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
             var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
             if (
                 controladorId != request.ControladorId
-                //|| integracaoId != request.IntegracaoId
                 || contextoId != request.ContextoId
                 || painelId != request.PainelId
                 || contaId != request.ContaId
@@ -116,7 +111,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             ),
             new(Entity.Keys.ContaId, $"{request.ContaId}", grupo: Grupo.App, tipo: Tipo.Config),
             new(Entity.Keys.PainelId, $"{request.PainelId}", grupo: Grupo.App, tipo: Tipo.Config),
-            //new(Entity.Keys.IntegracaoId, $"{request.IntegracaoId}", grupo: Grupo.App, tipo: Tipo.Config),
         ];
         if (request.ControladorId != null)
         {
