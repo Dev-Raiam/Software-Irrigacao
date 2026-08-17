@@ -1,18 +1,23 @@
-using System.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
+using System.Net.Http.Headers;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Setup;
+using Toolbox.Industrial.Core.Telemetry;
 
 namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
+    private readonly IMqtt _mqtt;
     private readonly IEntityStore _store;
     private readonly IApiClient _apiClient;
     private readonly ILogger<SincronizarAutomacaoHandler> _logger;
@@ -20,9 +25,11 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     public SincronizarAutomacaoHandler(
         IEntityStore store,
         IApiClient apiClient,
+        [FromKeyedServices(Mqtt.Interno)] MqttManager mqttInterno,
         ILogger<SincronizarAutomacaoHandler> logger
     )
     {
+        _mqtt = mqttInterno.Current!;
         _store = store;
         _logger = logger;
         _apiClient = apiClient;
@@ -39,8 +46,29 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
             return BadRequest();
         }
-
+        var controladores = Controlador.Master ? _store.Query<Controlador>().ToList() : [];
         await Sincronizar(painelId, cancellationToken);
+        if (request.Reiniciar)
+        {
+            if (Controlador.Master)
+            {
+                foreach (var controlador in controladores.Where(x => x.Id != Controlador.ControladorId))
+                {
+                    var serializer = JsonConvert.DefaultSettings!.Invoke();
+                    serializer.Formatting = Formatting.Indented;
+                    serializer.TypeNameHandling = TypeNameHandling.Objects;
+                    var sincronizar = JsonConvert.SerializeObject(
+                        request,
+                        serializer
+                    );
+                    await _mqtt.PublishAsync($"controladores/{controlador.Id}/comando", sincronizar);
+                }
+            }
+            _logger.LogWarning(
+                "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+            );
+            await Application.Restart();
+        }
 
         return NoContent();
     }

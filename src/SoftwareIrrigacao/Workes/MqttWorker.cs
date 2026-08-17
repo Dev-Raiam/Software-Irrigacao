@@ -3,7 +3,6 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Messages;
 
 namespace SoftwareIrrigacao.Workes;
 
@@ -141,8 +140,20 @@ public class MqttWorker : BackgroundService
             Console.WriteLine($"Mensagem recebida [REMOTO]: {topic} => {payload}");
 
             using var scope = _serviceProvider.CreateScope();
-            var dispatcher = scope.ServiceProvider.GetRequiredService<CommandDispatcher>();
-            await dispatcher.DispatchAsync(payload);
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var mensagem = JsonConvert.DeserializeObject(payload, _mqttRemotoSerializer)!;
+
+            Console.WriteLine(
+                $"Mensagem recebida [LOCAL]: {topic} => {mensagem.GetType().Name} => {payload}"
+            );
+            if (mensagem is Toolbox.Core.Messages.Command command)
+            {
+                await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                return;
+            }
+
+            //var dispatcher = scope.ServiceProvider.GetRequiredService<CommandDispatcher>();
+            //await dispatcher.DispatchAsync(payload);
         }
         catch (Exception ex)
         {
