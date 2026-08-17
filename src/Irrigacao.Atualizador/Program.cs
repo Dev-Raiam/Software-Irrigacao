@@ -14,8 +14,7 @@ builder.Services.AddSingleton(
         BackupPath: "/opt/edge-plc-backup"
     )
 );
-builder.Services.AddSingleton<Updater>();
-builder.Services.AddHostedService<Atualizador>();
+builder.Services.AddHostedService<Updater>();
 
 await Application.UpdateRun(
     builder,

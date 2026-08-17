@@ -1,27 +1,152 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Runtime.InteropServices;
+using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Extensions;
 
 namespace Irrigacao.Atualizador
 {
-    public class Updater
+    public class Updater : BackgroundService
     {
         private readonly UpdateInstallationConfig _config;
         private readonly IHttpClientFactory _factoryHttpClient;
         private readonly ILogger<Updater> _logger;
+        private readonly IEntityStore _store;
+        private readonly IApiClient _client;
 
         public Updater(
             UpdateInstallationConfig config,
             IHttpClientFactory factoryHttpClient,
-            ILogger<Updater> logger
+            ILogger<Updater> logger,
+            IEntityStore store,
+            IApiClient client
         )
         {
             _config = config;
             _factoryHttpClient = factoryHttpClient;
             _logger = logger;
+            _store = store;
+            _client = client;
         }
 
-        public async Task Install(string url, CancellationToken cancellationToken)
+        private const string UrlAtualizacao =
+            "/automacao/v1/integracoes/2eb57304-1df3-4883-8f81-29b3e9426f6c/atualizacao-disponivel";
+
+        private bool _containsRequisition = false;
+
+        private async Task<bool> ExisteCredenciais()
+        {
+            var contaId = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId);
+            var painelId = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId);
+            var controladorId = await _store.AnyAsync<Configuracao>(x =>
+                x.Id == Entity.Keys.ControladorId
+            );
+            var versao = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.VersaoAtual);
+
+            var chaveExiste = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave);
+            var segredoExiste = await _store.AnyAsync<Configuracao>(x =>
+                x.Id == Entity.Keys.Auth.Segredo
+            );
+            var contextoIdExiste = await _store.AnyAsync<Configuracao>(x =>
+                x.Id == Entity.Keys.Auth.ContextoId
+            );
+
+            if (
+                contaId
+                && painelId
+                && controladorId
+                && versao
+                && chaveExiste
+                && segredoExiste
+                && contextoIdExiste
+            )
+                return true;
+
+            return false;
+        }
+
+        private async Task<AtualizacaoDisponivel> ObterModeloRequest()
+        {
+            var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
+            var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
+            var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
+            var versaoAtual = await _store.FirstOrDefaultAsync<Configuracao>(x =>
+                x.Id == Entity.Keys.VersaoAtual
+            );
+
+            return new AtualizacaoDisponivel(
+                contaId,
+                painelId,
+                controladorId,
+                null,
+                versaoAtual.Valor.ToString()!,
+                null,
+                (int)RuntimeInformation.OSArchitecture
+            );
+        }
+
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            AtualizacaoDisponivel? request = null;
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    if (_containsRequisition)
+                    {
+                        var atualization = await Check(request!, stoppingToken);
+                        if (atualization != null)
+                            await Install(
+                                atualization.UrlDownload,
+                                stoppingToken
+                            );
+                    }
+                    else
+                    {
+                        if (await ExisteCredenciais())
+                        {
+                            request = await ObterModeloRequest();
+                            _containsRequisition = true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro inesperado na execução do serviço");
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+            }
+        }
+
+        private async Task<AtualizacaoResposta?> Check(
+            AtualizacaoDisponivel request,
+            CancellationToken cancellationToken
+        )
+        {
+            var message = new HttpRequestMessage(HttpMethod.Query, UrlAtualizacao)
+            {
+                Content = JsonContent.Create(request),
+            };
+
+            var response = await _client.SendAsync<AtualizacaoResposta?>(
+                message,
+                cancellationToken
+            );
+
+            if (!response.Success)
+            {
+                _logger.LogWarning(response.Error);
+                return null;
+            }
+
+            return response.Data;
+        }
+        private async Task Install(string url, CancellationToken cancellationToken)
         {
             var zipPath = Path.Combine(_config.UpdateDirectory, "irrigacao.zip");
 
@@ -112,6 +237,7 @@ namespace Irrigacao.Atualizador
                 _config.ServiceName,
                 error
             );
+
             return false;
         }
 
@@ -144,6 +270,7 @@ namespace Irrigacao.Atualizador
                 binaryUpdate,
                 destinationPath
             );
+             
             File.Copy(binaryUpdate, destinationPath, true);
 
             var process = new Process
