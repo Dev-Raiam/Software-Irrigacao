@@ -316,6 +316,15 @@ namespace Toolbox.Industrial.Core.Setup
                         }
                         else
                         {
+                            //receber resposta dos comandos (python/módulos)
+                            topics.Add(
+                                new MqttTopicFilterBuilder()
+                                    .WithTopic(
+                                        $"controladores/{Controlador.ControladorId}/comando/resposta"
+                                    )
+                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                    .Build()
+                            );
                             //receber dados de telemetria (python/módulos) e publicar no Remoto/LiteDB
                             topics.Add(
                                 new MqttTopicFilterBuilder()
@@ -350,6 +359,8 @@ namespace Toolbox.Industrial.Core.Setup
                 (provider, key) =>
                 {
                     Mqtt? mqtt = null;
+
+                    //Criar configuracao para permitir 2 master usar esse canal para se comunicar.
                     if (!Controlador.Master && Controlador.ControladorId != Guid.Empty)
                     {
                         var store = provider.GetRequiredService<IEntityStore>();

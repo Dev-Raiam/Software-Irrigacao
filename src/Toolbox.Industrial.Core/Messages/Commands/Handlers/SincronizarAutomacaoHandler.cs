@@ -1,17 +1,23 @@
-using System.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
+using System.Net.Http.Headers;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Setup;
+using Toolbox.Industrial.Core.Telemetry;
 
 namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
+    private readonly IMqtt _mqtt;
     private readonly IEntityStore _store;
     private readonly IApiClient _apiClient;
     private readonly ILogger<SincronizarAutomacaoHandler> _logger;
@@ -19,9 +25,11 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     public SincronizarAutomacaoHandler(
         IEntityStore store,
         IApiClient apiClient,
+        [FromKeyedServices(Mqtt.Interno)] MqttManager mqttInterno,
         ILogger<SincronizarAutomacaoHandler> logger
     )
     {
+        _mqtt = mqttInterno.Current!;
         _store = store;
         _logger = logger;
         _apiClient = apiClient;
@@ -33,30 +41,36 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     )
     {
         var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
-        if (
-             //!Guid.TryParse(
-             //    (await _store.GetAsync<Configuracao>(Entity.Keys.PainelId))?.Valor.ToString(),
-             //    out var painelId
-             //) ||
-            painelId == Guid.Empty
-        )
+        if (painelId == Guid.Empty)
         {
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
             return BadRequest();
         }
-
+        var controladores = Controlador.Master ? _store.Query<Controlador>().ToList() : [];
         await Sincronizar(painelId, cancellationToken);
+        if (request.Reiniciar)
+        {
+            if (Controlador.Master)
+            {
+                foreach (var controlador in controladores.Where(x => x.Id != Controlador.ControladorId))
+                {
+                    var serializer = JsonConvert.DefaultSettings!.Invoke();
+                    serializer.Formatting = Formatting.Indented;
+                    serializer.TypeNameHandling = TypeNameHandling.Objects;
+                    var sincronizar = JsonConvert.SerializeObject(
+                        request,
+                        serializer
+                    );
+                    await _mqtt.PublishAsync($"controladores/{controlador.Id}/comando", sincronizar);
+                }
+            }
+            _logger.LogWarning(
+                "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+            );
+            await Application.Restart();
+        }
 
         return NoContent();
-    }
-
-    private async Task<bool> CredenciaisRegistradasAsync()
-    {
-        var chave = await _store.ObterConfiguracao<string>(Entity.Keys.Auth.Chave);
-        var segredo = await _store.ObterConfiguracao<string>(Entity.Keys.Auth.Segredo);
-        var contextoId = await _store.ObterConfiguracao<string>(Entity.Keys.Auth.ContextoId);
-
-        return chave != null && segredo != null && contextoId != null;
     }
 
     private async Task<Result<List<Communication.Api.Contracts.Controlador>>> ObterControladores(
@@ -83,7 +97,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     {
         using (LogContext.PushProperty("PainelId", painelId))
         {
-            if (!await CredenciaisRegistradasAsync())
+            if (!Application.HasCredentials)
             {
                 _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
                 return;

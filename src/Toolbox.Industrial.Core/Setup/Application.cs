@@ -29,14 +29,16 @@ public delegate Task ApplicationSeedData(IServiceProvider serviceProvider, IEnti
 
 public static class Application
 {
-    public static Guid IntegracaoId => _integracaoId;
-
-    public static Stopwatch Stopwatch = Stopwatch.StartNew();
-    private static ILogger<IApplicationBuilder> _logger = null!;
-    private static Guid _integracaoId = Guid.Empty;
     private static IHost _app = null!;
+    private static bool _hascredentials = false;
+    private static Guid _integracaoId = Guid.Empty;
+    private static ILogger<IApplicationBuilder> _logger = null!;
 
-    public static async Task UpdateRun(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
+    public static Guid IntegracaoId => _integracaoId;
+    public static bool HasCredentials => _hascredentials;
+    public static Stopwatch Stopwatch = Stopwatch.StartNew();
+
+    public static async Task RunAsync(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
     {
         _integracaoId = integracaoId;
         builder.Services.AddIndustrialCoreAtualizador().AddLiteDbEntityStore(connectionString);
@@ -47,9 +49,10 @@ public static class Application
         var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
 
         await ConfigureApiBaseAddress(store);
+        _hascredentials = await CheckCredentials(store);
         //await ConfigureJwtService(store, scope.ServiceProvider.GetRequiredService<JwtService>());
 
-        _app.Run();
+        await _app.RunAsync();
     }
 
     public static async Task RunAsync(
@@ -58,9 +61,9 @@ public static class Application
         ApplicationSeedData? applicationSeedData = null
     )
     {
+        _app = app;
         _integracaoId = integracaoId;
 
-        _app = app;
         try
         {
             using var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
@@ -68,6 +71,7 @@ public static class Application
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
 
+            _hascredentials = await CheckCredentials(store);
             await EnsureSeedData(scope.ServiceProvider, store);
 
             var exporter = scope.ServiceProvider.GetRequiredService<IPythonSettingsExporter>();
@@ -126,6 +130,28 @@ public static class Application
         );
     }
 
+    private static async Task ConfigureVersion(IEntityStore store)
+    {
+        var id = Entity.Keys.VersaoAtual;
+        var version = await store.ObterConfiguracao<string>(id);
+        if (version == null)
+        {
+            var versionString = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+
+            if (versionString != null)
+            {
+                await store.UpsertAsync(
+                    new Configuracao(
+                        id: id,
+                        configuracao: versionString,
+                        grupo: Grupo.App,
+                        tipo: Tipo.Config
+                    )
+                );
+            }
+        }
+    }
+
     private static async Task ConfigureApiBaseAddress(IEntityStore store)
     {
         var id = Entity.Keys.Api.BaseAddress;
@@ -144,27 +170,7 @@ public static class Application
         }
         ApiClient.BaseAddress = apiBaseAddress;
     }
-    private static async Task ConfigureVersion(IEntityStore store)
-    {
-        var id = Entity.Keys.VersaoAtual;
-        var version = await store.ObterConfiguracao<string>(id);
-        if (version == null)
-        {
-            var versionString = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
 
-            if(versionString != null) 
-            {
-                await store.UpsertAsync(
-                    new Configuracao(
-                        id: id,
-                        configuracao: versionString,
-                        grupo: Grupo.App,
-                        tipo: Tipo.Config
-                    )
-                );
-            }
-        }
-    }
     private static async Task ConfigureJwtService(IEntityStore store, JwtService jwtService)
     {
         var id = Entity.Keys.Api.Jwt.ValidIssuers;
@@ -223,7 +229,7 @@ public static class Application
             if (painelId != Guid.Empty)
             {
                 await mediator.Execute(
-                    new SincronizarAutomacao { PainelId = painelId },
+                    new SincronizarAutomacao { PainelId = painelId, Reiniciar = false },
                     cancellationToken: default
                 );
             }
@@ -340,6 +346,14 @@ public static class Application
                 return;
             }
         }
+    }
+
+    private static async Task<bool> CheckCredentials(IEntityStore store)
+    {
+        var chave = await store.ObterConfiguracao<string>(Entity.Keys.Auth.Chave);
+        var segredo = await store.ObterConfiguracao<string>(Entity.Keys.Auth.Segredo);
+        var contextoId = await store.ObterConfiguracao<string>(Entity.Keys.Auth.ContextoId);
+        return chave != null && segredo != null && contextoId != null;
     }
 
     private static async Task SetHostName(string hostName)
