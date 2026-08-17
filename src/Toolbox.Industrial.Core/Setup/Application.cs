@@ -33,9 +33,10 @@ public static class Application
     private static bool _hascredentials = false;
     private static Guid _integracaoId = Guid.Empty;
     private static ILogger<IApplicationBuilder> _logger = null!;
-
+    private static List<Controlador> _controladores = null!;
     public static Guid IntegracaoId => _integracaoId;
     public static bool HasCredentials => _hascredentials;
+    public static List<Controlador> Controladores => _controladores;
     public static Stopwatch Stopwatch = Stopwatch.StartNew();
 
     public static async Task RunAsync(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
@@ -70,7 +71,6 @@ public static class Application
 
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
-
             _hascredentials = await CheckCredentials(store);
             await EnsureSeedData(scope.ServiceProvider, store);
 
@@ -121,6 +121,7 @@ public static class Application
         await ConfigureVersion(store);
         await ConfigureApiBaseAddress(store);
         await ConfigureJwtService(store, provider.GetRequiredService<JwtService>());
+        await ConfigureControlador(store);
         await SynchronizeData(store, provider.GetRequiredService<IMediator>());
         await ConfigureMqttRemoto(store);
         await ConfigureMqtt(
@@ -220,16 +221,43 @@ public static class Application
         }
     }
 
+    private static async Task ConfigureControlador(IEntityStore store)
+    {
+        _controladores = store.Query<Controlador>().ToList();
+        Controlador.ControladorId = await store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
+        if (Controlador.ControladorId != Guid.Empty)
+        {
+            var controlador = _controladores.FirstOrDefault(c => c.Id == Controlador.ControladorId)?.Valor;
+            Controlador.Master = controlador?.Master ?? false;
+
+            if (controlador != null)
+            {
+                await SetHostName(controlador.Conexoes.Host);
+            }
+        }
+        else if (_controladores.Count == 1)
+        {
+            var controlador = _controladores.First().Valor;
+            Controlador.Master = controlador.Master;
+            Controlador.ControladorId = controlador.Id;
+
+            await SetHostName(controlador.Conexoes.Host);
+        }
+        else if (_controladores.Count > 1)
+        {
+            _logger.LogError("Configure um controlador para o processo.");
+        }
+    }
+
     private static async Task SynchronizeData(IEntityStore store, IMediator mediator)
     {
         try
         {
-            var painelId = await store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
-            Controlador.PainelId = painelId;
-            if (painelId != Guid.Empty)
+            Controlador.PainelId = await store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
+            if (Controlador.PainelId != Guid.Empty)
             {
                 await mediator.Execute(
-                    new SincronizarAutomacao { PainelId = painelId, Reiniciar = false },
+                    new SincronizarAutomacao { PainelId = Controlador.PainelId, Reiniciar = false },
                     cancellationToken: default
                 );
             }
@@ -258,35 +286,7 @@ public static class Application
             await store.UpsertAsync(mqttInterno);
         }
 
-        var controladores = store.Query<Controlador>().ToList();
-
-        var controladorId = await store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
-        //Controlador.Master = false;
-        Controlador.ControladorId = controladorId;
-        if (controladorId != Guid.Empty)
-        {
-            var controlador = controladores.FirstOrDefault(c => c.Id == controladorId)?.Valor;
-            Controlador.Master = controlador?.Master ?? false;
-
-            if (controlador != null)
-            {
-                await SetHostName(controlador.Conexoes.Host);
-            }
-        }
-        else if (controladores.Count == 1)
-        {
-            var controlador = controladores.First().Valor;
-            Controlador.Master = controlador.Master;
-            Controlador.ControladorId = controlador.Id;
-
-            await SetHostName(controlador.Conexoes.Host);
-        }
-        else if (controladores.Count > 1)
-        {
-            _logger.LogError("Configure um controlador para o processo.");
-        }
-
-        if (controladores.Count > 0 && !Controlador.Master)
+        if (Controladores.Count > 0 && !Controlador.Master)
         {
             mqttLocal = await store.ObterConfiguracao<Configuracao>(Entity.Keys.Mqtt.Local);
             if (mqttLocal?.Valor == null)
@@ -301,7 +301,7 @@ public static class Application
             }
 
             var config = (MqttConfiguration)mqttLocal.Valor;
-            var master = controladores.FirstOrDefault(c => c.Valor.Master);
+            var master = Controladores.FirstOrDefault(c => c.Valor.Master);
             var masterHostName = master?.Valor.Conexoes.Host;
             if (master != null && masterHostName != null && config.Host != masterHostName)
             {

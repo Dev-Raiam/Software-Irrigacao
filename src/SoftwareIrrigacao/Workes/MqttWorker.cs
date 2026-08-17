@@ -40,7 +40,7 @@ public class MqttWorker : BackgroundService
         _mqttInterno.Current?.SetHandler(
             async (topic, payload) =>
             {
-                await ProcessarMensagemLocalAsync(topic, payload);
+                await ProcessarMensagemInternoAsync(topic, payload);
             }
         );
 
@@ -98,6 +98,37 @@ public class MqttWorker : BackgroundService
         }
     }
 
+    private async Task ProcessarMensagemInternoAsync(
+        string topic,
+        string payload,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var mensagem = JsonConvert.DeserializeObject(payload, _mqttInternoSerializer)!;
+
+            Console.WriteLine(
+                $"Mensagem recebida [INTERNO]: {topic} => {mensagem.GetType().Name} => {payload}"
+            );
+            if (mensagem is Toolbox.Core.Messages.Command command)
+            {
+                await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+            }
+            else if (mensagem is Event @event)
+            {
+                Console.WriteLine($"Event [INTERNO]: {@event.GetType().Name}");
+                await mediator.Publish(@event, cancellationToken: default);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao processar mensagem MQTT [LOCAL]: {Message}", ex.Message);
+        }
+    }
+
     private async Task ProcessarMensagemLocalAsync(
         string topic,
         string payload,
@@ -137,14 +168,12 @@ public class MqttWorker : BackgroundService
     {
         try
         {
-            Console.WriteLine($"Mensagem recebida [REMOTO]: {topic} => {payload}");
-
             using var scope = _serviceProvider.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var mensagem = JsonConvert.DeserializeObject(payload, _mqttRemotoSerializer)!;
 
             Console.WriteLine(
-                $"Mensagem recebida [LOCAL]: {topic} => {mensagem.GetType().Name} => {payload}"
+                $"Mensagem recebida [REMOTO]: {topic} => {mensagem.GetType().Name} => {payload}"
             );
             if (mensagem is Toolbox.Core.Messages.Command command)
             {

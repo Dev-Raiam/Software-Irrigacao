@@ -17,7 +17,7 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
-    private readonly IMqtt _mqtt;
+    private readonly MqttManager _mqttInterno;
     private readonly IEntityStore _store;
     private readonly IApiClient _apiClient;
     private readonly ILogger<SincronizarAutomacaoHandler> _logger;
@@ -29,7 +29,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         ILogger<SincronizarAutomacaoHandler> logger
     )
     {
-        _mqtt = mqttInterno.Current!;
+        _mqttInterno = mqttInterno;
         _store = store;
         _logger = logger;
         _apiClient = apiClient;
@@ -46,13 +46,17 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
             return BadRequest();
         }
-        var controladores = Controlador.Master ? _store.Query<Controlador>().ToList() : [];
+        var controladores = Controlador.Master ? Application.Controladores : [];
         await Sincronizar(painelId, cancellationToken);
         if (request.Reiniciar)
         {
             if (Controlador.Master)
             {
-                foreach (var controlador in controladores.Where(x => x.Id != Controlador.ControladorId))
+                var slaves = controladores
+                    .Where(x => x.Id != Controlador.ControladorId)
+                    .ToList();
+
+                foreach (var slave in slaves)
                 {
                     var serializer = JsonConvert.DefaultSettings!.Invoke();
                     serializer.Formatting = Formatting.Indented;
@@ -61,7 +65,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                         request,
                         serializer
                     );
-                    await _mqtt.PublishAsync($"controladores/{controlador.Id}/comando", sincronizar);
+                    await _mqttInterno.Current!.PublishAsync($"controladores/{slave.Id}/comando", sincronizar);
                 }
             }
             _logger.LogWarning(

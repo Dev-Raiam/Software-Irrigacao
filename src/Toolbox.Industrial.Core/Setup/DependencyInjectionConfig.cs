@@ -299,8 +299,7 @@ namespace Toolbox.Industrial.Core.Setup
                                     .Build()
                             );
 
-                            var controladores = store.Query<Controlador>().ToList();
-                            foreach (var controlador in controladores)
+                            foreach (var controlador in Application.Controladores)
                             {
                                 //receber dados de telemetria interno (python/módulos) bem como telemetria dos slaves
                                 //publicar no Remoto/LiteDB a telemetria interna.
