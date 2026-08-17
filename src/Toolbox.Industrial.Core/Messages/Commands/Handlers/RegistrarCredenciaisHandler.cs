@@ -133,7 +133,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         //Disparar sincronia
         await _mediator.Execute(
-            new SincronizarAutomacao { PainelId = request.PainelId, Reiniciar = false },
+            new SincronizarAutomacao { PainelId = request.PainelId, ControladorId = Controlador.ControladorId, Reiniciar = false },
             cancellationToken: cancellationToken
         );
 

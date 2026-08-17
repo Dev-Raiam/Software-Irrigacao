@@ -46,14 +46,24 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
             return BadRequest();
         }
+        if (painelId != request.PainelId)
+        {
+            _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
+            return BadRequest();
+        }
+        var reiniciar = false;
         var controladores = Controlador.Master ? Application.Controladores : [];
-        await Sincronizar(painelId, cancellationToken);
+        if (request.ControladorId == null || request.ControladorId == Controlador.ControladorId)
+        {
+            await Sincronizar(painelId, cancellationToken);
+            reiniciar = true;
+        }
         if (request.Reiniciar)
         {
             if (Controlador.Master)
             {
                 var slaves = controladores
-                    .Where(x => x.Id != Controlador.ControladorId)
+                    .Where(x => x.Id != Controlador.ControladorId && (request.ControladorId == null || x.Id == request.ControladorId))
                     .ToList();
 
                 foreach (var slave in slaves)
@@ -68,10 +78,13 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     await _mqttInterno.Current!.PublishAsync($"controladores/{slave.Id}/comando", sincronizar);
                 }
             }
-            _logger.LogWarning(
-                "A aplicação será finalizada para completar o ciclo de sincronização de dados."
-            );
-            await Application.Restart();
+            if (reiniciar)
+            {
+                _logger.LogWarning(
+                    "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+                );
+                await Application.Restart();
+            }
         }
 
         return NoContent();

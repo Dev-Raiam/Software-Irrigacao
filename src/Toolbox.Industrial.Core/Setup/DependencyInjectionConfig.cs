@@ -594,7 +594,7 @@ namespace Toolbox.Industrial.Core.Setup
                 typeof(INotificationHandler<>)
             );
 
-            services.AddScoped<IMediator, MediatorImp>();
+            services.AddSingleton<IMediator, MediatorImp>();
             return services;
         }
 
@@ -623,7 +623,7 @@ namespace Toolbox.Industrial.Core.Setup
 
                 foreach (var @interface in interfaces)
                 {
-                    services.AddScoped(@interface, implementationType);
+                    services.AddSingleton(@interface, implementationType);
                 }
             }
         }

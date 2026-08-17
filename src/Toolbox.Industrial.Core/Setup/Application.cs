@@ -257,7 +257,7 @@ public static class Application
             if (Controlador.PainelId != Guid.Empty)
             {
                 await mediator.Execute(
-                    new SincronizarAutomacao { PainelId = Controlador.PainelId, Reiniciar = false },
+                    new SincronizarAutomacao { PainelId = Controlador.PainelId, ControladorId = Controlador.ControladorId, Reiniciar = false },
                     cancellationToken: default
                 );
             }

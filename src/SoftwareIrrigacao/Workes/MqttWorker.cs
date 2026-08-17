@@ -9,6 +9,7 @@ namespace SoftwareIrrigacao.Workes;
 public class MqttWorker : BackgroundService
 {
     private bool _disposed = false;
+    private readonly IMediator _mediator;
     private readonly IEntityStore _store;
     private readonly MqttManager _mqttLocal;
     private readonly MqttManager _mqttRemoto;
@@ -24,11 +25,13 @@ public class MqttWorker : BackgroundService
         [FromKeyedServices(Mqtt.Remoto)] MqttManager mqttRemoto,
         IServiceProvider serviceProvider,
         ILogger<MqttWorker> logger,
+        IMediator mediator,
         IEntityStore store
     )
     {
         _store = store;
         _logger = logger;
+        _mediator = mediator;
         _mqttLocal = mqttLocal;
         _mqttRemoto = mqttRemoto;
         _mqttInterno = mqttInterno;
@@ -106,8 +109,8 @@ public class MqttWorker : BackgroundService
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            //using var scope = _serviceProvider.CreateScope();
+            //var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var mensagem = JsonConvert.DeserializeObject(payload, _mqttInternoSerializer)!;
 
             Console.WriteLine(
@@ -115,12 +118,12 @@ public class MqttWorker : BackgroundService
             );
             if (mensagem is Toolbox.Core.Messages.Command command)
             {
-                await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
             }
             else if (mensagem is Event @event)
             {
                 Console.WriteLine($"Event [INTERNO]: {@event.GetType().Name}");
-                await mediator.Publish(@event, cancellationToken: default);
+                await _mediator.Publish(@event, cancellationToken: default);
             }
         }
         catch (Exception ex)
@@ -137,8 +140,8 @@ public class MqttWorker : BackgroundService
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            //using var scope = _serviceProvider.CreateScope();
+            //var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var mensagem = JsonConvert.DeserializeObject(payload, _mqttInternoSerializer)!;
 
             Console.WriteLine(
@@ -146,12 +149,12 @@ public class MqttWorker : BackgroundService
             );
             if (mensagem is Toolbox.Core.Messages.Command command)
             {
-                await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
             }
             else if (mensagem is Event @event)
             {
                 Console.WriteLine($"Event [LOCAL]: {@event.GetType().Name}");
-                await mediator.Publish(@event, cancellationToken: default);
+                await _mediator.Publish(@event, cancellationToken: default);
             }
         }
         catch (Exception ex)
@@ -168,8 +171,8 @@ public class MqttWorker : BackgroundService
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            //using var scope = _serviceProvider.CreateScope();
+            //var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var mensagem = JsonConvert.DeserializeObject(payload, _mqttRemotoSerializer)!;
 
             Console.WriteLine(
@@ -177,7 +180,7 @@ public class MqttWorker : BackgroundService
             );
             if (mensagem is Toolbox.Core.Messages.Command command)
             {
-                await mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
                 return;
             }
 
