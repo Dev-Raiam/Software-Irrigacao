@@ -197,20 +197,22 @@ public sealed class Mqtt : IMqtt
                 }
                 else if (message is Toolbox.Core.Messages.IEvent @event)
                 {
-                    Console.WriteLine($"Event [{_purpose}]: {@event.GetType().Name}");
-                    await _mediator.Publish(@event);
+                    Console.WriteLine(
+                        $"Mensagem recebida [{_purpose}]: {topic} => {@event.GetType().Name} => {payload}"
+                    );
+                    //await _mediator.Publish((dynamic)@event);
                 }
+                //if (_handler != null)
+                //{
+                //    var topic = e.ApplicationMessage.Topic;
+                //    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                //    _handler?.Invoke(topic, payload);
+                //}
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao processar mensagem MQTT [{purpose}]: {Message}", _purpose, ex.Message);
             }
-            //if (_handler != null)
-            //{
-            //    var topic = e.ApplicationMessage.Topic;
-            //    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-            //    _handler?.Invoke(topic, payload);
-            //}
 
             await Task.CompletedTask;
         };
