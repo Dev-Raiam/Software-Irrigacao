@@ -1,3 +1,7 @@
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -6,10 +10,6 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages;
@@ -22,7 +22,8 @@ namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public sealed class Mqtt : IMqtt
 {
-    private static readonly JsonSerializerSettings _serializer = JsonConvert.DefaultSettings!.Invoke();
+    private static readonly JsonSerializerSettings _serializer =
+        JsonConvert.DefaultSettings!.Invoke();
     public const string Interno = "mqttinterno";
     public const string Local = "mqttlocal";
     public const string Remoto = "mqttremoto";
@@ -211,7 +212,12 @@ public sealed class Mqtt : IMqtt
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao processar mensagem MQTT [{purpose}]: {Message}", _purpose, ex.Message);
+                _logger.LogError(
+                    ex,
+                    "Erro ao processar mensagem MQTT [{purpose}]: {Message}",
+                    _purpose,
+                    ex.Message
+                );
             }
 
             await Task.CompletedTask;

@@ -80,7 +80,10 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             {
                 if (request.Mqtt != null)
                 {
-                    await request.Mqtt!.PublishAsync($"{request.Topic}/resposta", JsonConvert.SerializeObject(new Response(request), Mqtt.Serializer));
+                    await request.Mqtt!.PublishAsync(
+                        $"{request.Topic}/resposta",
+                        JsonConvert.SerializeObject(new Response(request), Mqtt.Serializer)
+                    );
                 }
                 _logger.LogWarning(
                     "A aplicação será finalizada para completar o ciclo de sincronização de dados."

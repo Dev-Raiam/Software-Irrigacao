@@ -4,24 +4,18 @@ using Toolbox.Industrial.Core.Communication.Mqtt;
 
 namespace Toolbox.Industrial.Core.Messages
 {
-    public abstract class Command: Toolbox.Core.Messages.Command
+    public abstract class Command : Toolbox.Core.Messages.Command
     {
         internal IMqtt? Mqtt { get; set; }
         internal string Topic { get; set; } = null!;
 
         public Guid Id { get; init; } = SequentialGuid.NewGuid();
-        public string CommandType { get; protected set; } = null!;
-
-        protected Command()
-        {
-            CommandType = GetType().FullName ?? GetType().Name;
-        }
     }
 
-    public class Response: Toolbox.Core.Messages.ResponseEvent
+    public class Response : Toolbox.Core.Messages.ResponseEvent
     {
         public Response(Command command, ResponseResult? response = null)
-        { 
+        {
             CommandId = command.Id;
             Success = response?.IsSuccessful ?? true;
             Payload = response?.PayLoad;
