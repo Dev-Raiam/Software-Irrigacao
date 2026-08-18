@@ -23,6 +23,7 @@ public record AtualizacaoResposta(
 public record UpdateInstallationConfig(
     string BinaryName,
     string ServiceName,
+    string BinaryDirectory,
     string UpdateDirectory,
     string BackupPath,
     string Url

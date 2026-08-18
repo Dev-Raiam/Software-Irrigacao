@@ -7,6 +7,7 @@ using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Setup;
+using static Toolbox.Industrial.Core.Data.Configuracao;
 
 namespace Irrigacao.Atualizador
 {
@@ -33,30 +34,34 @@ namespace Irrigacao.Atualizador
             _client = client;
         }
 
-        private bool _containsRequisition = false;
-        private AtualizacaoDisponivel? _request = null;
+        private AtualizacaoDisponivel? _credenciaisCache;
+        private bool _credenciais = false;
 
-        private async Task<AtualizacaoDisponivel> ObterModeloRequest()
+        private async Task<AtualizacaoDisponivel> ObterCredenciais()
         {
             var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
             var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
             var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
             var versaoAtual = await _store.ObterConfiguracao<string>(Entity.Keys.VersaoAtual);
 
+            var atualizacaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.AtualizacaoId);
+            var dataVersaoAtual = await _store.ObterConfiguracao<DateTime>(
+                Entity.Keys.DataVersaoAtual
+            );
+
             return new AtualizacaoDisponivel(
                 contaId,
                 painelId,
                 controladorId,
-                null,
+                atualizacaoId != Guid.Empty ? atualizacaoId : null,
                 versaoAtual ?? "",
-                null,
+                dataVersaoAtual != default ? dataVersaoAtual : null,
                 (int)RuntimeInformation.OSArchitecture
             );
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Console.WriteLine($"Worker Iniciado {Application.HasCredentials}");
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -65,8 +70,8 @@ namespace Irrigacao.Atualizador
 
                     if (url != null)
                     {
-                        Console.WriteLine($"Install Update Iniciado");
                         await InstallUpdate(url, stoppingToken);
+                        Directory.Delete(_config.UpdateDirectory, true);
                     }
                 }
                 catch (Exception ex)
@@ -80,18 +85,16 @@ namespace Irrigacao.Atualizador
 
         private async Task<string?> CheckUpdate(CancellationToken cancellationToken)
         {
-            if (!_containsRequisition)
+            if (!_credenciais)
             {
                 if (Application.HasCredentials)
                 {
-                    _request = await ObterModeloRequest();
+                    _credenciaisCache = await ObterCredenciais();
 
-                    if (_request == null)
-                    {
+                    if (_credenciaisCache == null)
                         return null;
-                    }
 
-                    _containsRequisition = true;
+                    _credenciais = true;
                 }
                 else
                 {
@@ -101,7 +104,7 @@ namespace Irrigacao.Atualizador
 
             var message = new HttpRequestMessage(HttpMethod.Query, _config.Url)
             {
-                Content = JsonContent.Create(_request),
+                Content = JsonContent.Create(_credenciaisCache),
             };
 
             var response = await _client.SendAsync<AtualizacaoResposta?>(
@@ -116,9 +119,20 @@ namespace Irrigacao.Atualizador
             }
 
             if (response.Data == null)
-            {
                 return null;
-            }
+
+            //_store.UpdateAsync<Configuracao>(new Configuracao(
+            //        id: Entity.Keys.AtualizacaoId,
+            //        configuracao: response.Data.AtualizacaoId,
+            //        grupo: grupo.Api,
+            //        tipo: tipo.Config
+            //    ));
+
+            _logger.LogInformation(
+                "Atualização Disponivel na Version {version} lançada em {lancamento}",
+                response.Data.Versao,
+                response.Data.Lancamento
+            );
 
             return response.Data.UrlDownload;
         }
@@ -132,14 +146,22 @@ namespace Irrigacao.Atualizador
             if (StopService())
             {
                 BackupBinary();
-                UpdateBinary();
+                if (!UpdateBinary())
+                {
+                    _logger.LogError("Atualização falhou, restaurando backup");
+                    // restaurar backup
+                    StartService();
+                    return;
+                }
                 StartService();
             }
         }
 
         private async Task DownloadReleaseZip(string url, CancellationToken cancellationToken)
         {
-            Directory.CreateDirectory(_config.UpdateDirectory);
+            var downloadPath = Path.Combine(_config.UpdateDirectory, "download");
+
+            Directory.CreateDirectory(downloadPath);
 
             var client = _factoryHttpClient.CreateClient();
 
@@ -158,7 +180,7 @@ namespace Irrigacao.Atualizador
 
             response.EnsureSuccessStatusCode();
 
-            var zipPath = Path.Combine(_config.UpdateDirectory, $"{_config.BinaryName}.zip");
+            var zipPath = Path.Combine(downloadPath, $"{_config.BinaryName}.zip");
 
             await using var fileStream = File.Create(zipPath);
             await response.Content.CopyToAsync(fileStream, cancellationToken);
@@ -168,13 +190,16 @@ namespace Irrigacao.Atualizador
 
         private void ExtractZip()
         {
-            Directory.CreateDirectory(_config.UpdateDirectory);
+            var downloadPath = Path.Combine(_config.UpdateDirectory, "download");
+            var extractedPath = Path.Combine(_config.UpdateDirectory, "extracted");
 
-            _logger.LogInformation("Extraindo zip em {updateDirectory}", _config.UpdateDirectory);
+            Directory.CreateDirectory(extractedPath);
+
+            _logger.LogInformation("Extraindo zip em {extractedPath }", extractedPath);
 
             ZipFile.ExtractToDirectory(
-                Path.Combine(_config.UpdateDirectory, $"{_config.BinaryName}.zip"),
-                _config.UpdateDirectory,
+                Path.Combine(downloadPath, $"{_config.BinaryName}.zip"),
+                extractedPath,
                 true
             );
 
@@ -189,7 +214,7 @@ namespace Irrigacao.Atualizador
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "/bin/bash",
-                    Arguments = $"-c \"sudo systemctl stop {_config.ServiceName}\"",
+                    Arguments = $"-c \"systemctl stop {_config.ServiceName}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -198,6 +223,9 @@ namespace Irrigacao.Atualizador
             };
 
             process.Start();
+
+            var error = process.StandardError.ReadToEnd();
+
             process.WaitForExit();
 
             if (process.ExitCode == 0)
@@ -209,7 +237,6 @@ namespace Irrigacao.Atualizador
                 return true;
             }
 
-            var error = process.StandardError.ReadToEnd();
             _logger.LogError(
                 "Falha ao parar serviço {serviceName}: {error}",
                 _config.ServiceName,
@@ -221,42 +248,44 @@ namespace Irrigacao.Atualizador
 
         private void BackupBinary()
         {
-            var binaryDirectory = Path.Combine(Directory.GetCurrentDirectory(), _config.BinaryName);
             Directory.CreateDirectory(_config.BackupPath);
 
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var backupPath = Path.Combine(_config.BackupPath, $"{_config.BinaryName}_{timestamp}");
+            //var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            //var backupPath = Path.Combine(_config.BackupPath, $"{_config.BinaryName}_{timestamp}");
 
             _logger.LogInformation(
-                "Fazendo backup de {sourcePath} para {backupPath}",
-                binaryDirectory,
-                backupPath
+                "Fazendo backup de {binaryDirectory} para {backupPath}",
+                _config.BinaryDirectory,
+                _config.BackupPath
             );
 
-            File.Copy(binaryDirectory, backupPath, true);
+            var binaryPath = Path.Combine(_config.BinaryDirectory, _config.BinaryName);
+            var backupPath = Path.Combine(_config.BackupPath, _config.BinaryName);
+
+            File.Copy(binaryPath, backupPath, true);
 
             _logger.LogInformation("Backup concluído com sucesso");
         }
 
         private bool UpdateBinary()
         {
-            var binaryUpdate = Path.Combine(_config.UpdateDirectory, _config.BinaryName);
-            var destinationPath = Path.Combine(Directory.GetCurrentDirectory(), _config.BinaryName);
+            var updatePath = Path.Combine(_config.UpdateDirectory, "extracted", _config.BinaryName);
+            var binaryPath = Path.Combine(_config.BinaryDirectory, _config.BinaryName);
 
             _logger.LogInformation(
-                "Movendo binário de {binaryUpdate} para {destinationPath}",
-                binaryUpdate,
-                destinationPath
+                "Movendo binário de {updatePath} para {binaryPath}",
+                updatePath,
+                binaryPath
             );
 
-            File.Copy(binaryUpdate, destinationPath, true);
+            File.Copy(updatePath, binaryPath, true);
 
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "/bin/bash",
-                    Arguments = $"-c \"sudo chmod +x {destinationPath}\"",
+                    Arguments = $"-c \"chmod +x {binaryPath}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -265,9 +294,22 @@ namespace Irrigacao.Atualizador
             };
 
             process.Start();
+
+            var error = process.StandardError.ReadToEnd();
+
             process.WaitForExit();
 
-            _logger.LogInformation("Binário movido com sucesso");
+            if (process.ExitCode != 0)
+            {
+                _logger.LogError(
+                    "Falha ao atualizar binario {binaryName} Erro: {erro}",
+                    _config.BinaryName,
+                    error
+                );
+
+                return false;
+            }
+
             return true;
         }
 
@@ -279,7 +321,7 @@ namespace Irrigacao.Atualizador
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "/bin/bash",
-                    Arguments = $"-c \"sudo systemctl start {_config.ServiceName}\"",
+                    Arguments = $"-c \"systemctl start {_config.ServiceName}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -288,6 +330,9 @@ namespace Irrigacao.Atualizador
             };
 
             process.Start();
+
+            var error = process.StandardError.ReadToEnd();
+
             process.WaitForExit();
 
             if (process.ExitCode == 0)
@@ -299,12 +344,12 @@ namespace Irrigacao.Atualizador
                 return true;
             }
 
-            var error = process.StandardError.ReadToEnd();
             _logger.LogError(
                 "Falha ao iniciar serviço {serviceName}: {error}",
                 _config.ServiceName,
                 error
             );
+
             return false;
         }
     }
