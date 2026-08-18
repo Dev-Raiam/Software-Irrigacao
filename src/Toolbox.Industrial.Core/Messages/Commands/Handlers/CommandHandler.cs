@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using Toolbox.Core.Data;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
@@ -10,16 +9,9 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers
 
     public abstract class CommandHandler
     {
-        //private readonly IMediator _mediator;
         private readonly List<Event> _events = [];
         private readonly IDictionary<string, object[]> _errors = new Dictionary<string, object[]>();
         protected ResponseResult ResponseResult { get; set; } = ResponseResult.Success;
-        //protected IMediator Mediator => _mediator;
-
-        //protected CommandHandler(IMediator mediator)
-        //{
-        //    //_mediator = mediator;
-        //}
 
         public ResponseResult BadRequest()
         {

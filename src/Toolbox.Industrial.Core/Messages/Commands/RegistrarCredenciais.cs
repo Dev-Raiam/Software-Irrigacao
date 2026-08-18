@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Toolbox.Core.Messages;
-
 namespace Toolbox.Industrial.Core.Messages.Commands
 {
     internal class RegistrarCredenciais : Command

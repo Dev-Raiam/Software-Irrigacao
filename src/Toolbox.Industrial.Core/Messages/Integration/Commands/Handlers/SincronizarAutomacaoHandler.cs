@@ -9,6 +9,7 @@ using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages.Integration.Events;
 using Toolbox.Industrial.Core.Setup;
 using CommandHandler = Toolbox.Industrial.Core.Messages.Commands.Handlers.CommandHandler;
 
@@ -82,7 +83,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                 {
                     await request.Mqtt!.PublishAsync(
                         $"{request.Topic}/resposta",
-                        JsonConvert.SerializeObject(new Response(request), Mqtt.Serializer)
+                        JsonConvert.SerializeObject(new ResponseCommand(request), Mqtt.Serializer)
                     );
                 }
                 _logger.LogWarning(

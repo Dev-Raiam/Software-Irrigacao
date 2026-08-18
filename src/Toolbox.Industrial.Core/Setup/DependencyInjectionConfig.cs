@@ -588,7 +588,6 @@ namespace Toolbox.Industrial.Core.Setup
                 typeof(IQueryHandler<>),
                 typeof(IQueryHandler<,>),
                 typeof(IEventHandler<>),
-                typeof(IResponseHandler<>),
                 typeof(IIntegrationHandler<>),
                 typeof(INotificationHandler<>)
             );
