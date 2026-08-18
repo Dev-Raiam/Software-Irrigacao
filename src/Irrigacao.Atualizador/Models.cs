@@ -20,11 +20,14 @@ public record AtualizacaoResposta(
     string UrlDownload
 );
 
+// UpdateConfirm
+public record AtualizacaoConfirmacao(Guid atualizacaoId);
 public record UpdateInstallationConfig(
     string BinaryName,
     string ServiceName,
     string BinaryDirectory,
     string UpdateDirectory,
     string BackupPath,
-    string Url
+    string Url,
+    string UrlConfirm
 );

@@ -13,9 +13,7 @@ if (args.Length > 0 && (args[0] == "--version" || args[0] == "-v"))
 }
 
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console(
-        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}"
-    )
+    .WriteTo.Console()
     .CreateBootstrapLogger();
 
 try
@@ -33,7 +31,8 @@ try
             BinaryDirectory: "/opt/edge-plc",
             UpdateDirectory: "/var/tmp/edge-plc",
             BackupPath: "/var/backups/edge-plc",
-            Url: "/automacao/v1/integracoes/2eb57304-1df3-4883-8f81-29b3e9426f6c/atualizacao-disponivel"
+            Url: "/automacao/v1/integracoes/2eb57304-1df3-4883-8f81-29b3e9426f6c/atualizacao-disponivel",
+            UrlConfirm : "/automacao/v1/integracoes/2eb57304-1df3-4883-8f81-29b3e9426f6c/confirmar-download-atualizacao"
         )
     );
 
