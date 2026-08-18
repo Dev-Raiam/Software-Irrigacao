@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
+using Toolbox.Industrial.Core.Setup;
 
 namespace Irrigacao.Atualizador
 {
@@ -32,86 +33,40 @@ namespace Irrigacao.Atualizador
             _client = client;
         }
 
-        private const string UrlAtualizacao =
-            "/automacao/v1/integracoes/2eb57304-1df3-4883-8f81-29b3e9426f6c/atualizacao-disponivel";
-
         private bool _containsRequisition = false;
-
-        private async Task<bool> ExisteCredenciais()
-        {
-            var contaId = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.ContaId);
-            var painelId = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.PainelId);
-            var controladorId = await _store.AnyAsync<Configuracao>(x =>
-                x.Id == Entity.Keys.ControladorId
-            );
-            var versao = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.VersaoAtual);
-
-            var chaveExiste = await _store.AnyAsync<Configuracao>(x => x.Id == Entity.Keys.Auth.Chave);
-            var segredoExiste = await _store.AnyAsync<Configuracao>(x =>
-                x.Id == Entity.Keys.Auth.Segredo
-            );
-            var contextoIdExiste = await _store.AnyAsync<Configuracao>(x =>
-                x.Id == Entity.Keys.Auth.ContextoId
-            );
-
-            if (
-                contaId
-                && painelId
-                && controladorId
-                && versao
-                && chaveExiste
-                && segredoExiste
-                && contextoIdExiste
-            )
-                return true;
-
-            return false;
-        }
+        private AtualizacaoDisponivel? _request = null;
 
         private async Task<AtualizacaoDisponivel> ObterModeloRequest()
         {
             var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
             var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
             var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
-            var versaoAtual = await _store.FirstOrDefaultAsync<Configuracao>(x =>
-                x.Id == Entity.Keys.VersaoAtual
-            );
+            var versaoAtual = await _store.ObterConfiguracao<string>(Entity.Keys.VersaoAtual);
 
             return new AtualizacaoDisponivel(
                 contaId,
                 painelId,
                 controladorId,
                 null,
-                versaoAtual.Valor.ToString()!,
+                versaoAtual ?? "",
                 null,
                 (int)RuntimeInformation.OSArchitecture
             );
         }
 
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            AtualizacaoDisponivel? request = null;
+            Console.WriteLine($"Worker Iniciado {Application.HasCredentials}");
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (_containsRequisition)
+                    var url = await CheckUpdate(stoppingToken);
+
+                    if (url != null)
                     {
-                        var atualization = await Check(request!, stoppingToken);
-                        if (atualization != null)
-                            await Install(
-                                atualization.UrlDownload,
-                                stoppingToken
-                            );
-                    }
-                    else
-                    {
-                        if (await ExisteCredenciais())
-                        {
-                            request = await ObterModeloRequest();
-                            _containsRequisition = true;
-                        }
+                        Console.WriteLine($"Install Update Iniciado");
+                        await InstallUpdate(url, stoppingToken);
                     }
                 }
                 catch (Exception ex)
@@ -119,18 +74,34 @@ namespace Irrigacao.Atualizador
                     _logger.LogError(ex, "Erro inesperado na execução do serviço");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
             }
         }
 
-        private async Task<AtualizacaoResposta?> Check(
-            AtualizacaoDisponivel request,
-            CancellationToken cancellationToken
-        )
+        private async Task<string?> CheckUpdate(CancellationToken cancellationToken)
         {
-            var message = new HttpRequestMessage(HttpMethod.Query, UrlAtualizacao)
+            if (!_containsRequisition)
             {
-                Content = JsonContent.Create(request),
+                if (Application.HasCredentials)
+                {
+                    _request = await ObterModeloRequest();
+
+                    if (_request == null)
+                    {
+                        return null;
+                    }
+
+                    _containsRequisition = true;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            var message = new HttpRequestMessage(HttpMethod.Query, _config.Url)
+            {
+                Content = JsonContent.Create(_request),
             };
 
             var response = await _client.SendAsync<AtualizacaoResposta?>(
@@ -144,12 +115,16 @@ namespace Irrigacao.Atualizador
                 return null;
             }
 
-            return response.Data;
-        }
-        private async Task Install(string url, CancellationToken cancellationToken)
-        {
-            var zipPath = Path.Combine(_config.UpdateDirectory, "irrigacao.zip");
+            if (response.Data == null)
+            {
+                return null;
+            }
 
+            return response.Data.UrlDownload;
+        }
+
+        private async Task InstallUpdate(string url, CancellationToken cancellationToken)
+        {
             await DownloadReleaseZip(url, cancellationToken);
 
             ExtractZip();
@@ -166,23 +141,26 @@ namespace Irrigacao.Atualizador
         {
             Directory.CreateDirectory(_config.UpdateDirectory);
 
-            var httpClient = _factoryHttpClient.CreateClient("Git");
+            var client = _factoryHttpClient.CreateClient();
 
-            httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
-            httpClient.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
-            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Software-Irrigacao");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            //client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            //client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
+
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Software-Irrigacao");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
                 ""
             );
 
             _logger.LogInformation("Baixando zip de {url}", url);
 
-            var response = await httpClient.GetAsync(url, cancellationToken);
+            var response = await client.GetAsync(url, cancellationToken);
 
             response.EnsureSuccessStatusCode();
 
-            await using var fileStream = File.Create(_config.UpdateDirectory);
+            var zipPath = Path.Combine(_config.UpdateDirectory, $"{_config.BinaryName}.zip");
+
+            await using var fileStream = File.Create(zipPath);
             await response.Content.CopyToAsync(fileStream, cancellationToken);
 
             _logger.LogInformation("Zip baixado para {updateDirectory}", _config.UpdateDirectory);
@@ -195,7 +173,7 @@ namespace Irrigacao.Atualizador
             _logger.LogInformation("Extraindo zip em {updateDirectory}", _config.UpdateDirectory);
 
             ZipFile.ExtractToDirectory(
-                Path.Combine(_config.UpdateDirectory, Path.Combine(_config.BinaryName, ".zip")),
+                Path.Combine(_config.UpdateDirectory, $"{_config.BinaryName}.zip"),
                 _config.UpdateDirectory,
                 true
             );
@@ -243,7 +221,7 @@ namespace Irrigacao.Atualizador
 
         private void BackupBinary()
         {
-            var binaryDirectory = Directory.GetCurrentDirectory();
+            var binaryDirectory = Path.Combine(Directory.GetCurrentDirectory(), _config.BinaryName);
             Directory.CreateDirectory(_config.BackupPath);
 
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -263,14 +241,14 @@ namespace Irrigacao.Atualizador
         private bool UpdateBinary()
         {
             var binaryUpdate = Path.Combine(_config.UpdateDirectory, _config.BinaryName);
-            var destinationPath = Directory.GetCurrentDirectory();
+            var destinationPath = Path.Combine(Directory.GetCurrentDirectory(), _config.BinaryName);
 
             _logger.LogInformation(
                 "Movendo binário de {binaryUpdate} para {destinationPath}",
                 binaryUpdate,
                 destinationPath
             );
-             
+
             File.Copy(binaryUpdate, destinationPath, true);
 
             var process = new Process
