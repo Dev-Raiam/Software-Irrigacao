@@ -3,7 +3,7 @@ using Toolbox.Core.Messages;
 
 namespace Toolbox.Industrial.Core.Messages.Commands
 {
-    internal class RegistrarCredenciais : Toolbox.Core.Messages.Command
+    internal class RegistrarCredenciais : Command
     {
         [Required(ErrorMessage = "Chave é obrigatória")]
         public string Chave { get; init; } = null!;
@@ -25,5 +25,4 @@ namespace Toolbox.Industrial.Core.Messages.Commands
 
         public Guid? ControladorId { get; init; }
     }
-
 }

@@ -129,11 +129,21 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
         }
         _auth.Token.Update(response.Data);
 
+        Controlador.PainelId = request.PainelId;
+        if (request.ControladorId != null)
+        {
+            Controlador.ControladorId = (Guid)request.ControladorId!;
+        }
+
         #endregion Salvar configurações
 
         //Disparar sincronia
         await _mediator.Execute(
-            new SincronizarAutomacao { PainelId = request.PainelId, ControladorId = Controlador.ControladorId, Reiniciar = false },
+            new SincronizarAutomacao
+            {
+                ControladorId = Controlador.ControladorId,
+                Interno = true,
+            },
             cancellationToken: cancellationToken
         );
 

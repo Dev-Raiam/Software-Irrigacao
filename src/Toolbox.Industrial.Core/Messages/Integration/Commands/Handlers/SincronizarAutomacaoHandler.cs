@@ -1,19 +1,18 @@
+using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog.Context;
-using System.Net.Http.Headers;
+using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
-using Toolbox.Industrial.Core.Extensions;
-using Toolbox.Industrial.Core.Messages.Integration;
 using Toolbox.Industrial.Core.Setup;
-using Toolbox.Industrial.Core.Telemetry;
+using CommandHandler = Toolbox.Industrial.Core.Messages.Commands.Handlers.CommandHandler;
 
-namespace Toolbox.Industrial.Core.Messages.Commands.Handlers;
+namespace Toolbox.Industrial.Core.Messages.Integration.Commands.Handlers;
 
 internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
 {
@@ -23,16 +22,17 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     private readonly ILogger<SincronizarAutomacaoHandler> _logger;
 
     public SincronizarAutomacaoHandler(
+        IMediator mediator,
         IEntityStore store,
         IApiClient apiClient,
-        [FromKeyedServices(Mqtt.Interno)] MqttManager mqttInterno,
-        ILogger<SincronizarAutomacaoHandler> logger
+        ILogger<SincronizarAutomacaoHandler> logger,
+        [FromKeyedServices(Mqtt.Interno)] MqttManager mqttInterno
     )
     {
-        _mqttInterno = mqttInterno;
         _store = store;
         _logger = logger;
         _apiClient = apiClient;
+        _mqttInterno = mqttInterno;
     }
 
     public async Task<ResponseResult> Handle(
@@ -40,46 +40,48 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         CancellationToken cancellationToken
     )
     {
-        var painelId = await _store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
-        if (painelId == Guid.Empty)
+        if (Controlador.PainelId == Guid.Empty)
         {
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
-            return BadRequest();
+            return BadRequest()
+                .AddError(
+                    nameof(Controlador.PainelId),
+                    "Sincronização cancelada por ausência de configuração."
+                );
         }
-        if (painelId != request.PainelId)
-        {
-            _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
-            return BadRequest();
-        }
-        var reiniciar = false;
+        var restart = false;
         var controladores = Controlador.Master ? Application.Controladores : [];
         if (request.ControladorId == null || request.ControladorId == Controlador.ControladorId)
         {
-            await Sincronizar(painelId, cancellationToken);
-            reiniciar = true;
+            await Sincronizar(Controlador.PainelId, cancellationToken);
+            restart = true;
         }
-        if (request.Reiniciar)
+        if (!request.Interno)
         {
             if (Controlador.Master)
             {
                 var slaves = controladores
-                    .Where(x => x.Id != Controlador.ControladorId && (request.ControladorId == null || x.Id == request.ControladorId))
+                    .Where(x =>
+                        x.Id != Controlador.ControladorId
+                        && (request.ControladorId == null || x.Id == request.ControladorId)
+                    )
                     .ToList();
 
                 foreach (var slave in slaves)
                 {
-                    var serializer = JsonConvert.DefaultSettings!.Invoke();
-                    serializer.Formatting = Formatting.Indented;
-                    serializer.TypeNameHandling = TypeNameHandling.Objects;
-                    var sincronizar = JsonConvert.SerializeObject(
-                        request,
-                        serializer
+                    request.Topic = $"controladores/{slave.Id}/comando";
+                    await _mqttInterno.Current!.PublishAsync(
+                        request.Topic,
+                        JsonConvert.SerializeObject(request, Mqtt.Serializer)
                     );
-                    await _mqttInterno.Current!.PublishAsync($"controladores/{slave.Id}/comando", sincronizar);
                 }
             }
-            if (reiniciar)
+            if (restart)
             {
+                if (request.Mqtt != null)
+                {
+                    await request.Mqtt!.PublishAsync($"{request.Topic}/resposta", JsonConvert.SerializeObject(new Response(request), Mqtt.Serializer));
+                }
                 _logger.LogWarning(
                     "A aplicação será finalizada para completar o ciclo de sincronização de dados."
                 );
@@ -124,9 +126,21 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
 
             if (result.Success && result.Data != null)
             {
+                Application._controladores.Clear();
+
                 foreach (var controlador in result.Data)
                 {
-                    await _store.UpsertAsync(new Controlador(controlador.Id, controlador));
+                    var ctrl = new Controlador(controlador.Id, controlador);
+                    await _store.UpsertAsync(ctrl);
+                    Application._controladores.Add(ctrl);
+                }
+                var controladores = _store.Query<Controlador>().ToList();
+                foreach (var controlador in controladores)
+                {
+                    if (Application._controladores.NotAny(c => c.Id == controlador.Id))
+                    {
+                        await _store.DeleteAsync(controlador);
+                    }
                 }
             }
             else

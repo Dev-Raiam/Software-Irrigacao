@@ -1,15 +1,15 @@
 using Newtonsoft.Json;
 using Toolbox.Core.Mediator;
-using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages;
 
 namespace SoftwareIrrigacao.Workes;
 
 public class MqttWorker : BackgroundService
 {
     private bool _disposed = false;
-    private readonly IMediator _mediator;
+    //private readonly IMediator _mediator;
     private readonly IEntityStore _store;
     private readonly MqttManager _mqttLocal;
     private readonly MqttManager _mqttRemoto;
@@ -25,13 +25,13 @@ public class MqttWorker : BackgroundService
         [FromKeyedServices(Mqtt.Remoto)] MqttManager mqttRemoto,
         IServiceProvider serviceProvider,
         ILogger<MqttWorker> logger,
-        IMediator mediator,
+        //IMediator mediator,
         IEntityStore store
     )
     {
         _store = store;
         _logger = logger;
-        _mediator = mediator;
+        //_mediator = mediator;
         _mqttLocal = mqttLocal;
         _mqttRemoto = mqttRemoto;
         _mqttInterno = mqttInterno;
@@ -40,28 +40,28 @@ public class MqttWorker : BackgroundService
         _mqttInternoSerializer = JsonConvert.DefaultSettings!.Invoke();
         _mqttInternoSerializer.Formatting = Formatting.Indented;
         _mqttInternoSerializer.TypeNameHandling = TypeNameHandling.Objects;
-        _mqttInterno.Current?.SetHandler(
-            async (topic, payload) =>
-            {
-                await ProcessarMensagemInternoAsync(topic, payload);
-            }
-        );
+        //_mqttInterno.Current?.SetHandler(
+        //    async (topic, payload) =>
+        //    {
+        //        await ProcessarMensagemInternoAsync(topic, payload);
+        //    }
+        //);
 
-        _mqttLocal.Current?.SetHandler(
-            async (topic, payload) =>
-            {
-                await ProcessarMensagemLocalAsync(topic, payload);
-            }
-        );
+        //_mqttLocal.Current?.SetHandler(
+        //    async (topic, payload) =>
+        //    {
+        //        await ProcessarMensagemLocalAsync(topic, payload);
+        //    }
+        //);
 
         _mqttRemotoSerializer = JsonConvert.DefaultSettings!.Invoke();
         _mqttRemotoSerializer.TypeNameHandling = TypeNameHandling.Objects;
-        _mqttRemoto.Current?.SetHandler(
-            async (topic, payload) =>
-            {
-                await ProcessarMensagemRemotoAsync(topic, payload);
-            }
-        );
+        //_mqttRemoto.Current?.SetHandler(
+        //    async (topic, payload) =>
+        //    {
+        //        await ProcessarMensagemRemotoAsync(topic, payload);
+        //    }
+        //);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -116,14 +116,14 @@ public class MqttWorker : BackgroundService
             Console.WriteLine(
                 $"Mensagem recebida [INTERNO]: {topic} => {mensagem.GetType().Name} => {payload}"
             );
-            if (mensagem is Toolbox.Core.Messages.Command command)
+            if (mensagem is Command command)
             {
-                await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                //await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
             }
-            else if (mensagem is Event @event)
+            else if (mensagem is Toolbox.Core.Messages.Event @event)
             {
                 Console.WriteLine($"Event [INTERNO]: {@event.GetType().Name}");
-                await _mediator.Publish(@event, cancellationToken: default);
+                //await _mediator.Publish(@event, cancellationToken: default);
             }
         }
         catch (Exception ex)
@@ -147,14 +147,14 @@ public class MqttWorker : BackgroundService
             Console.WriteLine(
                 $"Mensagem recebida [LOCAL]: {topic} => {mensagem.GetType().Name} => {payload}"
             );
-            if (mensagem is Toolbox.Core.Messages.Command command)
+            if (mensagem is Command command)
             {
-                await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                //await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
             }
-            else if (mensagem is Event @event)
+            else if (mensagem is Toolbox.Core.Messages.Event @event)
             {
                 Console.WriteLine($"Event [LOCAL]: {@event.GetType().Name}");
-                await _mediator.Publish(@event, cancellationToken: default);
+                //await _mediator.Publish(@event, cancellationToken: default);
             }
         }
         catch (Exception ex)
@@ -178,9 +178,9 @@ public class MqttWorker : BackgroundService
             Console.WriteLine(
                 $"Mensagem recebida [REMOTO]: {topic} => {mensagem.GetType().Name} => {payload}"
             );
-            if (mensagem is Toolbox.Core.Messages.Command command)
+            if (mensagem is Command command)
             {
-                await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
+                //await _mediator.Execute((dynamic)command, cancellationToken: cancellationToken);
                 return;
             }
 

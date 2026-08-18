@@ -1,15 +1,18 @@
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using Newtonsoft.Json;
 using Serilog;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
+using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
+using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
 using Timer = System.Timers.Timer;
@@ -19,6 +22,7 @@ namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public sealed class Mqtt : IMqtt
 {
+    private static readonly JsonSerializerSettings _serializer = JsonConvert.DefaultSettings!.Invoke();
     public const string Interno = "mqttinterno";
     public const string Local = "mqttlocal";
     public const string Remoto = "mqttremoto";
@@ -29,6 +33,7 @@ public sealed class Mqtt : IMqtt
     private readonly IMqttClient _mqttClient;
     private Action<string, string>? _handler;
     private readonly ILogger<Mqtt> _logger;
+    private readonly IMediator _mediator;
     private readonly Timer _connectGuard;
     private bool _reconnecting = false;
     private bool _initializing = true;
@@ -45,6 +50,7 @@ public sealed class Mqtt : IMqtt
     }
 
     internal ILogger<Mqtt> Logger => _logger;
+    internal static JsonSerializerSettings Serializer => _serializer;
     internal string Host => _host;
     internal int Port => _port;
 
@@ -68,7 +74,9 @@ public sealed class Mqtt : IMqtt
         _purpose = purpose;
         _host = config.Host;
         _port = config.Port;
+        _serializer.TypeNameHandling = TypeNameHandling.Objects;
         _logger = provider.GetRequiredService<ILogger<Mqtt>>();
+        _mediator = provider.GetRequiredService<IMediator>();
         _topics = new List<MqttTopicFilter>(topics ?? []);
         _certificate = certificate;
 
@@ -173,12 +181,36 @@ public sealed class Mqtt : IMqtt
 
         _mqttClient.ApplicationMessageReceivedAsync += async e =>
         {
-            if (_handler != null)
+            try
             {
                 var topic = e.ApplicationMessage.Topic;
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                _handler?.Invoke(topic, payload);
+                var message = JsonConvert.DeserializeObject(payload, _serializer)!;
+                Console.WriteLine(
+                    $"Mensagem recebida [{_purpose}]: {topic} => {message.GetType().Name} => {payload}"
+                );
+                if (message is Command command)
+                {
+                    command.Mqtt = this;
+                    command.Topic = topic;
+                    await _mediator.Execute((dynamic)command);
+                }
+                else if (message is Toolbox.Core.Messages.IEvent @event)
+                {
+                    Console.WriteLine($"Event [{_purpose}]: {@event.GetType().Name}");
+                    await _mediator.Publish(@event);
+                }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao processar mensagem MQTT [{purpose}]: {Message}", _purpose, ex.Message);
+            }
+            //if (_handler != null)
+            //{
+            //    var topic = e.ApplicationMessage.Topic;
+            //    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+            //    _handler?.Invoke(topic, payload);
+            //}
 
             await Task.CompletedTask;
         };

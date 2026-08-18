@@ -1,16 +1,16 @@
-﻿using LiteDB;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using LiteDB;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
@@ -33,13 +33,17 @@ public static class Application
     private static bool _hascredentials = false;
     private static Guid _integracaoId = Guid.Empty;
     private static ILogger<IApplicationBuilder> _logger = null!;
-    private static List<Controlador> _controladores = null!;
+    internal static List<Controlador> _controladores = null!;
     public static Guid IntegracaoId => _integracaoId;
     public static bool HasCredentials => _hascredentials;
-    public static List<Controlador> Controladores => _controladores;
+    public static IReadOnlyList<Controlador> Controladores => _controladores;
     public static Stopwatch Stopwatch = Stopwatch.StartNew();
 
-    public static async Task RunAsync(HostApplicationBuilder builder, Guid integracaoId, string connectionString)
+    public static async Task RunAsync(
+        HostApplicationBuilder builder,
+        Guid integracaoId,
+        string connectionString
+    )
     {
         _integracaoId = integracaoId;
         builder.Services.AddIndustrialCoreAtualizador().AddLiteDbEntityStore(connectionString);
@@ -112,7 +116,6 @@ public static class Application
         await Task.Delay(1000);
         //Environment.FailFast(("");
         lifetime.StopApplication();
-
     }
 
     private static async Task EnsureSeedData(IServiceProvider provider, IEntityStore store)
@@ -227,13 +230,18 @@ public static class Application
         Controlador.ControladorId = await store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
         if (Controlador.ControladorId != Guid.Empty)
         {
-            var controlador = _controladores.FirstOrDefault(c => c.Id == Controlador.ControladorId)?.Valor;
+            var controlador = _controladores
+                .FirstOrDefault(c => c.Id == Controlador.ControladorId)
+                ?.Valor;
             Controlador.Master = controlador?.Master ?? false;
 
-            if (controlador != null)
+            if (controlador == null)
             {
-                await SetHostName(controlador.Conexoes.Host);
+                Controlador.ControladorId = Guid.Empty;
+                _logger.LogError("Controlador configurado não está disponível");
+                return;
             }
+            await SetHostName(controlador.Conexoes.Host);
         }
         else if (_controladores.Count == 1)
         {
@@ -257,7 +265,11 @@ public static class Application
             if (Controlador.PainelId != Guid.Empty)
             {
                 await mediator.Execute(
-                    new SincronizarAutomacao { PainelId = Controlador.PainelId, ControladorId = Controlador.ControladorId, Reiniciar = false },
+                    new SincronizarAutomacao
+                    {
+                        ControladorId = Controlador.ControladorId,
+                        Interno = true,
+                    },
                     cancellationToken: default
                 );
             }

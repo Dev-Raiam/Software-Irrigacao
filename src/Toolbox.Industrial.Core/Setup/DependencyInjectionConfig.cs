@@ -102,9 +102,7 @@ namespace Toolbox.Industrial.Core.Setup
                 .AddDataProtection()
                 // Application Discriminator (isolamento entre aplicações)
                 .SetApplicationName("Automacao")
-                .PersistKeysToFileSystem(
-                    new DirectoryInfo("keys")
-                );
+                .PersistKeysToFileSystem(new DirectoryInfo("keys"));
             services
                 .AddHttpClient<IApiClient, ApiClient>(ConfigureClientAsync)
                 .AddHttpMessageHandler<AuthGuard>()
@@ -590,6 +588,7 @@ namespace Toolbox.Industrial.Core.Setup
                 typeof(IQueryHandler<>),
                 typeof(IQueryHandler<,>),
                 typeof(IEventHandler<>),
+                typeof(IResponseHandler<>),
                 typeof(IIntegrationHandler<>),
                 typeof(INotificationHandler<>)
             );
