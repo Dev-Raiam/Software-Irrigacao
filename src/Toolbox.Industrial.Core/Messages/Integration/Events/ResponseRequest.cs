@@ -13,6 +13,9 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
         [JsonProperty(Order = -96)]
         public TimeSpan Latency { get; init; }
 
+        [JsonIgnore]
+        public string ProcessId => $"{CorrelationId}-{Mqtt?.BrokerKey}";
+
         public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
         public static ResponseRequest From(Command request, ResponseResult? response = null)
         {
@@ -37,19 +40,21 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
 
     }
 
-    public interface IPendingResponse 
+    public interface IPendingProcess 
     {
-        void SetResult(ResponseRequest response);
+        string Id { get; init; }
+        void Completed(ResponseRequest response);
     }
 
-    public sealed class PendingResponse<TPayload> : IPendingResponse
+    public sealed class PendingProcess<TContent> : IPendingProcess
     {
-        public required string BrokerKey { get; init; }
-        public required TPayload Command { get; init; }
+        public required string Id { get; init; }
         public required string Topic { get; init; }
+        public required string BrokerKey { get; init; }
+        public required TContent Content { get; init; }
         public required TaskCompletionSource<ResponseRequest> Completion { get; init; }
 
-        public void SetResult(ResponseRequest response)
+        public void Completed(ResponseRequest response)
         {
             Completion.TrySetResult(response);
         }

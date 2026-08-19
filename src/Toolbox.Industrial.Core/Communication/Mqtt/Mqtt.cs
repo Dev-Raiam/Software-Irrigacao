@@ -12,6 +12,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Timers;
 using Toolbox.Core.Mediator;
+using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
@@ -374,35 +375,36 @@ public sealed class Mqtt : IMqtt
         }
     }
 
-    public async Task<PendingResponse<TPayload>?> PublishAsync<TPayload>(
+    public async Task<PendingProcess<TContent>?> PublishAsync<TContent>(
         string topic,
-        TPayload payload,
+        TContent content,
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    ) where TPayload : class
+    ) where TContent : class
     {
         await ConnectAsync();
-        PendingResponse<TPayload>? result = null; 
+        PendingProcess<TContent>? result = null; 
         try
         {
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
-                .WithPayload(JsonConvert.SerializeObject(payload, _serializer))
+                .WithPayload(JsonConvert.SerializeObject(content, _serializer))
                 .WithRetainFlag(retain)
                 .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
                 .Build();
 
-            if (payload is Command command)
+            if (content is Command command)
             {
-                result = new PendingResponse<TPayload>
+                result = new PendingProcess<TContent>
                 {
+                    Id = command.ProcessId,
                     Topic = topic,
-                    Command = payload,
+                    Content = content,
                     BrokerKey = command.Mqtt.BrokerKey,
                     Completion = new TaskCompletionSource<ResponseRequest>(
                         TaskCreationOptions.RunContinuationsAsynchronously)
                 };
-                MqttManager.CommandPending.TryAdd($"{command.Id}-{command.Mqtt.BrokerKey}", result);
+                MqttManager.Process.Add(result);
             }
             await _mqttClient.PublishAsync(message);
         }
@@ -487,17 +489,15 @@ public sealed class Mqtt : IMqtt
 
 public sealed class MqttManager
 {
-    private Mqtt? _current;
-    public static readonly ConcurrentDictionary<string, IPendingResponse> CommandPending = new();
-
     public MqttManager(Mqtt? mqtt)
     {
         _current = mqtt;
     }
 
+    private Mqtt? _current;
     public IMqtt? Current => _current;
-    public string Host => _current?.Host ?? "";
-    public int Port => _current?.Port ?? 0;
+
+    public static readonly MqttProcessManager Process = new MqttProcessManager();
 
     public async Task Reload(Configuration config)
     {
@@ -505,7 +505,6 @@ public sealed class MqttManager
             return;
 
         var topics = _current.Topics.ToList();
-        //var handler = _current.Handler;
         var provider = _current.Provider;
         var brokerKey = _current.BrokerKey;
         var connected = _current.IsConnected;
@@ -520,10 +519,32 @@ public sealed class MqttManager
             topics: topics,
             certificate: certificate
         );
-        //_current.SetHandler(handler);
         if (connected)
         {
             await _current.ConnectAsync();
         }
     }
+}
+
+public sealed class MqttProcessManager
+{
+    private readonly ConcurrentDictionary<string, IPendingProcess> _pendings = new();
+    public IReadOnlyDictionary<string, IPendingProcess> Pendings => _pendings;
+
+    public bool Add(IPendingProcess process)
+    {
+        return _pendings.TryAdd(process.Id, process);
+    }
+
+    public bool Completed(string processId, ResponseRequest response)
+    {
+        var result = _pendings.TryRemove(processId, out var process);
+        if (result)
+        {
+            process!.Completed(response);
+        }
+        return result;
+    }
+
+
 }

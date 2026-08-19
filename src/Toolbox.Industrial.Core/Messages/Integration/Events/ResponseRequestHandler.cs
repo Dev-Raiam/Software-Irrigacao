@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
-using Toolbox.Industrial.Core.Communication.RaspIO;
 
 namespace Toolbox.Industrial.Core.Messages.Integration.Events
 {
@@ -36,10 +34,7 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
                         await mqtt.PublishAsync(notification.Topic, notification);
                     }
                 }
-                if (MqttManager.CommandPending.TryRemove($"{notification.CorrelationId}-{brokerKey}", out var pending))
-                {
-                    pending.SetResult(notification);
-                }
+                MqttManager.Process.Completed($"{notification.CorrelationId}-{brokerKey}", notification);
             }
         }
     }

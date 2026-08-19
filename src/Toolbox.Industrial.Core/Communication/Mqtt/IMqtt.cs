@@ -12,12 +12,12 @@ public interface IMqtt : IDisposable
 
     Task DisconnectAsync();
 
-    Task<PendingResponse<TPayload>?> PublishAsync<TPayload>(
+    Task<PendingProcess<TContent>?> PublishAsync<TContent>(
         string topic,
-        TPayload payload,
+        TContent content,
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    ) where TPayload : class;
+    ) where TContent : class;
 
     Task SubscribeAsync(string topic, QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce);
 

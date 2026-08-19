@@ -49,6 +49,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     nameof(Controlador.PainelId),
                     "Sincronização cancelada por ausência de configuração."
                 );
+
             if (!request.Interno)
             {
                 var response = ResponseRequest.From(request, result);
@@ -57,10 +58,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     $"{request.Topic}/resposta",
                     response
                 );
-                if (MqttManager.CommandPending.TryRemove($"{request.Id}-{request.Mqtt.BrokerKey}", out var pending))
-                {
-                    pending.SetResult(response);
-                }
+                MqttManager.Process.Completed(request.ProcessId, response);
             }
             return result;
         }
@@ -73,7 +71,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         }
         if (!request.Interno)
         {
-            var pendings = new List<PendingResponse<SincronizarAutomacao>>();
+            var pendings = new List<PendingProcess<SincronizarAutomacao>>();
             if (Controlador.Master)
             {
                 var slaves = controladores
@@ -116,10 +114,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                                     $"{pendingResponse.Topic}/resposta", 
                                     response
                                 );
-                                if (MqttManager.CommandPending.TryRemove($"{request.Id}-{request.Mqtt.BrokerKey}", out var pending))
-                                {
-                                    pending.SetResult(response);
-                                }
+                                MqttManager.Process.Completed(request.ProcessId, response);
                             }
                         }
                     }
