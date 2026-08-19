@@ -6,12 +6,16 @@ using System.Runtime.InteropServices;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
-using Toolbox.Industrial.Core.Setup;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Irrigacao.Atualizador
 {
+    //Responsabilidade do atualizador apenas checar se tem atualização e se sim atualizar
+    //Responsabilidade do CheckUpdate apenas checar se há atualização
+    //Responsabilidade do InstallUpdate apenas instalar o software (Instalar e Extrair o software)
+    //Responsabilidade do Stop e Start service apenas iniciar e parar service
+    //Responsabilidade do UpdateApplication apenas atualizar o binario
     public class Updater : BackgroundService
     {
         private readonly UpdateInstallationConfig _config;
@@ -37,8 +41,6 @@ namespace Irrigacao.Atualizador
 
         private AtualizacaoDisponivel? _credenciaisCache;
 
-        //private bool _credenciais = false;
-
         private async Task<AtualizacaoDisponivel> ObterCredenciais()
         {
             var contaId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ContaId);
@@ -46,18 +48,20 @@ namespace Irrigacao.Atualizador
             var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
             var versaoAtual = await _store.ObterConfiguracao<string>(Entity.Keys.VersaoAtual);
 
-            var atualizacaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.AtualizacaoId);
-            var dataVersaoAtual = await _store.ObterConfiguracao<DateTime>(
-                Entity.Keys.DataVersaoAtual
-            );
+            //var atualizacaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.AtualizacaoId);
+            //var dataVersaoAtual = await _store.ObterConfiguracao<DateTime>(
+            //    Entity.Keys.DataVersaoAtual
+            //);
 
             return new AtualizacaoDisponivel(
                 contaId,
                 painelId,
                 controladorId,
-                atualizacaoId != Guid.Empty ? atualizacaoId : null,
+                null,
+                //atualizacaoId != Guid.Empty ? atualizacaoId : null,
                 versaoAtual ?? "",
-                dataVersaoAtual != default ? dataVersaoAtual : null,
+                //dataVersaoAtual != default ? dataVersaoAtual : null,
+                null,
                 (int)RuntimeInformation.OSArchitecture
             );
         }
@@ -191,9 +195,6 @@ namespace Irrigacao.Atualizador
 
             var client = _factoryHttpClient.CreateClient();
 
-            //client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
-            //client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
-
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Software-Irrigacao");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Bearer",
@@ -205,7 +206,7 @@ namespace Irrigacao.Atualizador
             var response = await client.GetAsync(url, cancellationToken);
 
             response.EnsureSuccessStatusCode();
-            /// Retornar se Deu certo ou não a instalação do zip
+
             var zipPath = Path.Combine(downloadPath, $"{_config.BinaryName}.zip");
 
             await using var fileStream = File.Create(zipPath);
@@ -437,7 +438,7 @@ namespace Irrigacao.Atualizador
                         "Servico {serviceName} não iniciado",
                         _config.ServiceName
                     );
-                    return true;
+                    return false;
                 }
                 else if (status == "active")
                 {
@@ -445,7 +446,7 @@ namespace Irrigacao.Atualizador
                         "Serviço {serviceName} foi iniciado com sucesso",
                         _config.ServiceName
                     );
-                    return false;
+                    return true;
                 }
             }
 
