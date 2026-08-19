@@ -24,13 +24,13 @@ namespace Toolbox.Industrial.Core.Platform
 
         public async Task<bool> Stop(string serviceName, TimeSpan? timeout = null)
         {
-            await Run($"systemctl stop {serviceName}");
+            await _shell.Run($"systemctl stop {serviceName}");
             return await WaitForStatus(serviceName, "inactive", timeout ?? _timeout);
         }
 
         public async Task<bool> Start(string serviceName, TimeSpan? timeout = null)
         {
-            await Run($"systemctl start {serviceName}");
+            await _shell.Run($"systemctl start {serviceName}");
             return await WaitForStatus(serviceName, "active", timeout ?? _timeout);
         }
 
@@ -64,7 +64,7 @@ namespace Toolbox.Industrial.Core.Platform
         }
         public async Task<string?> GetStatus(string serviceName)
         {
-            var (output, _, _) = await Run($"systemctl is-active {serviceName}");
+            var (output, _, _) = await _shell.Run($"systemctl is-active {serviceName}");
             return output.Trim();
         }
 
