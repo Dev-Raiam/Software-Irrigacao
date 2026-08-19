@@ -79,6 +79,11 @@ internal sealed class Heartbeat : BackgroundService
                     {
                         IsOnline = true;
                         _logger.LogInformation("Controlador ONLINE.");
+                        var version = System
+                            .Reflection.Assembly.GetExecutingAssembly()
+                            .GetName()
+                            .Version?.ToString();
+                        _logger.LogInformation("");
                         StatusChanged?.Invoke(this, true);
                     }
                 }
