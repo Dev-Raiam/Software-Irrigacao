@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
+using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Security.Cryptography;
 using Toolbox.Industrial.Core.Setup;
+using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
@@ -37,24 +40,27 @@ internal class RegistrarCredenciais : RemoteCommand
 
 internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<RegistrarCredenciais>
 {
-    private readonly AuthGuard _auth;
+    private readonly Token _token;
     private readonly IMediator _mediator;
     private readonly IEntityStore _store;
+    private readonly IApiClient _apiClient;
     private readonly ICryptography _cryptography;
     private readonly ILogger<RegistrarCredenciaisHandler> _logger;
 
     public RegistrarCredenciaisHandler(
-        AuthGuard auth,
+        Token token,
         IMediator mediator,
         IEntityStore store,
         ICryptography cryptography,
-        ILogger<RegistrarCredenciaisHandler> logger
+        ILogger<RegistrarCredenciaisHandler> logger,
+        [FromKeyedServices(ApiClient.Anonymous)] IApiClient apiClient
     )
     {
-        _auth = auth;
+        _token = token;
         _store = store;
         _logger = logger;
         _mediator = mediator;
+        _apiClient = apiClient;
         _cryptography = cryptography;
     }
 
@@ -83,7 +89,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         var credentials = new Credentials(request.Chave, request.Segredo, request.ContextoId);
 
-        var response = await _auth.Authenticate(credentials, cancellationToken);
+        var response = await _apiClient.Authenticate(credentials, cancellationToken);
 
         if (!response.Success || response.Data == null)
         {
@@ -135,6 +141,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
             new(Entity.Keys.ContaId, $"{request.ContaId}", grupo: Grupo.App, tipo: Tipo.Config),
             new(Entity.Keys.PainelId, $"{request.PainelId}", grupo: Grupo.App, tipo: Tipo.Config),
         ];
+
         if (request.ControladorId != null)
         {
             configuracoes.Add(
@@ -146,11 +153,12 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
                 )
             );
         }
+
         foreach (var configuracao in configuracoes)
         {
             await _store.UpsertAsync(configuracao);
         }
-        _auth.Token.Update(response.Data);
+        _token.Update(response.Data);
 
         Controlador.PainelId = request.PainelId;
         if (request.ControladorId != null)
@@ -160,7 +168,6 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         #endregion Salvar configurações
 
-        //Disparar sincronia
         await _mediator.Execute(
             new Sincronizar(),
             cancellationToken: cancellationToken

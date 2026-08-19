@@ -3,7 +3,6 @@ using System.Net.Http.Headers;
 using System.Net.Mime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NetDevPack.Security.Jwt.Core.Interfaces;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
@@ -16,8 +15,8 @@ internal sealed record Credentials(string chave, string segredo, Guid contextoId
 internal class AuthGuard : DelegatingHandler
 {
     private readonly Token _token;
-    private readonly IApiClient _client;
     private readonly IEntityStore _store;
+    private readonly IApiClient _apiClient;
     private readonly ICryptography _cryptography;
     private readonly ILogger<AuthGuard> _logger;
 
@@ -28,13 +27,13 @@ internal class AuthGuard : DelegatingHandler
         IEntityStore store,
         ICryptography cryptography,
         ILogger<AuthGuard> logger,
-        [FromKeyedServices(ApiClient.Anonymous)] IApiClient client
+        [FromKeyedServices(ApiClient.Anonymous)] IApiClient apiClient
     )
     {
         _token = token;
         _store = store;
-        _client = client;
         _logger = logger;
+        _apiClient = apiClient;
         _cryptography = cryptography;
     }
 
@@ -52,24 +51,6 @@ internal class AuthGuard : DelegatingHandler
             _cryptography.Decrypt(segredo),
             Guid.Parse(contextoId)
         );
-    }
-
-    public async Task<Result<Token>> Authenticate(
-        Credentials credentials,
-        CancellationToken cancellationToken
-    )
-    {
-        var request = new HttpRequestMessage(HttpMethod.Post, "autenticacao/v1/autenticar-cliente");
-
-        request.Content = new StringContent(
-            System.Text.Json.JsonSerializer.Serialize(credentials),
-            System.Text.Encoding.UTF8,
-            MediaTypeNames.Application.Json
-        );
-
-        var response = await _client.SendAsync<Token>(request, cancellationToken);
-
-        return response;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -90,7 +71,7 @@ internal class AuthGuard : DelegatingHandler
                 };
             }
 
-            var response = await Authenticate(credentials, cancellationToken);
+            var response = await _apiClient.Authenticate(credentials, cancellationToken);
 
             if (!response.Success || response.Data == null)
             {
