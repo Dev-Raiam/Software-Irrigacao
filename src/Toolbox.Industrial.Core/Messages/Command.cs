@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using Newtonsoft.Json;
 using Toolbox.Industrial.Core.Communication.Mqtt;
-using Toolbox.Industrial.Core.Communication.RaspIO;
 
 namespace Toolbox.Industrial.Core.Messages
 {
