@@ -1,7 +1,3 @@
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -10,9 +6,16 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
+using System.Collections.Concurrent;
+using System.ComponentModel.Design;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages;
+using Toolbox.Industrial.Core.Messages.Integration.Events;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
 using Timer = System.Timers.Timer;
@@ -27,60 +30,58 @@ public sealed class Mqtt : IMqtt
     public const string Interno = "mqttinterno";
     public const string Local = "mqttlocal";
     public const string Remoto = "mqttremoto";
-    private X509Certificate2? _certificate;
     private readonly List<MqttTopicFilter> _topics;
+    private readonly int _reconnectIntervalFactor;
     private readonly MqttClientOptions _options;
     private readonly IServiceProvider _provider;
     private readonly IMqttClient _mqttClient;
     private Action<string, string>? _handler;
+    private readonly int _reconnectInterval;
     private readonly ILogger<Mqtt> _logger;
-    private readonly IMediator _mediator;
+    private X509Certificate2? _certificate;
     private readonly Timer _connectGuard;
+    private readonly IMediator _mediator;
     private bool _reconnecting = false;
+    private readonly string _brokerKey;
     private bool _initializing = true;
-    private readonly string _purpose;
     private readonly string _host;
     private readonly int _port;
-
     private bool _disposed;
 
+    internal IReadOnlyList<MqttTopicFilter> Topics => _topics;
     internal X509Certificate2? Certificate
     {
         get { return _certificate; }
         set { _certificate = value; }
     }
-
     internal ILogger<Mqtt> Logger => _logger;
-    internal static JsonSerializerSettings Serializer => _serializer;
     internal string Host => _host;
     internal int Port => _port;
 
-    internal IReadOnlyList<MqttTopicFilter> Topics => _topics;
-
     public bool IsConnected => _mqttClient.IsConnected;
-
     public Action<string, string>? Handler => _handler;
-    public string Purpose => _purpose;
     public IServiceProvider Provider => _provider;
+    public string BrokerKey => _brokerKey;
 
     public Mqtt(
         IServiceProvider provider,
-        string purpose,
+        string brokerKey,
         Configuration config,
         X509Certificate2? certificate = null,
         IEnumerable<MqttTopicFilter>? topics = null
     )
     {
         _provider = provider;
-        _purpose = purpose;
+        _brokerKey = brokerKey;
         _host = config.Host;
         _port = config.Port;
+        _topics = [..topics ?? []];
+        _certificate = certificate;
         _serializer.TypeNameHandling = TypeNameHandling.Objects;
         _logger = provider.GetRequiredService<ILogger<Mqtt>>();
         _mediator = provider.GetRequiredService<IMediator>();
-        _topics = new List<MqttTopicFilter>(topics ?? []);
-        _certificate = certificate;
-
+        _reconnectInterval = brokerKey == Remoto ? 1000 : 20;
+        _reconnectIntervalFactor = brokerKey == Remoto ? 2 : 1;
         var options = new MqttClientOptionsBuilder()
             .WithClientId(config.ClientId)
             .WithTcpServer(config.Host, config.Port)
@@ -91,7 +92,7 @@ public sealed class Mqtt : IMqtt
         {
             options = options.WithTlsOptions(tls =>
             {
-                var ca = X509CertificateLoader.LoadCertificateFromFile($"{_purpose}.cer");
+                var ca = X509CertificateLoader.LoadCertificateFromFile($"{_brokerKey}.cer");
                 tls.UseTls();
                 tls.WithCertificateValidationHandler(context =>
                 {
@@ -119,7 +120,7 @@ public sealed class Mqtt : IMqtt
                         {
                             if (
                                 status.Status == X509ChainStatusFlags.NotSignatureValid
-                                && Purpose == Local
+                                && BrokerKey == Local
                             )
                             {
                                 ReloadCertificateMaster();
@@ -152,8 +153,8 @@ public sealed class Mqtt : IMqtt
             {
                 _logger.LogInformation($"Sucesso na reconexão com broker MQTT ({_host}:{_port})");
                 _connectGuard.Stop();
-                Thread.Sleep(500);
-                _connectGuard.Interval = 1000;
+                Thread.Sleep(10);
+                _connectGuard.Interval = _reconnectInterval;
             }
             if (_initializing)
             {
@@ -173,7 +174,7 @@ public sealed class Mqtt : IMqtt
                 if (!_initializing && !_connectGuard.Enabled)
                 {
                     _logger.LogInformation($"Reconectando broker MQTT ({_host}:{_port})");
-                    _connectGuard.Interval = 1000;
+                    _connectGuard.Interval = _reconnectInterval;
                     _connectGuard.Start();
                 }
             }
@@ -188,34 +189,31 @@ public sealed class Mqtt : IMqtt
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 var message = JsonConvert.DeserializeObject(payload, _serializer)!;
                 Console.WriteLine(
-                    $"Mensagem recebida [{_purpose}]: {topic} => {message.GetType().Name} => {payload}"
+                    $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} => {payload}"
                 );
                 if (message is Command command)
                 {
                     command.Mqtt = this;
                     command.Topic = topic;
-                    await _mediator.Execute((dynamic)command);
+                    _mediator.Execute((dynamic)command);
+                }
+                else if (message is ResponseRequest response)
+                {
+                    response.Mqtt = this;
+                    response.Topic = topic;
+                    await _mediator.Publish(response).ConfigureAwait(false);
                 }
                 else if (message is Toolbox.Core.Messages.IEvent @event)
                 {
-                    Console.WriteLine(
-                        $"Mensagem recebida [{_purpose}]: {topic} => {@event.GetType().Name} => {payload}"
-                    );
-                    //await _mediator.Publish((dynamic)@event);
+                    await _mediator.Publish(@event).ConfigureAwait(false);
                 }
-                //if (_handler != null)
-                //{
-                //    var topic = e.ApplicationMessage.Topic;
-                //    var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                //    _handler?.Invoke(topic, payload);
-                //}
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
                     "Erro ao processar mensagem MQTT [{purpose}]: {Message}",
-                    _purpose,
+                    _brokerKey,
                     ex.Message
                 );
             }
@@ -263,7 +261,7 @@ public sealed class Mqtt : IMqtt
                     if (_connectGuard.Enabled)
                     {
                         _connectGuard.Stop();
-                        _connectGuard.Interval = 1000;
+                        _connectGuard.Interval = _reconnectInterval;
                         _logger.LogInformation(
                             $"Sucesso na reconexão com broker MQTT ({_host}:{_port})"
                         );
@@ -272,7 +270,7 @@ public sealed class Mqtt : IMqtt
                 }
                 if (result != null && result.ResultCode != MqttClientConnectResultCode.Success)
                 {
-                    _connectGuard.Interval *= 2;
+                    _connectGuard.Interval *= _reconnectIntervalFactor;
                     if (_connectGuard.Interval > 15000) // Limite máximo de espera de 1 minuto
                     {
                         _connectGuard.Interval = 15000;
@@ -281,7 +279,7 @@ public sealed class Mqtt : IMqtt
             }
             catch (Exception)
             {
-                _connectGuard.Interval *= 2;
+                _connectGuard.Interval *= _reconnectIntervalFactor;
                 if (_connectGuard.Interval > 15000) // Limite máximo de espera de 1 minuto
                 {
                     _connectGuard.Interval = 15000;
@@ -309,7 +307,7 @@ public sealed class Mqtt : IMqtt
                 );
                 if (!_connectGuard.Enabled)
                 {
-                    _connectGuard.Interval = 1000;
+                    _connectGuard.Interval = _reconnectInterval;
                     _connectGuard.Start();
                 }
                 return _mqttClient.IsConnected;
@@ -326,7 +324,7 @@ public sealed class Mqtt : IMqtt
                 )
             )
             {
-                if (_purpose == Local)
+                if (_brokerKey == Local)
                 {
                     ReloadCertificateMaster();
                 }
@@ -346,7 +344,7 @@ public sealed class Mqtt : IMqtt
             );
             if (!_connectGuard.Enabled)
             {
-                _connectGuard.Interval = 1000;
+                _connectGuard.Interval = _reconnectInterval;
                 _connectGuard.Start();
             }
         }
@@ -355,7 +353,7 @@ public sealed class Mqtt : IMqtt
             _logger.LogError(ex, $"Erro ao conectar ao broker MQTT ({_host}:{_port})");
             if (!_connectGuard.Enabled)
             {
-                _connectGuard.Interval = 1000;
+                _connectGuard.Interval = _reconnectInterval;
                 _connectGuard.Start();
             }
         }
@@ -380,24 +378,36 @@ public sealed class Mqtt : IMqtt
         }
     }
 
-    public async Task PublishAsync(
+    public async Task<PendingResponse<TPayload>?> PublishAsync<TPayload>(
         string topic,
-        string payload,
+        TPayload payload,
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    )
+    ) where TPayload : class
     {
         await ConnectAsync();
-
+        PendingResponse<TPayload>? result = null; 
         try
         {
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
-                .WithPayload(payload)
+                .WithPayload(JsonConvert.SerializeObject(payload, _serializer))
                 .WithRetainFlag(retain)
                 .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
                 .Build();
 
+            if (payload is Command command)
+            {
+                result = new PendingResponse<TPayload>
+                {
+                    Topic = topic,
+                    Command = payload,
+                    BrokerKey = command.Mqtt.BrokerKey,
+                    Completion = new TaskCompletionSource<ResponseRequest>(
+                        TaskCreationOptions.RunContinuationsAsynchronously)
+                };
+                MqttManager.CommandPending.TryAdd($"{command.Id}-{command.Mqtt.BrokerKey}", result);
+            }
             await _mqttClient.PublishAsync(message);
         }
         catch (Exception ex)
@@ -407,35 +417,7 @@ public sealed class Mqtt : IMqtt
                 ex
             );
         }
-    }
-
-    public async Task PublishAsync(
-        string topic,
-        byte[] payload,
-        bool retain = false,
-        QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    )
-    {
-        await ConnectAsync();
-
-        try
-        {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(payload)
-                .WithRetainFlag(retain)
-                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
-                .Build();
-
-            await _mqttClient.PublishAsync(message);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(
-                $"Erro ao publicar no tópico {topic} em {_host}:{_port}: {ex.Message}",
-                ex
-            );
-        }
+        return result;
     }
 
     public async Task SubscribeAsync(
@@ -485,11 +467,6 @@ public sealed class Mqtt : IMqtt
         }
     }
 
-    public void SetHandler(Action<string, string>? handler)
-    {
-        _handler = handler;
-    }
-
     public void Dispose()
     {
         if (_disposed)
@@ -515,17 +492,15 @@ public sealed class Mqtt : IMqtt
 
 public sealed class MqttManager
 {
-    //private readonly ILogger<Mqtt> _logger;
     private Mqtt? _current;
+    public static readonly ConcurrentDictionary<string, IPendingResponse> CommandPending = new();
 
-    public MqttManager(Mqtt? mqtt) //Configuration config, ILogger<Mqtt> logger
+    public MqttManager(Mqtt? mqtt)
     {
-        //_logger = logger;
-        _current = mqtt; //new Mqtt(config, _logger);
+        _current = mqtt;
     }
 
     public IMqtt? Current => _current;
-
     public string Host => _current?.Host ?? "";
     public int Port => _current?.Port ?? 0;
 
@@ -535,22 +510,22 @@ public sealed class MqttManager
             return;
 
         var topics = _current.Topics.ToList();
-        var handler = _current.Handler;
-        var purpose = _current.Purpose;
+        //var handler = _current.Handler;
         var provider = _current.Provider;
+        var brokerKey = _current.BrokerKey;
         var connected = _current.IsConnected;
         var certificate = _current.Certificate;
         _current.Certificate = null;
         _current.Dispose();
 
         _current = new Mqtt(
+            brokerKey: brokerKey,
             provider: provider,
             config: config,
             topics: topics,
-            purpose: purpose,
             certificate: certificate
         );
-        _current.SetHandler(handler);
+        //_current.SetHandler(handler);
         if (connected)
         {
             await _current.ConnectAsync();

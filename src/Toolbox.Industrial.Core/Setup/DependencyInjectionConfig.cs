@@ -340,8 +340,8 @@ namespace Toolbox.Industrial.Core.Setup
                     var subject = certificate?.Subject ?? config?.Host ?? "localhost";
 
                     var mqtt = new Mqtt(
+                        brokerKey: Mqtt.Interno,
                         provider: provider,
-                        purpose: Mqtt.Interno,
                         topics: topics,
                         config: config ?? new MqttConfiguration(),
                         certificate: certificateService.GetCertificate(subject)
@@ -405,8 +405,8 @@ namespace Toolbox.Industrial.Core.Setup
 
                         var subject = certificate?.Subject ?? config?.Host ?? "localhost";
                         mqtt = new Mqtt(
+                            brokerKey: Mqtt.Local,
                             provider: provider,
-                            purpose: Mqtt.Local,
                             topics: topics,
                             config: config ?? new MqttConfiguration(),
                             certificate: certificateService.GetCertificate(subject)
@@ -462,8 +462,8 @@ namespace Toolbox.Industrial.Core.Setup
                     }
 
                     var mqtt = new Mqtt(
+                        brokerKey: Mqtt.Remoto,
                         provider: provider,
-                        purpose: Mqtt.Remoto,
                         topics: topics,
                         config: config,
                         certificate: certificado

@@ -1,15 +1,30 @@
-﻿using System.Diagnostics;
+﻿using Newtonsoft.Json;
+using System.Diagnostics;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 
 namespace Toolbox.Industrial.Core.Messages
 {
+
     public abstract class Command : Toolbox.Core.Messages.Command
     {
-        internal IMqtt Mqtt { get; set; } = null!;
+        private readonly DateTimeOffset _timestamp;
+        protected Command()
+        {
+            _timestamp = DateTimeOffset.UtcNow;
+        }
+
+        internal Mqtt Mqtt { get; set; } = null!;
         internal string Topic { get; set; } = null!;
-        //internal Stopwatch Stopwatch { get; } = Stopwatch.StartNew();
+        internal TimeSpan Latency => _timestamp - Timestamp;
+        internal Stopwatch Stopwatch { get; init; } = Stopwatch.StartNew();
 
         public Guid Id { get; init; } = SequentialGuid.NewGuid();
         public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
+
+        [JsonIgnore]
+        public bool HasAdditionalProperties => AdditionalProperties?.Count > 0;
+
+        [JsonExtensionData]
+        public Dictionary<string, object>? AdditionalProperties { get; set; }
     }
 }

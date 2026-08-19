@@ -59,6 +59,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         }
         if (!request.Interno)
         {
+            var pendings = new List<PendingResponse<SincronizarAutomacao>>();
             if (Controlador.Master)
             {
                 var slaves = controladores
@@ -70,26 +71,54 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
 
                 foreach (var slave in slaves)
                 {
+                    //salvar comandos na lista para aguardar a resposta antes de encerrar o aplicativo.
                     request.Topic = $"controladores/{slave.Id}/comando";
-                    await _mqttInterno.Current!.PublishAsync(
-                        request.Topic,
-                        JsonConvert.SerializeObject(request, Mqtt.Serializer)
-                    );
+                    var result = await _mqttInterno.Current!.PublishAsync(request.Topic, request);
+                    if (result != null) 
+                    {
+                        pendings.Add(result);
+                    }
                 }
             }
             if (restart)
             {
-                if (request.Mqtt != null)
+                if (pendings.Count > 0)
                 {
-                    await request.Mqtt!.PublishAsync(
-                        $"{request.Topic}/resposta",
-                        JsonConvert.SerializeObject(new ResponseCommand(request), Mqtt.Serializer)
-                    );
+                    try
+                    {
+                        await Task.WhenAll(pendings.Select(x => x.Completion.Task)).WaitAsync(
+                            TimeSpan.FromSeconds(3),
+                            cancellationToken);
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        var timeout = RequestTimeout().AddError("timeout", ex.Message);
+                        foreach (var pendingResponse in pendings)
+                        {
+                            if (!pendingResponse.Completion.Task.IsCompleted)
+                            {
+                                var response = ResponseRequest.From(request, timeout);
+                                response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
+                                await request.Mqtt.PublishAsync(
+                                    $"{pendingResponse.Topic}/resposta", 
+                                    response
+                                );
+                            }
+                        }
+                    }
                 }
-                _logger.LogWarning(
-                    "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+                //await request.Mqtt.PublishAsync(
+                //    $"{request.Topic}/resposta",
+                //    JsonConvert.SerializeObject(new ResponseCommand(request), Mqtt.Serializer)
+                //);
+                await _mqttInterno.Current!.PublishAsync(
+                    $"{request.Topic}/resposta",
+                    ResponseRequest.From(request)
                 );
-                await Application.Restart();
+                //_logger.LogWarning(
+                //    "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+                //);
+                //await Application.Restart();
             }
         }
 

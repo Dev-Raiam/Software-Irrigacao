@@ -25,10 +25,10 @@ public class DefinirValvulaProporcionalHandler : ICommandHandler<DefinirValvulaP
         // de sincronizacao ou seja o meu handler ja deverar ter feito
         // a requisicao para buscar as infromacoes de qual é o dispositivo com id que vem no request
         var comando = new ComandoControleAnalogico { Porta = "Q1", Valor = request.Abertura };
-        var payload = JsonSerializer.Serialize(comando);
+        //var payload = JsonSerializer.Serialize(comando);
 
         // TODO: Implementar lógica de publicação no MQTT
-        await _mqtt.PublishAsync("topic", payload);
+        await _mqtt.PublishAsync("topic", comando);
 
         return ResponseResult.Result(System.Net.HttpStatusCode.OK);
     }

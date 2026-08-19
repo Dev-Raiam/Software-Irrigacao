@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Toolbox.Core.Extensions;
+using Toolbox.Industrial.Core.Messages.Integration.Events;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
@@ -11,25 +12,18 @@ public interface IMqtt : IDisposable
 
     Task DisconnectAsync();
 
-    Task PublishAsync(
+    Task<PendingResponse<TPayload>?> PublishAsync<TPayload>(
         string topic,
-        string payload,
+        TPayload payload,
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    );
-
-    Task PublishAsync(
-        string topic,
-        byte[] payload,
-        bool retain = false,
-        QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    );
+    ) where TPayload : class;
 
     Task SubscribeAsync(string topic, QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce);
 
     Task UnsubscribeAsync(string topic);
 
-    void SetHandler(Action<string, string>? handler);
+    //void SetHandler(Action<string, string>? handler);
 }
 
 public sealed record Configuration

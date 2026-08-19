@@ -29,6 +29,12 @@ namespace Toolbox.Industrial.Core.Messages.Commands.Handlers
             //.AddErrors(_errors);
         }
 
+        public ResponseResult RequestTimeout()
+        {
+            return ResponseResult.SetHttpStatusCode(HttpStatusCode.RequestTimeout);
+            //.AddErrors(_errors);
+        }
+
         public ResponseResult NoContent()
         {
             return ResponseResult.SetHttpStatusCode(HttpStatusCode.NoContent);
