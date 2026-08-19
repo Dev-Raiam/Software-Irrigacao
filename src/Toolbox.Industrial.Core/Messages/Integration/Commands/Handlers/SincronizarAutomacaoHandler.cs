@@ -71,7 +71,6 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
 
                 foreach (var slave in slaves)
                 {
-                    //salvar comandos na lista para aguardar a resposta antes de encerrar o aplicativo.
                     request.Topic = $"controladores/{slave.Id}/comando";
                     var result = await _mqttInterno.Current!.PublishAsync(request.Topic, request);
                     if (result != null) 
@@ -103,22 +102,26 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                                     $"{pendingResponse.Topic}/resposta", 
                                     response
                                 );
+                                if (MqttManager.CommandPending.TryRemove($"{request.Id}-{request.Mqtt.BrokerKey}", out var pending))
+                                {
+                                    pending.SetResult(response);
+                                }
                             }
                         }
                     }
                 }
-                //await request.Mqtt.PublishAsync(
-                //    $"{request.Topic}/resposta",
-                //    JsonConvert.SerializeObject(new ResponseCommand(request), Mqtt.Serializer)
-                //);
-                await _mqttInterno.Current!.PublishAsync(
+                await request.Mqtt.PublishAsync(
                     $"{request.Topic}/resposta",
                     ResponseRequest.From(request)
                 );
-                //_logger.LogWarning(
-                //    "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+                //await _mqttInterno.Current!.PublishAsync(
+                //    $"{request.Topic}/resposta",
+                //    ResponseRequest.From(request)
                 //);
-                //await Application.Restart();
+                _logger.LogWarning(
+                    "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+                );
+                await Application.Restart();
             }
         }
 

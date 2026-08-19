@@ -36,10 +36,10 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
                         await mqtt.PublishAsync(notification.Topic, notification);
                     }
                 }
-                //if (MqttManager.CommandPending.TryRemove($"{notification.CorrelationId}-{brokerKey}", out var pending))
-                //{
-                //    pending.Completion.TrySetResult(notification);
-                //}
+                if (MqttManager.CommandPending.TryRemove($"{notification.CorrelationId}-{brokerKey}", out var pending))
+                {
+                    pending.SetResult(notification);
+                }
             }
         }
     }

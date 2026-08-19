@@ -36,12 +36,21 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
 
     }
 
-    public interface IPendingResponse { }
+    public interface IPendingResponse 
+    {
+        void SetResult(ResponseRequest response);
+    }
+
     public sealed class PendingResponse<TPayload> : IPendingResponse
     {
         public required string BrokerKey { get; init; }
         public required TPayload Command { get; init; }
         public required string Topic { get; init; }
         public required TaskCompletionSource<ResponseRequest> Completion { get; init; }
+
+        public void SetResult(ResponseRequest response)
+        {
+            Completion.TrySetResult(response);
+        }
     }
 }
