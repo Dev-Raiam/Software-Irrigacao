@@ -6,12 +6,16 @@ using System.Runtime.InteropServices;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
-using Toolbox.Industrial.Core.Setup;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
 using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Irrigacao.Atualizador
 {
+    //Responsabilidade do atualizador apenas checar se tem atualização e se sim atualizar
+    //Responsabilidade do CheckUpdate apenas checar se há atualização
+    //Responsabilidade do InstallUpdate apenas instalar o software (Instalar e Extrair o software)
+    //Responsabilidade do Stop e Start service apenas iniciar e parar service
+    //Responsabilidade do UpdateApplication apenas atualizar o binario
     public class Updater : BackgroundService
     {
         private readonly UpdateInstallationConfig _config;
@@ -36,7 +40,6 @@ namespace Irrigacao.Atualizador
         }
 
         private AtualizacaoDisponivel? _credenciaisCache;
-        private bool _credenciais = false;
 
         private async Task<AtualizacaoDisponivel> ObterCredenciais()
         {
@@ -45,18 +48,20 @@ namespace Irrigacao.Atualizador
             var controladorId = await _store.ObterConfiguracao<Guid>(Entity.Keys.ControladorId);
             var versaoAtual = await _store.ObterConfiguracao<string>(Entity.Keys.VersaoAtual);
 
-            var atualizacaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.AtualizacaoId);
-            var dataVersaoAtual = await _store.ObterConfiguracao<DateTime>(
-                Entity.Keys.DataVersaoAtual
-            );
+            //var atualizacaoId = await _store.ObterConfiguracao<Guid>(Entity.Keys.AtualizacaoId);
+            //var dataVersaoAtual = await _store.ObterConfiguracao<DateTime>(
+            //    Entity.Keys.DataVersaoAtual
+            //);
 
             return new AtualizacaoDisponivel(
                 contaId,
                 painelId,
                 controladorId,
-                atualizacaoId != Guid.Empty ? atualizacaoId : null,
+                null,
+                //atualizacaoId != Guid.Empty ? atualizacaoId : null,
                 versaoAtual ?? "",
-                dataVersaoAtual != default ? dataVersaoAtual : null,
+                //dataVersaoAtual != default ? dataVersaoAtual : null,
+                null,
                 (int)RuntimeInformation.OSArchitecture
             );
         }
@@ -80,28 +85,30 @@ namespace Irrigacao.Atualizador
                     _logger.LogError(ex, "Erro inesperado na execução do serviço");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
 
         private async Task<AtualizacaoResposta?> CheckUpdate(CancellationToken cancellationToken)
         {
-            if (!_credenciais)
-            {
-                if (Application.HasCredentials)
-                {
-                    _credenciaisCache = await ObterCredenciais();
+            //if (Application.HasCredentials)
+            //{
+            //    _credenciaisCache = await ObterCredenciais();
 
-                    if (_credenciaisCache == null)
-                        return null;
+            //    if (_credenciaisCache == null)
+            //        return null;
 
-                    _credenciais = true;
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            //    //_credenciais = true;
+            //}
+            //else
+            //{
+            //    return null;
+            //}
+
+            _credenciaisCache = await ObterCredenciais();
+
+            if (_credenciaisCache == null)
+                return null;
 
             var message = new HttpRequestMessage(HttpMethod.Query, _config.Url)
             {
@@ -167,7 +174,7 @@ namespace Irrigacao.Atualizador
                     await _store.UpdateAsync(
                         new Configuracao(
                             id: Entity.Keys.VersaoAtual,
-                            configuracao: request.Versao,
+                            configuracao: request.Versao.ToString(),
                             grupo: Grupo.Api,
                             tipo: Tipo.Config
                         )
@@ -187,9 +194,6 @@ namespace Irrigacao.Atualizador
             Directory.CreateDirectory(downloadPath);
 
             var client = _factoryHttpClient.CreateClient();
-
-            //client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
-            //client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
 
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Software-Irrigacao");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
@@ -353,6 +357,8 @@ namespace Irrigacao.Atualizador
                     );
                     return false;
                 }
+                _logger.LogInformation("Serviço {serviceName} com sucesso", _config.ServiceName);
+                return true;
             }
 
             _logger.LogError(
@@ -432,7 +438,7 @@ namespace Irrigacao.Atualizador
                         "Servico {serviceName} não iniciado",
                         _config.ServiceName
                     );
-                    return true;
+                    return false;
                 }
                 else if (status == "active")
                 {
@@ -440,7 +446,7 @@ namespace Irrigacao.Atualizador
                         "Serviço {serviceName} foi iniciado com sucesso",
                         _config.ServiceName
                     );
-                    return false;
+                    return true;
                 }
             }
 
@@ -453,9 +459,43 @@ namespace Irrigacao.Atualizador
             return false;
         }
 
+        //private async Task<bool> CheckServiceStoped()
+        //{
+        //    // Preciso que esse cara execute por 20 milisegundos
+        //    while (true)
+        //    {
+        //        var status = await StatusService();
+
+        //        if (status == "inactive")
+        //        {
+        //            _logger.LogInformation(
+        //                "Serviço {serviceName} parado com sucesso",
+        //                _config.ServiceName
+        //            );
+        //            break;
+        //        }
+        //        else if (status == "deactivating  ")
+        //        {
+        //            _logger.LogInformation(
+        //                "Serviço {serviceName} parado com sucesso",
+        //                _config.ServiceName
+        //            );
+        //        }
+        //        else if (status == "active")
+        //        {
+        //            _logger.LogInformation(
+        //                "Serviço {serviceName} não foi parado",
+        //                _config.ServiceName
+        //            );
+        //        }
+
+        //        await Task.Delay(TimeSpan.FromSeconds(1));
+        //    }
+        //}
+
         private async Task ConfirmUpdate(Guid atualizacaoId, CancellationToken cancellationToken)
         {
-            var message = new HttpRequestMessage(HttpMethod.Query, _config.UrlConfirm)
+            var message = new HttpRequestMessage(HttpMethod.Post, _config.UrlConfirm)
             {
                 Content = JsonContent.Create(new AtualizacaoConfirmacao(atualizacaoId)),
             };
