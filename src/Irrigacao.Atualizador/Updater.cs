@@ -7,7 +7,8 @@ using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
 using Toolbox.Industrial.Core.Setup;
-using static Toolbox.Industrial.Core.Data.Configuracao;
+using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
+using Tipo = Toolbox.Industrial.Core.Data.Configuracao.tipo;
 
 namespace Irrigacao.Atualizador
 {
@@ -66,12 +67,12 @@ namespace Irrigacao.Atualizador
             {
                 try
                 {
-                    var url = await CheckUpdate(stoppingToken);
+                    var response = await CheckUpdate(stoppingToken);
 
-                    if (url != null)
+                    if (response != null)
                     {
-                        await InstallUpdate(url, stoppingToken);
-                        Directory.Delete(_config.UpdateDirectory, true);
+                        await InstallUpdate(response, stoppingToken);
+                        //Directory.Delete(_config.UpdateDirectory, true);
                     }
                 }
                 catch (Exception ex)
@@ -83,7 +84,7 @@ namespace Irrigacao.Atualizador
             }
         }
 
-        private async Task<string?> CheckUpdate(CancellationToken cancellationToken)
+        private async Task<AtualizacaoResposta?> CheckUpdate(CancellationToken cancellationToken)
         {
             if (!_credenciais)
             {
@@ -114,19 +115,12 @@ namespace Irrigacao.Atualizador
 
             if (!response.Success)
             {
-                _logger.LogWarning(response.Error);
+                _logger.LogWarning(response.Exception, response.Error);
                 return null;
             }
 
             if (response.Data == null)
                 return null;
-
-            //_store.UpdateAsync<Configuracao>(new Configuracao(
-            //        id: Entity.Keys.AtualizacaoId,
-            //        configuracao: response.Data.AtualizacaoId,
-            //        grupo: grupo.Api,
-            //        tipo: tipo.Config
-            //    ));
 
             _logger.LogInformation(
                 "Atualização Disponivel na Version {version} lançada em {lancamento}",
@@ -134,26 +128,55 @@ namespace Irrigacao.Atualizador
                 response.Data.Lancamento
             );
 
-            return response.Data.UrlDownload;
+            return response.Data;
         }
 
-        private async Task InstallUpdate(string url, CancellationToken cancellationToken)
+        private async Task InstallUpdate(
+            AtualizacaoResposta request,
+            CancellationToken cancellationToken
+        )
         {
-            await DownloadReleaseZip(url, cancellationToken);
+            await DownloadReleaseZip(request.UrlDownload, cancellationToken);
 
-            ExtractZip();
-
-            if (StopService())
+            if (ExtractZip())
             {
-                BackupBinary();
-                if (!UpdateBinary())
+                if (await StopService())
                 {
-                    _logger.LogError("Atualização falhou, restaurando backup");
-                    // restaurar backup
-                    StartService();
-                    return;
+                    BackupBinary();
+                    UpdateBinary();
+                    AddPermissionExecution();
+
+                    await _store.UpdateAsync(
+                        new Configuracao(
+                            id: Entity.Keys.AtualizacaoId,
+                            configuracao: request.Id,
+                            grupo: Grupo.Api,
+                            tipo: Tipo.Config
+                        )
+                    );
+
+                    await _store.UpdateAsync(
+                        new Configuracao(
+                            id: Entity.Keys.DataVersaoAtual,
+                            configuracao: request.Lancamento,
+                            grupo: Grupo.Api,
+                            tipo: Tipo.Config
+                        )
+                    );
+
+                    await _store.UpdateAsync(
+                        new Configuracao(
+                            id: Entity.Keys.VersaoAtual,
+                            configuracao: request.Versao,
+                            grupo: Grupo.Api,
+                            tipo: Tipo.Config
+                        )
+                    );
+
+                    await ConfirmUpdate(request.Id, cancellationToken);
+
+                    await StartService();
                 }
-                StartService();
             }
         }
 
@@ -188,14 +211,14 @@ namespace Irrigacao.Atualizador
             _logger.LogInformation("Zip baixado para {updateDirectory}", _config.UpdateDirectory);
         }
 
-        private void ExtractZip()
+        private bool ExtractZip()
         {
             var downloadPath = Path.Combine(_config.UpdateDirectory, "download");
             var extractedPath = Path.Combine(_config.UpdateDirectory, "extracted");
 
             Directory.CreateDirectory(extractedPath);
 
-            _logger.LogInformation("Extraindo zip em {extractedPath }", extractedPath);
+            _logger.LogInformation("Extraindo zip em {extractedPath}", extractedPath);
 
             ZipFile.ExtractToDirectory(
                 Path.Combine(downloadPath, $"{_config.BinaryName}.zip"),
@@ -203,47 +226,18 @@ namespace Irrigacao.Atualizador
                 true
             );
 
-            _logger.LogInformation("Zip extraído com sucesso");
-        }
-
-        private bool StopService()
-        {
-            _logger.LogInformation("Parando serviço {serviceName}", _config.ServiceName);
-            var process = new Process
+            var binaryPath = Path.Combine(extractedPath, _config.BinaryName);
+            if (!File.Exists(binaryPath))
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"systemctl stop {_config.ServiceName}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                },
-            };
-
-            process.Start();
-
-            var error = process.StandardError.ReadToEnd();
-
-            process.WaitForExit();
-
-            if (process.ExitCode == 0)
-            {
-                _logger.LogInformation(
-                    "Serviço {serviceName} parado com sucesso",
-                    _config.ServiceName
+                _logger.LogError(
+                    "Binário {binaryName} não encontrado no zip extraído",
+                    _config.BinaryName
                 );
-                return true;
+                return false;
             }
 
-            _logger.LogError(
-                "Falha ao parar serviço {serviceName}: {error}",
-                _config.ServiceName,
-                error
-            );
-
-            return false;
+            _logger.LogInformation("Zip extraído com sucesso");
+            return true;
         }
 
         private void BackupBinary()
@@ -267,7 +261,7 @@ namespace Irrigacao.Atualizador
             _logger.LogInformation("Backup concluído com sucesso");
         }
 
-        private bool UpdateBinary()
+        private void UpdateBinary()
         {
             var updatePath = Path.Combine(_config.UpdateDirectory, "extracted", _config.BinaryName);
             var binaryPath = Path.Combine(_config.BinaryDirectory, _config.BinaryName);
@@ -279,7 +273,11 @@ namespace Irrigacao.Atualizador
             );
 
             File.Copy(updatePath, binaryPath, true);
+        }
 
+        private bool AddPermissionExecution()
+        {
+            var binaryPath = Path.Combine(_config.BinaryDirectory, _config.BinaryName);
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -302,7 +300,7 @@ namespace Irrigacao.Atualizador
             if (process.ExitCode != 0)
             {
                 _logger.LogError(
-                    "Falha ao atualizar binario {binaryName} Erro: {erro}",
+                    "Falha ao adicionar permissão de execução do binario {binaryName} Erro: {erro}",
                     _config.BinaryName,
                     error
                 );
@@ -313,7 +311,96 @@ namespace Irrigacao.Atualizador
             return true;
         }
 
-        private bool StartService()
+        private async Task<bool> StopService()
+        {
+            _logger.LogInformation("Parando serviço {serviceName}", _config.ServiceName);
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"systemctl stop {_config.ServiceName}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                },
+            };
+
+            process.Start();
+
+            var error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit();
+
+            if (process.ExitCode == 0)
+            {
+                var status = await StatusService();
+
+                if (status == "inactive")
+                {
+                    _logger.LogInformation(
+                        "Serviço {serviceName} parado com sucesso",
+                        _config.ServiceName
+                    );
+                    return true;
+                }
+                else if (status == "active")
+                {
+                    _logger.LogInformation(
+                        "Serviço {serviceName} não foi parado",
+                        _config.ServiceName
+                    );
+                    return false;
+                }
+            }
+
+            _logger.LogError(
+                "Falha ao parar serviço {serviceName}: {error}",
+                _config.ServiceName,
+                error
+            );
+
+            return false;
+        }
+
+        private async Task<string?> StatusService()
+        {
+            _logger.LogInformation(
+                "Verificando status do serviço {serviceName}",
+                _config.ServiceName
+            );
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"systemctl is-active {_config.ServiceName}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                },
+            };
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            process.Start();
+
+            var output = process.StandardOutput.ReadToEnd().Trim();
+
+            process.WaitForExit();
+
+            _logger.LogInformation(
+                "Serviço {serviceName} status: {status}",
+                _config.ServiceName,
+                output
+            );
+
+            return output;
+        }
+
+        private async Task<bool> StartService()
         {
             _logger.LogInformation("Iniciando serviço {serviceName}", _config.ServiceName);
             var process = new Process
@@ -337,11 +424,24 @@ namespace Irrigacao.Atualizador
 
             if (process.ExitCode == 0)
             {
-                _logger.LogInformation(
-                    "Serviço {serviceName} iniciado com sucesso",
-                    _config.ServiceName
-                );
-                return true;
+                var status = await StatusService();
+
+                if (status == "inactive")
+                {
+                    _logger.LogInformation(
+                        "Servico {serviceName} não iniciado",
+                        _config.ServiceName
+                    );
+                    return true;
+                }
+                else if (status == "active")
+                {
+                    _logger.LogInformation(
+                        "Serviço {serviceName} foi iniciado com sucesso",
+                        _config.ServiceName
+                    );
+                    return false;
+                }
             }
 
             _logger.LogError(
@@ -351,6 +451,23 @@ namespace Irrigacao.Atualizador
             );
 
             return false;
+        }
+
+        private async Task ConfirmUpdate(Guid atualizacaoId, CancellationToken cancellationToken)
+        {
+            var message = new HttpRequestMessage(HttpMethod.Query, _config.UrlConfirm)
+            {
+                Content = JsonContent.Create(new AtualizacaoConfirmacao(atualizacaoId)),
+            };
+
+            var response = await _client.SendAsync<string?>(message, cancellationToken);
+
+            if (!response.Success)
+            {
+                _logger.LogWarning(response.Exception, response.Error);
+            }
+
+            _logger.LogInformation("Confirmação de Atualização enviada com sucesso");
         }
     }
 }
