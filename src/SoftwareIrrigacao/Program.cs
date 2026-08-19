@@ -20,6 +20,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
+
     Log.Information($"Inicializando aplicação");
     var builder = WebApplication.CreateBuilder(args);
 

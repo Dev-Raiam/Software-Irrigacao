@@ -36,7 +36,8 @@ namespace Irrigacao.Atualizador
         }
 
         private AtualizacaoDisponivel? _credenciaisCache;
-        private bool _credenciais = false;
+
+        //private bool _credenciais = false;
 
         private async Task<AtualizacaoDisponivel> ObterCredenciais()
         {
@@ -80,28 +81,30 @@ namespace Irrigacao.Atualizador
                     _logger.LogError(ex, "Erro inesperado na execução do serviço");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
 
         private async Task<AtualizacaoResposta?> CheckUpdate(CancellationToken cancellationToken)
         {
-            if (!_credenciais)
-            {
-                if (Application.HasCredentials)
-                {
-                    _credenciaisCache = await ObterCredenciais();
+            //if (Application.HasCredentials)
+            //{
+            //    _credenciaisCache = await ObterCredenciais();
 
-                    if (_credenciaisCache == null)
-                        return null;
+            //    if (_credenciaisCache == null)
+            //        return null;
 
-                    _credenciais = true;
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            //    //_credenciais = true;
+            //}
+            //else
+            //{
+            //    return null;
+            //}
+
+            _credenciaisCache = await ObterCredenciais();
+
+            if (_credenciaisCache == null)
+                return null;
 
             var message = new HttpRequestMessage(HttpMethod.Query, _config.Url)
             {
@@ -167,7 +170,7 @@ namespace Irrigacao.Atualizador
                     await _store.UpdateAsync(
                         new Configuracao(
                             id: Entity.Keys.VersaoAtual,
-                            configuracao: request.Versao,
+                            configuracao: request.Versao.ToString(),
                             grupo: Grupo.Api,
                             tipo: Tipo.Config
                         )
@@ -202,7 +205,7 @@ namespace Irrigacao.Atualizador
             var response = await client.GetAsync(url, cancellationToken);
 
             response.EnsureSuccessStatusCode();
-
+            /// Retornar se Deu certo ou não a instalação do zip
             var zipPath = Path.Combine(downloadPath, $"{_config.BinaryName}.zip");
 
             await using var fileStream = File.Create(zipPath);
@@ -353,6 +356,8 @@ namespace Irrigacao.Atualizador
                     );
                     return false;
                 }
+                _logger.LogInformation("Serviço {serviceName} com sucesso", _config.ServiceName);
+                return true;
             }
 
             _logger.LogError(
@@ -453,9 +458,43 @@ namespace Irrigacao.Atualizador
             return false;
         }
 
+        //private async Task<bool> CheckServiceStoped()
+        //{
+        //    // Preciso que esse cara execute por 20 milisegundos
+        //    while (true)
+        //    {
+        //        var status = await StatusService();
+
+        //        if (status == "inactive")
+        //        {
+        //            _logger.LogInformation(
+        //                "Serviço {serviceName} parado com sucesso",
+        //                _config.ServiceName
+        //            );
+        //            break;
+        //        }
+        //        else if (status == "deactivating  ")
+        //        {
+        //            _logger.LogInformation(
+        //                "Serviço {serviceName} parado com sucesso",
+        //                _config.ServiceName
+        //            );
+        //        }
+        //        else if (status == "active")
+        //        {
+        //            _logger.LogInformation(
+        //                "Serviço {serviceName} não foi parado",
+        //                _config.ServiceName
+        //            );
+        //        }
+
+        //        await Task.Delay(TimeSpan.FromSeconds(1));
+        //    }
+        //}
+
         private async Task ConfirmUpdate(Guid atualizacaoId, CancellationToken cancellationToken)
         {
-            var message = new HttpRequestMessage(HttpMethod.Query, _config.UrlConfirm)
+            var message = new HttpRequestMessage(HttpMethod.Post, _config.UrlConfirm)
             {
                 Content = JsonContent.Create(new AtualizacaoConfirmacao(atualizacaoId)),
             };
