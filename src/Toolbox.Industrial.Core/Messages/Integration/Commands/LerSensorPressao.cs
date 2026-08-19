@@ -1,6 +1,6 @@
 ﻿namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class LerSensorPressao : Command
+    public class LerSensorPressao : RemoteCommand
     {
         public Guid SensorId { get; init; }
     }

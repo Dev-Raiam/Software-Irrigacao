@@ -1,6 +1,6 @@
 ﻿namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class DesligarInversorFrequencia : Command
+    public class DesligarInversorFrequencia : RemoteCommand
     {
         public Guid InversorId { get; init; }
     }

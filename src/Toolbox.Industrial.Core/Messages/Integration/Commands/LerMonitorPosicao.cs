@@ -1,6 +1,6 @@
 ﻿namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class LerMonitorPosicao : Command
+    public class LerMonitorPosicao : RemoteCommand
     {
         public Guid MonitorId { get; init; }
     }

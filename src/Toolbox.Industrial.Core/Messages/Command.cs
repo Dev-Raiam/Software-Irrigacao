@@ -4,11 +4,11 @@ using Toolbox.Industrial.Core.Communication.Mqtt;
 
 namespace Toolbox.Industrial.Core.Messages
 {
-    public abstract class Command : Toolbox.Core.Messages.Command
+    public abstract class RemoteCommand : Toolbox.Core.Messages.Command
     {
         private readonly DateTimeOffset _timestamp;
 
-        protected Command()
+        protected RemoteCommand()
         {
             _timestamp = DateTimeOffset.UtcNow;
         }
@@ -30,4 +30,6 @@ namespace Toolbox.Industrial.Core.Messages
         [JsonExtensionData]
         public Dictionary<string, object>? AdditionalProperties { get; set; }
     }
+
+    public abstract class InternalCommand : Toolbox.Core.Messages.Command { }
 }

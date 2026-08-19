@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -12,7 +11,7 @@ using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
 using Toolbox.Core.Mediator;
-using Toolbox.Industrial.Core.Communication.RaspIO;
+using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
@@ -53,9 +52,7 @@ public sealed class Mqtt : IMqtt
         get { return _certificate; }
         set { _certificate = value; }
     }
-    internal string Host => _host;
-    internal int Port => _port;
-
+    
     public bool IsConnected => _mqttClient.IsConnected;
     public IServiceProvider Provider => _provider;
     public string BrokerKey => _brokerKey;
@@ -188,10 +185,14 @@ public sealed class Mqtt : IMqtt
                 Console.WriteLine(
                     $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} => {payload}"
                 );
-                if (message is Command command)
+                if (message is RemoteCommand remoteCommand)
                 {
-                    command.Mqtt = this;
-                    command.Topic = topic;
+                    remoteCommand.Mqtt = this;
+                    remoteCommand.Topic = topic;
+                    return _mediator.Execute((dynamic)remoteCommand);
+                }
+                else if (message is Command command)
+                {
                     return _mediator.Execute((dynamic)command);
                 }
                 else if (message is ResponseRequest response)
@@ -394,7 +395,7 @@ public sealed class Mqtt : IMqtt
                 .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
                 .Build();
 
-            if (content is Command command)
+            if (content is RemoteCommand command)
             {
                 result = new PendingProcess<TContent>
                 {
@@ -486,65 +487,5 @@ public sealed class Mqtt : IMqtt
             _mqttClient.Dispose();
             GC.SuppressFinalize(this);
         }
-    }
-}
-
-public sealed class MqttManager
-{
-    public MqttManager(Mqtt? mqtt)
-    {
-        _current = mqtt;
-    }
-
-    private Mqtt? _current;
-    public IMqtt? Current => _current;
-
-    public static readonly MqttProcessManager Process = new MqttProcessManager();
-
-    public async Task Reload(Configuration config)
-    {
-        if (_current == null)
-            return;
-
-        var topics = _current.Topics.ToList();
-        var provider = _current.Provider;
-        var brokerKey = _current.BrokerKey;
-        var connected = _current.IsConnected;
-        var certificate = _current.Certificate;
-        _current.Certificate = null;
-        _current.Dispose();
-
-        _current = new Mqtt(
-            brokerKey: brokerKey,
-            provider: provider,
-            config: config,
-            topics: topics,
-            certificate: certificate
-        );
-        if (connected)
-        {
-            await _current.ConnectAsync();
-        }
-    }
-}
-
-public sealed class MqttProcessManager
-{
-    private readonly ConcurrentDictionary<string, IPendingProcess> _pendings = new();
-    public IReadOnlyDictionary<string, IPendingProcess> Pendings => _pendings;
-
-    public bool Add(IPendingProcess process)
-    {
-        return _pendings.TryAdd(process.Id, process);
-    }
-
-    public bool Completed(string processId, ResponseRequest response)
-    {
-        var result = _pendings.TryRemove(processId, out var process);
-        if (result)
-        {
-            process!.Completed(response);
-        }
-        return result;
     }
 }

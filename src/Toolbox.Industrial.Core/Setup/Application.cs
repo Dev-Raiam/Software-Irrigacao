@@ -16,7 +16,7 @@ using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Api.Contracts;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
-using Toolbox.Industrial.Core.Messages.Integration;
+using Toolbox.Industrial.Core.Messages.Commands;
 using Toolbox.Industrial.Core.Security;
 using Controlador = Toolbox.Industrial.Core.Data.Controlador;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -271,14 +271,7 @@ public static class Application
             Controlador.PainelId = await store.ObterConfiguracao<Guid>(Entity.Keys.PainelId);
             if (Controlador.PainelId != Guid.Empty)
             {
-                await mediator.Execute(
-                    new SincronizarRemoto
-                    {
-                        ControladorId = Controlador.ControladorId,
-                        Interno = true,
-                    },
-                    cancellationToken: default
-                );
+                await mediator.Execute(new Sincronizar(), cancellationToken: default);
             }
             var existeTelemetrias = store.Query<Telemetria>().FirstOrDefault() != null;
         }
