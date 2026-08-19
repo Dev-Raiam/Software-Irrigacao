@@ -1,13 +1,13 @@
-using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
+using System.Net.Http.Headers;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Mqtt;
+using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
 using Toolbox.Industrial.Core.Setup;
@@ -44,11 +44,25 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         if (Controlador.PainelId == Guid.Empty)
         {
             _logger.LogWarning("Sincronização cancelada por ausência de configuração.");
-            return BadRequest()
+            var result = BadRequest()
                 .AddError(
                     nameof(Controlador.PainelId),
                     "Sincronização cancelada por ausência de configuração."
                 );
+            if (!request.Interno)
+            {
+                var response = ResponseRequest.From(request, result);
+                response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
+                await request.Mqtt.PublishAsync(
+                    $"{request.Topic}/resposta",
+                    response
+                );
+                if (MqttManager.CommandPending.TryRemove($"{request.Id}-{request.Mqtt.BrokerKey}", out var pending))
+                {
+                    pending.SetResult(response);
+                }
+            }
+            return result;
         }
         var restart = false;
         var controladores = Controlador.Master ? Application.Controladores : [];
@@ -86,12 +100,12 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     try
                     {
                         await Task.WhenAll(pendings.Select(x => x.Completion.Task)).WaitAsync(
-                            TimeSpan.FromSeconds(3),
+                            ResponseRequest.Timeout,
                             cancellationToken);
                     }
-                    catch (TimeoutException ex)
+                    catch (TimeoutException)
                     {
-                        var timeout = RequestTimeout().AddError("timeout", ex.Message);
+                        var timeout = RequestTimeout().AddError("timeout", $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})" );
                         foreach (var pendingResponse in pendings)
                         {
                             if (!pendingResponse.Completion.Task.IsCompleted)
@@ -110,9 +124,11 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                         }
                     }
                 }
+                var resposta = ResponseRequest.From(request);
+                resposta.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
                 await request.Mqtt.PublishAsync(
                     $"{request.Topic}/resposta",
-                    ResponseRequest.From(request)
+                    resposta
                 );
                 //await _mqttInterno.Current!.PublishAsync(
                 //    $"{request.Topic}/resposta",

@@ -7,7 +7,6 @@ using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
 using System.Collections.Concurrent;
-using System.ComponentModel.Design;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -35,7 +34,6 @@ public sealed class Mqtt : IMqtt
     private readonly MqttClientOptions _options;
     private readonly IServiceProvider _provider;
     private readonly IMqttClient _mqttClient;
-    private Action<string, string>? _handler;
     private readonly int _reconnectInterval;
     private readonly ILogger<Mqtt> _logger;
     private X509Certificate2? _certificate;
@@ -54,12 +52,10 @@ public sealed class Mqtt : IMqtt
         get { return _certificate; }
         set { _certificate = value; }
     }
-    internal ILogger<Mqtt> Logger => _logger;
     internal string Host => _host;
     internal int Port => _port;
 
     public bool IsConnected => _mqttClient.IsConnected;
-    public Action<string, string>? Handler => _handler;
     public IServiceProvider Provider => _provider;
     public string BrokerKey => _brokerKey;
 
@@ -151,8 +147,8 @@ public sealed class Mqtt : IMqtt
         {
             if (_connectGuard.Enabled)
             {
-                _logger.LogInformation($"Sucesso na reconexão com broker MQTT ({_host}:{_port})");
                 _connectGuard.Stop();
+                _logger.LogInformation($"Sucesso na reconexão com broker MQTT ({_host}:{_port})");
                 Thread.Sleep(10);
                 _connectGuard.Interval = _reconnectInterval;
             }
@@ -181,7 +177,7 @@ public sealed class Mqtt : IMqtt
             return Task.CompletedTask;
         };
 
-        _mqttClient.ApplicationMessageReceivedAsync += async e =>
+        _mqttClient.ApplicationMessageReceivedAsync += e =>
         {
             try
             {
@@ -195,17 +191,17 @@ public sealed class Mqtt : IMqtt
                 {
                     command.Mqtt = this;
                     command.Topic = topic;
-                    _mediator.Execute((dynamic)command);
+                    return _mediator.Execute((dynamic)command);
                 }
                 else if (message is ResponseRequest response)
                 {
                     response.Mqtt = this;
                     response.Topic = topic;
-                    await _mediator.Publish(response).ConfigureAwait(false);
+                    return _mediator.Publish(response);
                 }
                 else if (message is Toolbox.Core.Messages.IEvent @event)
                 {
-                    await _mediator.Publish(@event).ConfigureAwait(false);
+                    return _mediator.Publish(@event);
                 }
             }
             catch (Exception ex)
@@ -218,7 +214,7 @@ public sealed class Mqtt : IMqtt
                 );
             }
 
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         };
     }
 
@@ -484,7 +480,6 @@ public sealed class Mqtt : IMqtt
         finally
         {
             _mqttClient.Dispose();
-            _handler = null;
             GC.SuppressFinalize(this);
         }
     }

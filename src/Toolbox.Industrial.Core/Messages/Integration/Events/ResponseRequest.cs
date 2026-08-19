@@ -13,6 +13,7 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
         [JsonProperty(Order = -96)]
         public TimeSpan Latency { get; init; }
 
+        public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
         public static ResponseRequest From(Command request, ResponseResult? response = null)
         {
             request.Stopwatch.Stop();
