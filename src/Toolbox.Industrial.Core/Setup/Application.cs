@@ -265,7 +265,7 @@ public static class Application
             if (Controlador.PainelId != Guid.Empty)
             {
                 await mediator.Execute(
-                    new SincronizarAutomacao
+                    new SincronizarRemoto
                     {
                         ControladorId = Controlador.ControladorId,
                         Interno = true,

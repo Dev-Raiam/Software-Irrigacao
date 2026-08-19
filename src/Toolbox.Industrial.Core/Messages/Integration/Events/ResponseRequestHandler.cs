@@ -32,7 +32,6 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
                 notification.AdditionalProperties.Remove(property);
                 if (notification.Mqtt.BrokerKey != $"{brokerKey}")
                 {
-                    //disparar mensagem para o destinatario.
                     var mqtt = _provider.GetRequiredKeyedService<MqttManager>(brokerKey).Current!;
                     if (mqtt != null)
                     {

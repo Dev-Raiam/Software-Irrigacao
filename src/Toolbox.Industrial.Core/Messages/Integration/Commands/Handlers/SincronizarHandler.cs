@@ -7,7 +7,6 @@ using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Mqtt;
-using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
 using Toolbox.Industrial.Core.Setup;
@@ -15,18 +14,18 @@ using CommandHandler = Toolbox.Industrial.Core.Messages.Commands.Handlers.Comman
 
 namespace Toolbox.Industrial.Core.Messages.Integration.Commands.Handlers;
 
-internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<SincronizarAutomacao>
+internal class SincronizarHandler : CommandHandler, ICommandHandler<SincronizarRemoto>
 {
     private readonly MqttManager _mqttInterno;
     private readonly IEntityStore _store;
     private readonly IApiClient _apiClient;
-    private readonly ILogger<SincronizarAutomacaoHandler> _logger;
+    private readonly ILogger<SincronizarHandler> _logger;
 
-    public SincronizarAutomacaoHandler(
+    public SincronizarHandler(
         IMediator mediator,
         IEntityStore store,
         IApiClient apiClient,
-        ILogger<SincronizarAutomacaoHandler> logger,
+        ILogger<SincronizarHandler> logger,
         [FromKeyedServices(Mqtt.Interno)] MqttManager mqttInterno
     )
     {
@@ -37,7 +36,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
     }
 
     public async Task<ResponseResult> Handle(
-        SincronizarAutomacao request,
+        SincronizarRemoto request,
         CancellationToken cancellationToken
     )
     {
@@ -70,7 +69,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
         }
         if (!request.Interno)
         {
-            var pendings = new List<PendingProcess<SincronizarAutomacao>>();
+            var pendings = new List<PendingProcess<SincronizarRemoto>>();
             if (Controlador.Master)
             {
                 var slaves = controladores

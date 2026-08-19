@@ -2,7 +2,7 @@
 
 namespace Toolbox.Industrial.Core.Messages.Integration
 {
-    public class SincronizarAutomacao : RemoteCommand
+    public class SincronizarRemoto : RemoteCommand
     {
         internal bool Interno { get; init; } = false;
 
