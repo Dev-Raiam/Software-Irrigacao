@@ -14,15 +14,20 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
             _provider = provider;
         }
 
-        public async Task Handle(ResponseRequest notification, CancellationToken cancellationToken = default)
+        public async Task Handle(
+            ResponseRequest notification,
+            CancellationToken cancellationToken = default
+        )
         {
             if (!notification.Success)
             {
-                //logar falha 
+                //logar falha
             }
             var property = nameof(notification.Mqtt.BrokerKey).ToLowerFirst();
-            if (notification.HasAdditionalProperties && 
-                notification.AdditionalProperties!.TryGetValue(property, out object? brokerKey))
+            if (
+                notification.HasAdditionalProperties
+                && notification.AdditionalProperties!.TryGetValue(property, out object? brokerKey)
+            )
             {
                 notification.AdditionalProperties.Remove(property);
                 if (notification.Mqtt.BrokerKey != $"{brokerKey}")
@@ -34,7 +39,10 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
                         await mqtt.PublishAsync(notification.Topic, notification);
                     }
                 }
-                MqttManager.Process.Completed($"{notification.CorrelationId}-{brokerKey}", notification);
+                MqttManager.Process.Completed(
+                    $"{notification.CorrelationId}-{brokerKey}",
+                    notification
+                );
             }
         }
     }

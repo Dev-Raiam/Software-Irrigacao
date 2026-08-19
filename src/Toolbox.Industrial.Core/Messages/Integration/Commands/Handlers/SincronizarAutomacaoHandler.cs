@@ -1,7 +1,7 @@
+using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using System.Net.Http.Headers;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
@@ -53,11 +53,10 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             if (!request.Interno)
             {
                 var response = ResponseRequest.From(request, result);
-                response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
-                await request.Mqtt.PublishAsync(
-                    $"{request.Topic}/resposta",
-                    response
+                response.AdditionalProperties?.Remove(
+                    nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                 );
+                await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);
                 MqttManager.Process.Completed(request.ProcessId, response);
             }
             return result;
@@ -85,7 +84,7 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                 {
                     request.Topic = $"controladores/{slave.Id}/comando";
                     var result = await _mqttInterno.Current!.PublishAsync(request.Topic, request);
-                    if (result != null) 
+                    if (result != null)
                     {
                         pendings.Add(result);
                     }
@@ -97,21 +96,26 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                 {
                     try
                     {
-                        await Task.WhenAll(pendings.Select(x => x.Completion.Task)).WaitAsync(
-                            ResponseRequest.Timeout,
-                            cancellationToken);
+                        await Task.WhenAll(pendings.Select(x => x.Completion.Task))
+                            .WaitAsync(ResponseRequest.Timeout, cancellationToken);
                     }
                     catch (TimeoutException)
                     {
-                        var timeout = RequestTimeout().AddError("timeout", $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})" );
+                        var timeout = RequestTimeout()
+                            .AddError(
+                                "timeout",
+                                $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})"
+                            );
                         foreach (var pendingResponse in pendings)
                         {
                             if (!pendingResponse.Completion.Task.IsCompleted)
                             {
                                 var response = ResponseRequest.From(request, timeout);
-                                response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
+                                response.AdditionalProperties?.Remove(
+                                    nameof(request.Mqtt.BrokerKey).ToLowerFirst()
+                                );
                                 await request.Mqtt.PublishAsync(
-                                    $"{pendingResponse.Topic}/resposta", 
+                                    $"{pendingResponse.Topic}/resposta",
                                     response
                                 );
                                 MqttManager.Process.Completed(request.ProcessId, response);
@@ -120,11 +124,10 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
                     }
                 }
                 var resposta = ResponseRequest.From(request);
-                resposta.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
-                await request.Mqtt.PublishAsync(
-                    $"{request.Topic}/resposta",
-                    resposta
+                resposta.AdditionalProperties?.Remove(
+                    nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                 );
+                await request.Mqtt.PublishAsync($"{request.Topic}/resposta", resposta);
                 //await _mqttInterno.Current!.PublishAsync(
                 //    $"{request.Topic}/resposta",
                 //    ResponseRequest.From(request)
@@ -200,12 +203,6 @@ internal class SincronizarAutomacaoHandler : CommandHandler, ICommandHandler<Sin
             }
         }
     }
-
-    //public Models.Controlador? ObterControlador(CancellationToken cancellationToken = default)
-    //{
-    //    var controlador = ObterControladorMaster(cancellationToken);
-    //    return controlador;
-    //}
 
     //public List<Dispositivo> ObterDispositivos(CancellationToken cancellationToken = default)
     //{

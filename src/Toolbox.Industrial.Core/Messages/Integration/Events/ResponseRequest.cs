@@ -17,6 +17,7 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
         public string ProcessId => $"{CorrelationId}-{Mqtt?.BrokerKey}";
 
         public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
+
         public static ResponseRequest From(Command request, ResponseResult? response = null)
         {
             request.Stopwatch.Stop();
@@ -29,18 +30,22 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events
                 Success = response?.IsSuccessful ?? true,
                 StatusCode = ((int?)response?.HttpStatusCode ?? 0),
             };
-            result.AdditionalProperties ??= new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            result.AdditionalProperties[nameof(request.Mqtt.BrokerKey).ToLowerFirst()] = request.Mqtt.BrokerKey;
+            result.AdditionalProperties ??= new Dictionary<string, object>(
+                StringComparer.OrdinalIgnoreCase
+            );
+            result.AdditionalProperties[nameof(request.Mqtt.BrokerKey).ToLowerFirst()] = request
+                .Mqtt
+                .BrokerKey;
             if (response?.Errors.Count > 0)
             {
-                result.AdditionalProperties[nameof(response.Errors).ToLowerFirst()] = response!.Errors;
+                result.AdditionalProperties[nameof(response.Errors).ToLowerFirst()] =
+                    response!.Errors;
             }
             return result;
         }
-
     }
 
-    public interface IPendingProcess 
+    public interface IPendingProcess
     {
         string Id { get; init; }
         void Completed(ResponseRequest response);

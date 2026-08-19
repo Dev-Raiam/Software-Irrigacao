@@ -17,7 +17,8 @@ public interface IMqtt : IDisposable
         TContent content,
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    ) where TContent : class;
+    )
+        where TContent : class;
 
     Task SubscribeAsync(string topic, QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce);
 

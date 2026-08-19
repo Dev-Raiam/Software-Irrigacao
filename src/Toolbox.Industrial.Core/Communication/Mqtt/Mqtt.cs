@@ -1,3 +1,8 @@
+using System.Collections.Concurrent;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -6,11 +11,6 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
-using System.Collections.Concurrent;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Toolbox.Core.Mediator;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
@@ -72,7 +72,7 @@ public sealed class Mqtt : IMqtt
         _brokerKey = brokerKey;
         _host = config.Host;
         _port = config.Port;
-        _topics = [..topics ?? []];
+        _topics = [.. topics ?? []];
         _certificate = certificate;
         _serializer.TypeNameHandling = TypeNameHandling.Objects;
         _logger = provider.GetRequiredService<ILogger<Mqtt>>();
@@ -380,10 +380,11 @@ public sealed class Mqtt : IMqtt
         TContent content,
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
-    ) where TContent : class
+    )
+        where TContent : class
     {
         await ConnectAsync();
-        PendingProcess<TContent>? result = null; 
+        PendingProcess<TContent>? result = null;
         try
         {
             var message = new MqttApplicationMessageBuilder()
@@ -402,7 +403,8 @@ public sealed class Mqtt : IMqtt
                     Content = content,
                     BrokerKey = command.Mqtt.BrokerKey,
                     Completion = new TaskCompletionSource<ResponseRequest>(
-                        TaskCreationOptions.RunContinuationsAsynchronously)
+                        TaskCreationOptions.RunContinuationsAsynchronously
+                    ),
                 };
                 MqttManager.Process.Add(result);
             }
@@ -545,6 +547,4 @@ public sealed class MqttProcessManager
         }
         return result;
     }
-
-
 }

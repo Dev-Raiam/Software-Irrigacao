@@ -1,14 +1,14 @@
-﻿using Newtonsoft.Json;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Newtonsoft.Json;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 
 namespace Toolbox.Industrial.Core.Messages
 {
-
     public abstract class Command : Toolbox.Core.Messages.Command
     {
         private readonly DateTimeOffset _timestamp;
+
         protected Command()
         {
             _timestamp = DateTimeOffset.UtcNow;
