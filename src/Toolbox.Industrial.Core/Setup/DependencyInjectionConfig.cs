@@ -287,18 +287,18 @@ namespace Toolbox.Industrial.Core.Setup
                                     .Build()
                             );
 
-                            //receber resposta dos comandos (python/módulos)
-                            topics.Add(
-                                new MqttTopicFilterBuilder()
-                                    .WithTopic(
-                                        $"controladores/{Controlador.ControladorId}/comando/resposta"
-                                    )
-                                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-                                    .Build()
-                            );
-
                             foreach (var controlador in Application.Controladores)
                             {
+                                //receber resposta dos comandos (python/módulos/Slaves)
+                                topics.Add(
+                                    new MqttTopicFilterBuilder()
+                                        .WithTopic(
+                                            $"controladores/{controlador.Id}/comando/resposta"
+                                        )
+                                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                        .Build()
+                                );
+
                                 //receber dados de telemetria interno (python/módulos) bem como telemetria dos slaves
                                 //publicar no Remoto/LiteDB a telemetria interna.
                                 topics.Add(

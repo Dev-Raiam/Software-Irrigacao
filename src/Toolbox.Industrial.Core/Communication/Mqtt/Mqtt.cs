@@ -185,7 +185,10 @@ public sealed class Mqtt : IMqtt
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 var message = JsonConvert.DeserializeObject(payload, _serializer)!;
                 Console.WriteLine(
-                    $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} => {payload}"
+                    $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} =>"
+                );
+                Console.WriteLine(
+                    $"{payload}"
                 );
                 if (message is RemoteCommand remoteCommand)
                 {
@@ -396,7 +399,7 @@ public sealed class Mqtt : IMqtt
                 command.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                command.AdditionalProperties["publish"] = $"{Environment.MachineName} - {BrokerKey}";
+                command.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] = $"{Environment.MachineName} - {BrokerKey}";
                 result = new PendingProcess<TContent>
                 {
                     Id = command.ProcessId,
@@ -414,7 +417,7 @@ public sealed class Mqtt : IMqtt
                 response.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                response.AdditionalProperties["publish"] = $"{Environment.MachineName} - {BrokerKey}";
+                response.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] = $"{Environment.MachineName} - {BrokerKey}";
                 responseRequest = response;
             }
             var message = new MqttApplicationMessageBuilder()
