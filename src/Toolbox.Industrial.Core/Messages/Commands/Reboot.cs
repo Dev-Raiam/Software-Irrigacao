@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
@@ -9,10 +9,7 @@ internal class Reboot : InternalCommand { }
 
 internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
 {
-    public async Task<ResponseResult> Handle(
-        Reboot request,
-        CancellationToken cancellationToken
-    )
+    public async Task<ResponseResult> Handle(Reboot request, CancellationToken cancellationToken)
     {
         await Task.Delay(1000);
         try

@@ -19,7 +19,7 @@ public sealed class ResponseRequest : Toolbox.Core.Messages.NotificationEvent
     [JsonIgnore]
     public string ProcessId => $"{CorrelationId}-{Mqtt?.BrokerKey}";
 
-    public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
+    public static TimeSpan Timeout = TimeSpan.FromSeconds(30);
 
     public static ResponseRequest From(RemoteCommand request, ResponseResult? response = null)
     {
@@ -41,7 +41,8 @@ public sealed class ResponseRequest : Toolbox.Core.Messages.NotificationEvent
             .BrokerKey;
         if (response?.Errors.Count > 0)
         {
-            result.AdditionalProperties[nameof(response.Errors).ToLowerFirst()] = response!.GetErrors();
+            result.AdditionalProperties[nameof(response.Errors).ToLowerFirst()] =
+                response!.GetErrors();
         }
         return result;
     }

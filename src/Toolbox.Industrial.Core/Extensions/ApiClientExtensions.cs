@@ -18,12 +18,11 @@ namespace Toolbox.Industrial.Core.Extensions
                 $"automacao/v1/paineis/{painelId}/controladores?status=todos"
             );
 
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypes.Industrial.V1));
-
-            var response = await apiClient.SendAsync<List<Controlador>>(
-                request,
-                cancellationToken
+            request.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue(MediaTypes.Industrial.V1)
             );
+
+            var response = await apiClient.SendAsync<List<Controlador>>(request, cancellationToken);
 
             return response;
         }
@@ -34,7 +33,10 @@ namespace Toolbox.Industrial.Core.Extensions
             CancellationToken cancellationToken
         )
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "autenticacao/v1/autenticar-cliente");
+            var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                "autenticacao/v1/autenticar-cliente"
+            );
 
             request.Content = new StringContent(
                 System.Text.Json.JsonSerializer.Serialize(credentials),

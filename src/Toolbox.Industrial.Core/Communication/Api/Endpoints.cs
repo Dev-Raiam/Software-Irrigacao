@@ -202,13 +202,13 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/restart",
-                async (
-                    CancellationToken cancellationToken,
-                    [FromServices] IMediator mediator
-                    ) =>
+                async (CancellationToken cancellationToken, [FromServices] IMediator mediator) =>
                 {
                     Log.Warning($"Aplicação será reiniciada através de uma solicitação.");
-                    return await mediator.Execute(new Restart(), cancellationToken: cancellationToken);
+                    return await mediator.Execute(
+                        new Restart(),
+                        cancellationToken: cancellationToken
+                    );
                 }
             )
             .RequireAuthorization()
@@ -216,13 +216,13 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/reboot",
-                async (
-                    CancellationToken cancellationToken,
-                    [FromServices] IMediator mediator
-                    ) =>
+                async (CancellationToken cancellationToken, [FromServices] IMediator mediator) =>
                 {
                     Log.Warning($"O dispositivo será reiniciado através de uma solicitação.");
-                    return await mediator.Execute(new Reboot(), cancellationToken: cancellationToken);
+                    return await mediator.Execute(
+                        new Reboot(),
+                        cancellationToken: cancellationToken
+                    );
                 }
             )
             .RequireAuthorization()
@@ -230,13 +230,13 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/shutdown",
-                async (
-                    CancellationToken cancellationToken,
-                    [FromServices] IMediator mediator
-                    ) =>
+                async (CancellationToken cancellationToken, [FromServices] IMediator mediator) =>
                 {
                     Log.Warning($"O dispositivo será desligado através de uma solicitação.");
-                    return await mediator.Execute(new Shutdown(), cancellationToken: cancellationToken);
+                    return await mediator.Execute(
+                        new Shutdown(),
+                        cancellationToken: cancellationToken
+                    );
                 }
             )
             .RequireAuthorization()

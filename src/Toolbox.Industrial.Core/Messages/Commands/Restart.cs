@@ -8,10 +8,7 @@ internal class Restart : InternalCommand { }
 
 internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
 {
-    public async Task<ResponseResult> Handle(
-        Restart request,
-        CancellationToken cancellationToken
-    )
+    public async Task<ResponseResult> Handle(Restart request, CancellationToken cancellationToken)
     {
         try
         {

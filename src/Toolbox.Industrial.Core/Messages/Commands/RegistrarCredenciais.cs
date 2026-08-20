@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.ComponentModel.DataAnnotations;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
@@ -168,10 +168,7 @@ internal class RegistrarCredenciaisHandler : CommandHandler, ICommandHandler<Reg
 
         #endregion Salvar configurações
 
-        await _mediator.Execute(
-            new Sincronizar(),
-            cancellationToken: cancellationToken
-        );
+        await _mediator.Execute(new Sincronizar(), cancellationToken: cancellationToken);
 
         if (restart)
         {

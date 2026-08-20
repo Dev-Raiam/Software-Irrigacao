@@ -95,10 +95,7 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                     response.AdditionalProperties?.Remove(
                         nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                     );
-                    await request.Mqtt.PublishAsync(
-                        $"{pendingResponse.Topic}/resposta",
-                        response
-                    );
+                    await request.Mqtt.PublishAsync($"{pendingResponse.Topic}/resposta", response);
                     //Coloquei dentro do Mqtt.PublishAsync
                     //MqttManager.Process.Completed(request.ProcessId, response);
                 }

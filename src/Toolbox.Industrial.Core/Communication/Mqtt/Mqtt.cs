@@ -1,3 +1,7 @@
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -6,10 +10,6 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.RaspIO;
@@ -53,7 +53,7 @@ public sealed class Mqtt : IMqtt
         get { return _certificate; }
         set { _certificate = value; }
     }
-    
+
     public bool IsConnected => _mqttClient.IsConnected;
     public IServiceProvider Provider => _provider;
     public string BrokerKey => _brokerKey;
@@ -187,9 +187,7 @@ public sealed class Mqtt : IMqtt
                 Console.WriteLine(
                     $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} =>"
                 );
-                Console.WriteLine(
-                    $"{payload}"
-                );
+                Console.WriteLine($"{payload}");
                 if (message is RemoteCommand remoteCommand)
                 {
                     remoteCommand.Mqtt = this;
@@ -399,7 +397,8 @@ public sealed class Mqtt : IMqtt
                 command.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                command.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] = $"{Environment.MachineName} - {BrokerKey}";
+                command.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] =
+                    $"{Environment.MachineName} - {BrokerKey}";
                 result = new PendingProcess<TContent>
                 {
                     Id = command.ProcessId,
@@ -417,7 +416,8 @@ public sealed class Mqtt : IMqtt
                 response.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                response.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] = $"{Environment.MachineName} - {BrokerKey}";
+                response.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] =
+                    $"{Environment.MachineName} - {BrokerKey}";
                 responseRequest = response;
             }
             var message = new MqttApplicationMessageBuilder()

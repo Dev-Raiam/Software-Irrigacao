@@ -295,7 +295,9 @@ namespace Toolbox.Industrial.Core.Setup
                                         .WithTopic(
                                             $"controladores/{controlador.Id}/comando/resposta"
                                         )
-                                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
+                                        .WithQualityOfServiceLevel(
+                                            MqttQualityOfServiceLevel.AtMostOnce
+                                        )
                                         .Build()
                                 );
 

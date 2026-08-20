@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Toolbox.Industrial.Core.Platform
 {
@@ -16,8 +16,8 @@ namespace Toolbox.Industrial.Core.Platform
         private readonly ILogger<SystemctlService> _logger;
         private TimeSpan _timeout = TimeSpan.FromSeconds(5);
 
-        public SystemctlService(IShell shell,ILogger<SystemctlService> logger) 
-        { 
+        public SystemctlService(IShell shell, ILogger<SystemctlService> logger)
+        {
             _shell = shell;
             _logger = logger;
         }
@@ -34,7 +34,11 @@ namespace Toolbox.Industrial.Core.Platform
             return await WaitForStatus(serviceName, "active", timeout ?? _timeout);
         }
 
-        private async Task<bool> WaitForStatus(string serviceName, string expectedStatus, TimeSpan timeout)
+        private async Task<bool> WaitForStatus(
+            string serviceName,
+            string expectedStatus,
+            TimeSpan timeout
+        )
         {
             var deadline = DateTime.UtcNow + timeout;
 
@@ -49,7 +53,8 @@ namespace Toolbox.Industrial.Core.Platform
                 {
                     _logger.LogWarning(
                         "Serviço {serviceName} em estado: {status}",
-                        serviceName, status
+                        serviceName,
+                        status
                     );
                 }
 
@@ -58,10 +63,12 @@ namespace Toolbox.Industrial.Core.Platform
 
             _logger.LogError(
                 "Timeout aguardando serviço {serviceName} atingir estado {expected}",
-                serviceName, expectedStatus
+                serviceName,
+                expectedStatus
             );
             return false;
         }
+
         public async Task<string?> GetStatus(string serviceName)
         {
             var (output, _, _) = await _shell.Run($"systemctl is-active {serviceName}");

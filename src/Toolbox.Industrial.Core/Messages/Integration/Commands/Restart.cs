@@ -82,7 +82,7 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
                 //await Task.WhenAll(pendings.Select(x => x.Completion.Task))
                 //    .WaitAsync(ResponseRequest.Timeout, cancellationToken);
             }
-            catch {}
+            catch { }
             var timeout = RequestTimeout()
                 .AddError(
                     "timeout",
@@ -96,10 +96,7 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
                     response.AdditionalProperties?.Remove(
                         nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                     );
-                    await request.Mqtt.PublishAsync(
-                        $"{pendingResponse.Topic}/resposta",
-                        response
-                    );
+                    await request.Mqtt.PublishAsync($"{pendingResponse.Topic}/resposta", response);
                     MqttManager.Process.Completed(request.ProcessId, response);
                 }
                 else
@@ -108,7 +105,6 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
                     //if (result != null) { }
                 }
             }
-
         }
 
         if (controladorId == null || controladorId == Controlador.ControladorId)

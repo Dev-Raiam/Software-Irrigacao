@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 
@@ -9,10 +9,7 @@ internal class Shutdown : InternalCommand { }
 
 internal class ShutdownHandler : CommandHandler, ICommandHandler<Shutdown>
 {
-    public async Task<ResponseResult> Handle(
-        Shutdown request,
-        CancellationToken cancellationToken
-    )
+    public async Task<ResponseResult> Handle(Shutdown request, CancellationToken cancellationToken)
     {
         await Task.Delay(1000);
         Process? process = null;

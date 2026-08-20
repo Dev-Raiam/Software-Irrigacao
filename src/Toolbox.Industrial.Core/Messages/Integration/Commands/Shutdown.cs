@@ -96,10 +96,7 @@ internal class ShutdownHandler : CommandHandler, ICommandHandler<Shutdown>
                     response.AdditionalProperties?.Remove(
                         nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                     );
-                    await request.Mqtt.PublishAsync(
-                        $"{pendingResponse.Topic}/resposta",
-                        response
-                    );
+                    await request.Mqtt.PublishAsync($"{pendingResponse.Topic}/resposta", response);
                     MqttManager.Process.Completed(request.ProcessId, response);
                 }
                 else
