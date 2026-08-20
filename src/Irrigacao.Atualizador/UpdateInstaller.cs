@@ -1,7 +1,7 @@
-﻿using Irrigacao.Atualizador.Extensions;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http.Headers;
+using Irrigacao.Atualizador.Extensions;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Data;
 using Grupo = Toolbox.Industrial.Core.Data.Configuracao.grupo;
@@ -34,6 +34,7 @@ namespace Irrigacao.Atualizador
             _factoryHttpClient = factoryHttpClient;
             _logger = logger;
         }
+
         // Utilizar o Metodo de Extensão em Toolbox.Industrial.Core AddAtualizadorCore() ja disponibilizando essa interface
         private const string _binaryName = "irrigacao";
         private const string _serviceName = "irrigacao";
