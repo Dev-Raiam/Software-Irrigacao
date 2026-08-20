@@ -42,6 +42,7 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
         CancellationToken cancellationToken
     )
     {
+        var topic = request.Topic;
         var pendings = new List<PendingProcess<Restart>>();
         var controladorId = request.ControladorId;
         var controladores = Controlador.Master ? Application.Controladores : [];
@@ -106,8 +107,9 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
 
         if (controladorId == null || controladorId == Controlador.ControladorId)
         {
-            request.ControladorId = controladorId;
-            request.Topic = $"controladores/{controladorId}/comando";
+            //request.ControladorId = controladorId ?? Controlador.ControladorId;
+            //request.Topic = $"controladores/{controladorId}/comando";
+            request.Topic = topic;
             var response = ResponseRequest.From(request);
             response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);

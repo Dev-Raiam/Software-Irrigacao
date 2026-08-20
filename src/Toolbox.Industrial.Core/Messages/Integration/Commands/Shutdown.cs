@@ -43,6 +43,7 @@ internal class ShutdownHandler : CommandHandler, ICommandHandler<Shutdown>
         CancellationToken cancellationToken
     )
     {
+        var topic = request.Topic;
         var pendings = new List<PendingProcess<Shutdown>>();
         var controladorId = request.ControladorId;
         var controladores = Controlador.Master ? Application.Controladores : [];
@@ -106,8 +107,9 @@ internal class ShutdownHandler : CommandHandler, ICommandHandler<Shutdown>
         }
         if (controladorId == null || controladorId == Controlador.ControladorId)
         {
-            request.ControladorId = controladorId;
-            request.Topic = $"controladores/{controladorId}/comando";
+            //request.ControladorId = controladorId ?? Controlador.ControladorId;
+            //request.Topic = $"controladores/{controladorId}/comando";
+            request.Topic = topic;
             var response = ResponseRequest.From(request);
             response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);

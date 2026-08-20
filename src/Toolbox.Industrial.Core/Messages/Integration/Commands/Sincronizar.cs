@@ -59,7 +59,8 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             var response = ResponseRequest.From(request, result);
             response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);
-            MqttManager.Process.Completed(request.ProcessId, response);
+            //Coloquei dentro do Mqtt.PublishAsync
+            //MqttManager.Process.Completed(request.ProcessId, response);
             return result;
         }
         var restart = false;

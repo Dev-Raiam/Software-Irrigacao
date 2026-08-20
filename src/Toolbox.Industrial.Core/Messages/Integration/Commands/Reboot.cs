@@ -92,7 +92,8 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                             $"{pendingResponse.Topic}/resposta",
                             response
                         );
-                        MqttManager.Process.Completed(request.ProcessId, response);
+                        //Coloquei dentro do Mqtt.PublishAsync
+                        //MqttManager.Process.Completed(request.ProcessId, response);
                     }
                     else
                     {

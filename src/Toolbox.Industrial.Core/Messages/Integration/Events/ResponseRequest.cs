@@ -4,6 +4,7 @@ using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Mqtt;
+using Toolbox.Industrial.Core.Extensions;
 
 namespace Toolbox.Industrial.Core.Messages.Integration.Events;
 
@@ -40,7 +41,7 @@ public sealed class ResponseRequest : Toolbox.Core.Messages.NotificationEvent
             .BrokerKey;
         if (response?.Errors.Count > 0)
         {
-            result.AdditionalProperties[nameof(response.Errors).ToLowerFirst()] = response!.Errors;
+            result.AdditionalProperties[nameof(response.Errors).ToLowerFirst()] = response!.GetErrors();
         }
         return result;
     }

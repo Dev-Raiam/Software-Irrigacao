@@ -1,7 +1,3 @@
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -10,8 +6,13 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
+using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
@@ -71,6 +72,7 @@ public sealed class Mqtt : IMqtt
         _port = config.Port;
         _topics = [.. topics ?? []];
         _certificate = certificate;
+        _serializer.Formatting = Formatting.Indented;
         _serializer.TypeNameHandling = TypeNameHandling.Objects;
         _logger = provider.GetRequiredService<ILogger<Mqtt>>();
         _mediator = provider.GetRequiredService<IMediator>();
@@ -385,18 +387,16 @@ public sealed class Mqtt : IMqtt
         where TContent : class
     {
         await ConnectAsync();
+        ResponseRequest? responseRequest = null;
         PendingProcess<TContent>? result = null;
         try
         {
-            var message = new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(JsonConvert.SerializeObject(content, _serializer))
-                .WithRetainFlag(retain)
-                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
-                .Build();
-
             if (content is RemoteCommand command)
             {
+                command.AdditionalProperties ??= new Dictionary<string, object>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+                command.AdditionalProperties["publish"] = $"{Environment.MachineName} - {BrokerKey}";
                 result = new PendingProcess<TContent>
                 {
                     Id = command.ProcessId,
@@ -409,7 +409,27 @@ public sealed class Mqtt : IMqtt
                 };
                 MqttManager.Process.Add(result);
             }
+            else if (content is ResponseRequest response)
+            {
+                response.AdditionalProperties ??= new Dictionary<string, object>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+                response.AdditionalProperties["publish"] = $"{Environment.MachineName} - {BrokerKey}";
+                responseRequest = response;
+            }
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic(topic)
+                .WithPayload(JsonConvert.SerializeObject(content, _serializer))
+                .WithRetainFlag(retain)
+                .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
+                .Build();
+
             await _mqttClient.PublishAsync(message);
+
+            if (responseRequest != null)
+            {
+                MqttManager.Process.Completed(responseRequest.ProcessId, responseRequest);
+            }
         }
         catch (Exception ex)
         {
