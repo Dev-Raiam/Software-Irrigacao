@@ -19,7 +19,7 @@ public class Sincronizar : RemoteCommand
     /// Caso contrário, todos os controladores, Master e Slave, realizarão a sincronização.
     /// Após a sincronização, a aplicação poderá ser reiniciada automaticamente para aplicar a nova configuração.
     /// </summary>
-    public Guid? ControladorId { get; init; }
+    public Guid? ControladorId { get; internal set; }
 }
 
 internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
@@ -63,8 +63,10 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             return result;
         }
         var restart = false;
+        var topic = request.Topic;
+        var controladorId = request.ControladorId;
         var controladores = Controlador.Master ? Application.Controladores : [];
-        if (request.ControladorId == null || request.ControladorId == Controlador.ControladorId)
+        if (controladorId == null || controladorId == Controlador.ControladorId)
         {
             await Sincronizar(Controlador.PainelId, cancellationToken);
             restart = true;
@@ -76,12 +78,13 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             var slaves = controladores
                 .Where(x =>
                     x.Id != Controlador.ControladorId
-                    && (request.ControladorId == null || x.Id == request.ControladorId)
+                    && (controladorId == null || x.Id == controladorId)
                 )
                 .ToList();
 
             foreach (var slave in slaves)
             {
+                request.ControladorId = slave.Id;
                 request.Topic = $"controladores/{slave.Id}/comando";
                 var result = await _mqttInterno.Current!.PublishAsync(request.Topic, request);
                 if (result != null)
@@ -120,9 +123,17 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
                             );
                             MqttManager.Process.Completed(request.ProcessId, response);
                         }
+                        else
+                        {
+                            var result = pendingResponse.Completion.Task.Result;
+                            if (result != null) 
+                            { 
+                            }
+                        }
                     }
                 }
             }
+            request.Topic = topic;
             var resposta = ResponseRequest.From(request);
             resposta.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", resposta);

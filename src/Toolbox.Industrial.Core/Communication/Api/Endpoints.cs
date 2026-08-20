@@ -162,12 +162,11 @@ public static class Endpoints
 
         #region endpoints de sistema
 
-
         app.MapGet(
                 "/system/security/certificate-authority/{id:guid}",
                 async (
-                    [FromServices] IEntityStore store,
                     Guid id,
+                    [FromServices] IEntityStore store,
                     CancellationToken cancellationToken
                 ) =>
                 {
@@ -205,12 +204,11 @@ public static class Endpoints
                 "/system/restart",
                 async (
                     CancellationToken cancellationToken,
-                    [FromServices] IHostApplicationLifetime _lifetime
-                ) =>
+                    [FromServices] IMediator mediator
+                    ) =>
                 {
                     Log.Warning($"Aplicação será reiniciada através de uma solicitação.");
-                    await Application.Restart();
-                    return Results.Accepted(value: "Aplicação será reiniciada.");
+                    return await mediator.Execute(new Restart(), cancellationToken: cancellationToken);
                 }
             )
             .RequireAuthorization()
@@ -218,51 +216,13 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/reboot",
-                async () =>
+                async (
+                    CancellationToken cancellationToken,
+                    [FromServices] IMediator mediator
+                    ) =>
                 {
-                    var result = Results.NoContent();
-                    _ = Task.Run(async () =>
-                    {
-                        Log.Warning($"O dispositivo será reiniciado através de uma solicitação.");
-                        await Task.Delay(1000);
-                        Process? process = null;
-                        if (OperatingSystem.IsWindows())
-                        {
-                            process = Process.Start(
-                                new ProcessStartInfo
-                                {
-                                    FileName = "shutdown",
-                                    ArgumentList =
-                                    {
-                                        "/r", // Restart
-                                        "/f", //Força o encerramento dos aplicativos.
-                                        "/t",
-                                        "0", // Sem atraso <segundos>
-                                    },
-                                    UseShellExecute = false,
-                                }
-                            );
-                        }
-                        else if (OperatingSystem.IsLinux())
-                        {
-                            process = Process.Start(
-                                new ProcessStartInfo
-                                {
-                                    FileName = "systemctl",
-                                    ArgumentList = { "reboot" },
-                                    RedirectStandardOutput = true,
-                                    RedirectStandardError = true,
-                                    UseShellExecute = false,
-                                }
-                            );
-                        }
-                        if (process != null)
-                        {
-                            await process.WaitForExitAsync();
-                            result = Results.Accepted("O dispositivo será reiniciado.");
-                        }
-                    });
-                    return result;
+                    Log.Warning($"O dispositivo será reiniciado através de uma solicitação.");
+                    return await mediator.Execute(new Reboot(), cancellationToken: cancellationToken);
                 }
             )
             .RequireAuthorization()
@@ -270,49 +230,13 @@ public static class Endpoints
 
         app.MapPost(
                 "/system/shutdown",
-                async () =>
+                async (
+                    CancellationToken cancellationToken,
+                    [FromServices] IMediator mediator
+                    ) =>
                 {
-                    var result = Results.NoContent();
-                    _ = Task.Run(async () =>
-                    {
-                        Log.Warning($"O dispositivo será desligado através de uma solicitação.");
-                        await Task.Delay(1000);
-                        Process? process = null;
-                        if (OperatingSystem.IsWindows())
-                        {
-                            process = Process.Start(
-                                new ProcessStartInfo
-                                {
-                                    FileName = "shutdown",
-                                    ArgumentList =
-                                    {
-                                        "/s", // Shutdown
-                                        "/f", //Força o encerramento dos aplicativos.
-                                        "/t",
-                                        "0", // Sem atraso <segundos>
-                                    },
-                                    UseShellExecute = false,
-                                }
-                            );
-                        }
-                        else if (OperatingSystem.IsLinux())
-                        {
-                            process = Process.Start(
-                                new ProcessStartInfo
-                                {
-                                    FileName = "systemctl",
-                                    ArgumentList = { "poweroff" },
-                                    UseShellExecute = false,
-                                }
-                            );
-                        }
-                        if (process != null)
-                        {
-                            await process.WaitForExitAsync();
-                            result = Results.Accepted("O dispositivo será desligado.");
-                        }
-                    });
-                    return result;
+                    Log.Warning($"O dispositivo será desligado através de uma solicitação.");
+                    return await mediator.Execute(new Shutdown(), cancellationToken: cancellationToken);
                 }
             )
             .RequireAuthorization()
