@@ -37,10 +37,7 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
         _mqttInterno = mqttInterno;
     }
 
-    public async Task<ResponseResult> Handle(
-        Reboot request,
-        CancellationToken cancellationToken
-    )
+    public async Task<ResponseResult> Handle(Reboot request, CancellationToken cancellationToken)
     {
         var topic = request.Topic;
         var pendings = new List<PendingProcess<Reboot>>();
@@ -59,6 +56,7 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
             {
                 request.ControladorId = slave.Id;
                 request.Topic = $"controladores/{slave.Id}/comando";
+                request.AdditionalProperties = null;
                 var result = await _mqttInterno.Current!.PublishAsync(request.Topic, request);
                 if (result != null)
                 {
@@ -70,38 +68,44 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
         {
             try
             {
-                await Task.WhenAll(pendings.Select(x => x.Completion.Task))
-                    .WaitAsync(ResponseRequest.Timeout, cancellationToken);
-            }
-            catch (TimeoutException)
-            {
-                var timeout = RequestTimeout()
-                    .AddError(
-                        "timeout",
-                        $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})"
-                    );
-                foreach (var pendingResponse in pendings)
+                //await Task.WhenAll(pendings.Select(x => x.Completion.Task))
+                //    .WaitAsync(ResponseRequest.Timeout, cancellationToken);
+                var start = DateTimeOffset.UtcNow;
+                while (
+                    !cancellationToken.IsCancellationRequested
+                    && pendings.Any(p => !p.Completion.Task.IsCompleted)
+                    && (DateTimeOffset.UtcNow - start).TotalMilliseconds
+                        < ResponseRequest.Timeout.TotalMilliseconds
+                )
                 {
-                    if (!pendingResponse.Completion.Task.IsCompleted)
-                    {
-                        var response = ResponseRequest.From(request, timeout);
-                        response.AdditionalProperties?.Remove(
-                            nameof(request.Mqtt.BrokerKey).ToLowerFirst()
-                        );
-                        await request.Mqtt.PublishAsync(
-                            $"{pendingResponse.Topic}/resposta",
-                            response
-                        );
-                        //Coloquei dentro do Mqtt.PublishAsync
-                        //MqttManager.Process.Completed(request.ProcessId, response);
-                    }
-                    else
-                    {
-                        var result = pendingResponse.Completion.Task.Result;
-                        if (result != null)
-                        {
-                        }
-                    }
+                    await Task.Delay(20);
+                }
+            }
+            catch { }
+            var timeout = RequestTimeout()
+                .AddError(
+                    "timeout",
+                    $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})"
+                );
+            foreach (var pendingResponse in pendings)
+            {
+                if (!pendingResponse.Completion.Task.IsCompleted)
+                {
+                    var response = ResponseRequest.From(request, timeout);
+                    response.AdditionalProperties?.Remove(
+                        nameof(request.Mqtt.BrokerKey).ToLowerFirst()
+                    );
+                    await request.Mqtt.PublishAsync(
+                        $"{pendingResponse.Topic}/resposta",
+                        response
+                    );
+                    //Coloquei dentro do Mqtt.PublishAsync
+                    //MqttManager.Process.Completed(request.ProcessId, response);
+                }
+                else
+                {
+                    //var result = pendingResponse.Completion.Task.Result;
+                    //if (result != null) { }
                 }
             }
         }
@@ -111,7 +115,10 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
             var response = ResponseRequest.From(request);
             response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);
-            return await _mediator.Execute(new Messages.Commands.Reboot(), cancellationToken: cancellationToken);
+            return await _mediator.Execute(
+                new Messages.Commands.Reboot(),
+                cancellationToken: cancellationToken
+            );
         }
 
         return NoContent();
