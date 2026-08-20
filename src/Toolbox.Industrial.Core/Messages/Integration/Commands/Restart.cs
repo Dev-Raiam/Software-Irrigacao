@@ -81,7 +81,6 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
                     );
                 foreach (var pendingResponse in pendings)
                 {
-                    var result = pendingResponse.Completion.Task.Result;
                     if (!pendingResponse.Completion.Task.IsCompleted)
                     {
                         var response = ResponseRequest.From(request, timeout);
@@ -94,9 +93,17 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
                         );
                         MqttManager.Process.Completed(request.ProcessId, response);
                     }
+                    else
+                    {
+                        var result = pendingResponse.Completion.Task.Result;
+                        if (result != null)
+                        {
+                        }
+                    }
                 }
             }
         }
+
         if (controladorId == null || controladorId == Controlador.ControladorId)
         {
             request.ControladorId = controladorId;
@@ -106,7 +113,6 @@ internal class RestartHandler : CommandHandler, ICommandHandler<Restart>
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);
             return await _mediator.Execute(new Messages.Commands.Restart(), cancellationToken: cancellationToken);
         }
-
         return NoContent();
     }
 }

@@ -82,7 +82,6 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                     );
                 foreach (var pendingResponse in pendings)
                 {
-                    var result = pendingResponse.Completion.Task.Result;
                     if (!pendingResponse.Completion.Task.IsCompleted)
                     {
                         var response = ResponseRequest.From(request, timeout);
@@ -94,6 +93,13 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                             response
                         );
                         MqttManager.Process.Completed(request.ProcessId, response);
+                    }
+                    else
+                    {
+                        var result = pendingResponse.Completion.Task.Result;
+                        if (result != null)
+                        {
+                        }
                     }
                 }
             }
