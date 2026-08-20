@@ -1,7 +1,6 @@
 ﻿namespace Irrigacao.Atualizador;
 
-// UpdateRequest
-public record AtualizacaoDisponivel(
+public record UpdateRequest(
     Guid ContaId,
     Guid PainelId,
     Guid ControladorId,
@@ -11,8 +10,7 @@ public record AtualizacaoDisponivel(
     int Arquitetura
 );
 
-// UpdateResponse
-public record AtualizacaoResposta(
+public record UpdateResponse(
     Guid Id,
     Version Versao,
     DateTime Lancamento,
@@ -20,14 +18,4 @@ public record AtualizacaoResposta(
     string UrlDownload
 );
 
-// UpdateConfirm
-public record AtualizacaoConfirmacao(Guid atualizacaoId);
-public record UpdateInstallationConfig(
-    string BinaryName,
-    string ServiceName,
-    string BinaryDirectory,
-    string UpdateDirectory,
-    string BackupPath,
-    string Url,
-    string UrlConfirm
-);
+public record UpdateConfirm(Guid atualizacaoId);
