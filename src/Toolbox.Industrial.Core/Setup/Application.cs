@@ -79,7 +79,7 @@ public static class Application
             var version = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.VersaoAtual);
             if (version != null) 
             {
-                Log.Information("Aplicação Versão : {version}",version.Valor);
+                Log.Information("Versão : {version}",version.Valor);
             }
 
             _hascredentials = await CheckCredentials(store);
