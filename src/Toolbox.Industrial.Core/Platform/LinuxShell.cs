@@ -3,16 +3,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Toolbox.Industrial.Core.Platform
 {
-    //Interface
     internal class LinuxShell : IShell
     {
         private readonly ILogger<LinuxShell> _logger;
 
         public LinuxShell(ILogger<LinuxShell> logger) => _logger = logger;
 
-        private TimeSpan _timeout = TimeSpan.FromSeconds(5);
-
-        public async Task<(string output, string error, int exitCode)> Run(string command)
+        private async Task<(string output, string error, int exitCode)> Run(string command,CancellationToken cancellationToken)
         {
             var process = new Process
             {
@@ -28,9 +25,9 @@ namespace Toolbox.Industrial.Core.Platform
             };
 
             process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var error = await process.StandardError.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken);
 
             if (process.ExitCode != 0)
                 _logger.LogError("Comando falhou: {command} — {error}", command, error);
@@ -38,57 +35,32 @@ namespace Toolbox.Industrial.Core.Platform
             return (output, error, process.ExitCode);
         }
 
-        private async Task<bool> WaitForStatus(
-            string serviceName,
-            string expectedStatus,
-            TimeSpan timeout
-        )
+        public async Task<bool> StartService(string serviceName, CancellationToken cancellationToken)
         {
-            var deadline = DateTime.UtcNow + timeout;
+            var result = await Run($"systemctl start {serviceName}",cancellationToken);
+            return result.exitCode == 0 ? true : false;
+        }
 
-            while (DateTime.UtcNow < deadline)
+        public async Task<ServiceStatus> StatusService(string serviceName, CancellationToken cancellationToken)
+        {
+            var (output, _, exitCode) = await Run($"systemctl is-active {serviceName}", cancellationToken);
+            var status = output.Trim();
+
+            return status switch
             {
-                var status = await Status(serviceName);
-
-                if (status == expectedStatus)
-                    return true;
-
-                if (status is not ("deactivating" or "activating"))
-                {
-                    _logger.LogWarning(
-                        "Serviço {serviceName} em estado: {status}",
-                        serviceName,
-                        status
-                    );
-                }
-
-                await Task.Delay(TimeSpan.FromMilliseconds(500));
-            }
-
-            _logger.LogError(
-                "Timeout aguardando serviço {serviceName} atingir estado {expected}",
-                serviceName,
-                expectedStatus
-            );
-            return false;
+                "active" => ServiceStatus.Running,
+                "inactive" => ServiceStatus.Stopped,
+                "activating" => ServiceStatus.Starting,
+                "deactivating" => ServiceStatus.Stopping,
+                "failed" => ServiceStatus.Failed,
+                _ => ServiceStatus.Unknown,
+            };
         }
 
-        public async Task<bool> Start(string serviceName, TimeSpan? timeout = null)
+        public async Task<bool> StopService(string serviceName, CancellationToken cancellationToken)
         {
-            await Run($"systemctl start {serviceName}");
-            return await WaitForStatus(serviceName, "active", timeout ?? _timeout);
-        }
-
-        public async Task<string?> Status(string serviceName, TimeSpan? timeout = null)
-        {
-            var (output, _, _) = await Run($"systemctl is-active {serviceName}");
-            return output.Trim();
-        }
-
-        public async Task<bool> Stop(string serviceName, TimeSpan? timeout = null)
-        {
-            await Run($"systemctl stop {serviceName}");
-            return await WaitForStatus(serviceName, "inactive", timeout ?? _timeout);
+            var result = await Run($"systemctl stop {serviceName}",cancellationToken);
+            return result.exitCode == 0 ? true : false;
         }
     }
 }

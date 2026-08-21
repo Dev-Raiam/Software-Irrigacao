@@ -27,6 +27,7 @@ using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Communication.RaspIO;
 using Toolbox.Industrial.Core.Data;
 using Toolbox.Industrial.Core.Extensions;
+using Toolbox.Industrial.Core.Platform;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Security.Cryptography;
 using Toolbox.Industrial.Core.Telemetry;
@@ -97,6 +98,12 @@ namespace Toolbox.Industrial.Core.Setup
             services.AddSingleton<Token>();
             services.AddSingleton<EntityConfiguration>();
             services.AddSingleton<ICryptography, Cryptography>();
+
+            if (OperatingSystem.IsLinux())
+                services.AddSingleton<IShell, LinuxShell>();
+            else if (OperatingSystem.IsWindows())
+                services.AddSingleton<IShell, WindowsShell>();
+
             services.AddTransient<AuthGuard>();
             services
                 .AddDataProtection()
