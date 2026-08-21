@@ -17,7 +17,7 @@ public sealed class ResponseRequest : Toolbox.Core.Messages.NotificationEvent
     public TimeSpan Latency { get; init; }
 
     [JsonIgnore]
-    public string ProcessId => $"{CorrelationId}-{Mqtt?.BrokerKey}";
+    public string ProcessId => $"{CorrelationId}";
 
     public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
 
@@ -66,6 +66,7 @@ internal class ResponseRequestHandler : INotificationHandler<ResponseRequest>
         {
             //logar falha
         }
+        MqttManager.Process.Completed($"{notification.CorrelationId}", notification);
         var property = nameof(notification.Mqtt.BrokerKey).ToLowerFirst();
         if (
             notification.HasAdditionalProperties
@@ -75,13 +76,16 @@ internal class ResponseRequestHandler : INotificationHandler<ResponseRequest>
             notification.AdditionalProperties.Remove(property);
             if (notification.Mqtt.BrokerKey != $"{brokerKey}")
             {
-                var mqtt = _provider.GetRequiredKeyedService<MqttManager>(brokerKey).Current!;
-                if (mqtt != null)
+                try
                 {
-                    await mqtt.PublishAsync(notification.Topic, notification);
+                    var mqtt = _provider.GetRequiredKeyedService<MqttManager>(brokerKey).Current!;
+                    if (mqtt != null)
+                    {
+                        await mqtt.PublishAsync(notification.Topic, notification);
+                    }
                 }
+                catch { }
             }
-            MqttManager.Process.Completed($"{notification.CorrelationId}", notification);
         }
     }
 }

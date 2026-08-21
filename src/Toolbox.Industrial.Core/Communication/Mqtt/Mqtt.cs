@@ -397,9 +397,9 @@ public sealed class Mqtt : IMqtt
                 command.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                command.AdditionalProperties[$"publish-{Guid.NewGuid()}"] =
+                command.AdditionalProperties[$"publish"] =
                     $"{Environment.MachineName} - {BrokerKey}";
-                command.AdditionalProperties[$"processId-{Guid.NewGuid()}"] = command.ProcessId;
+                command.AdditionalProperties[$"processId"] = command.ProcessId;
                 result = new PendingProcess<TContent>
                 {
                     Id = command.ProcessId,
@@ -417,9 +417,9 @@ public sealed class Mqtt : IMqtt
                 response.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                response.AdditionalProperties[$"publish-{Guid.NewGuid()}"] =
+                response.AdditionalProperties[$"publish"] =
                     $"{Environment.MachineName} - {BrokerKey}";
-                response.AdditionalProperties[$"processId-{Guid.NewGuid()}"] = response.ProcessId;
+                response.AdditionalProperties[$"processId"] = response.ProcessId;
                 responseRequest = response;
             }
             var payload = JsonConvert.SerializeObject(content, _serializer);

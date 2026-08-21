@@ -1,7 +1,6 @@
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
-using static Toolbox.Industrial.Core.Data.Entity.Keys;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
