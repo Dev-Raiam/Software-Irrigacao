@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Toolbox.Core.Extensions;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
@@ -85,10 +86,11 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
 
             foreach (var slave in slaves)
             {
-                request.ControladorId = slave.Id;
-                request.Topic = $"controladores/{slave.Id}/comando";
-                request.AdditionalProperties = null;
-                var result = await _mqttInterno.Current!.PublishAsync(request.Topic, request);
+                var requestSlave = RemoteCommand.From(request);
+                requestSlave.ControladorId = slave.Id;
+                requestSlave.Topic = $"controladores/{slave.Id}/comando";
+                requestSlave.AdditionalProperties = null;
+                var result = await _mqttInterno.Current!.PublishAsync(requestSlave.Topic, requestSlave);
                 if (result != null)
                 {
                     pendings.Add(result);
@@ -101,18 +103,24 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             {
                 try
                 {
-                    //await Task.WhenAll(pendings.Select(x => x.Completion.Task))
-                    //    .WaitAsync(ResponseRequest.Timeout, cancellationToken);
-                    var start = DateTimeOffset.UtcNow;
-                    while (
-                        !cancellationToken.IsCancellationRequested
-                        && pendings.Any(p => !p.Completion.Task.IsCompleted)
-                        && (DateTimeOffset.UtcNow - start).TotalMilliseconds
-                            < ResponseRequest.Timeout.TotalMilliseconds
-                    )
+                    foreach (var pendingResponse in pendings)
                     {
-                        await Task.Delay(20);
+                        Console.WriteLine(
+                            $"Aguardando processo [{pendingResponse.Id}] => {JsonConvert.SerializeObject(pendingResponse.Content, Formatting.Indented)}"
+                        );
                     }
+                    await Task.WhenAll(pendings.Select(x => x.Completion.Task))
+                        .WaitAsync(ResponseRequest.Timeout, cancellationToken);
+                    //var start = DateTimeOffset.UtcNow;
+                    //while (
+                    //    !cancellationToken.IsCancellationRequested
+                    //    && pendings.Any(p => !p.Completion.Task.IsCompleted)
+                    //    && (DateTimeOffset.UtcNow - start).TotalMilliseconds
+                    //        < ResponseRequest.Timeout.TotalMilliseconds
+                    //)
+                    //{
+                    //    await Task.Delay(20);
+                    //}
                 }
                 catch { }
                 var timeout = RequestTimeout()
@@ -124,7 +132,7 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
                 {
                     if (!pendingResponse.Completion.Task.IsCompleted)
                     {
-                        var response = ResponseRequest.From(request, timeout);
+                        var response = ResponseRequest.From(pendingResponse.Content, timeout);
                         response.AdditionalProperties?.Remove(
                             nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                         );
@@ -132,12 +140,16 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
                             $"{pendingResponse.Topic}/resposta",
                             response
                         );
-                        MqttManager.Process.Completed(request.ProcessId, response);
+                        //Verificar se precisa chamar Completed pois já foi realizado dentro de PublishAsync
+                        MqttManager.Process.Completed(pendingResponse.Content.ProcessId, response);
                     }
                     else
                     {
-                        var result = pendingResponse.Completion.Task.Result;
-                        if (result != null) { }
+                        var response = pendingResponse.Completion.Task.Result;
+                        response.AdditionalProperties?.Remove(
+                            nameof(request.Mqtt.BrokerKey).ToLowerFirst()
+                        );
+                        await request.Mqtt.PublishAsync($"{pendingResponse.Topic}/resposta", response);
                     }
                 }
             }

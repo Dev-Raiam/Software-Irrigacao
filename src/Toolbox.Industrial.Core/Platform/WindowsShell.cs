@@ -12,7 +12,7 @@ namespace Toolbox.Industrial.Core.Platform
 
         private TimeSpan _timeout = TimeSpan.FromSeconds(5);
 
-        private async Task<(string output, string error, int exitCode)> Run(string command)
+        public async Task<(string output, string error, int exitCode)> Run(string command)
         {
             var process = new Process
             {

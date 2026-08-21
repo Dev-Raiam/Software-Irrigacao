@@ -397,8 +397,9 @@ public sealed class Mqtt : IMqtt
                 command.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                command.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] =
+                command.AdditionalProperties[$"publish-{Guid.NewGuid()}"] =
                     $"{Environment.MachineName} - {BrokerKey}";
+                command.AdditionalProperties[$"processId-{Guid.NewGuid()}"] = command.ProcessId;
                 result = new PendingProcess<TContent>
                 {
                     Id = command.ProcessId,
@@ -416,17 +417,23 @@ public sealed class Mqtt : IMqtt
                 response.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                response.AdditionalProperties[$"publish-{SequentialGuid.NewGuid()}"] =
+                response.AdditionalProperties[$"publish-{Guid.NewGuid()}"] =
                     $"{Environment.MachineName} - {BrokerKey}";
+                response.AdditionalProperties[$"processId-{Guid.NewGuid()}"] = response.ProcessId;
                 responseRequest = response;
             }
+            var payload = JsonConvert.SerializeObject(content, _serializer);
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
-                .WithPayload(JsonConvert.SerializeObject(content, _serializer))
+                .WithPayload(payload)
                 .WithRetainFlag(retain)
                 .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
                 .Build();
 
+            Console.WriteLine(
+                $"Mensagem publicada [{_brokerKey}]: {topic} => {content.GetType().Name} =>"
+            );
+            Console.WriteLine($"{payload}");
             await _mqttClient.PublishAsync(message);
 
             if (responseRequest != null)

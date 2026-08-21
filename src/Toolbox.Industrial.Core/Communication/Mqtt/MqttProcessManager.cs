@@ -1,5 +1,7 @@
+using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
+using static Toolbox.Industrial.Core.Data.Entity.Keys;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
@@ -15,9 +17,13 @@ public sealed class MqttProcessManager
 
     public bool Completed(string processId, ResponseRequest response)
     {
+        Console.WriteLine(
+            $"Processo completado [{processId}] =>"
+        );
         var result = _pendings.TryRemove(processId, out var process);
         if (result)
         {
+            Console.WriteLine($"{JsonConvert.SerializeObject(response, Formatting.Indented)}");
             process!.Completed(response);
         }
         return result;
