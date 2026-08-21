@@ -20,17 +20,19 @@ public class Sincronizar : RemoteCommand
     /// Caso contrário, todos os controladores, Master e Slave, realizarão a sincronização.
     /// Após a sincronização, a aplicação poderá ser reiniciada automaticamente para aplicar a nova configuração.
     /// </summary>
-    public Guid? ControladorId { get; internal set; }
+    public Guid? ControladorId { get; set; }
 }
 
 internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
 {
     private readonly MqttManager _mqttInterno;
+    private readonly IMediator _mediator;
     private readonly IEntityStore _store;
     private readonly IApiClient _apiClient;
     private readonly ILogger<SincronizarHandler> _logger;
 
     public SincronizarHandler(
+        IMediator mediator,
         IEntityStore store,
         IApiClient apiClient,
         ILogger<SincronizarHandler> logger,
@@ -39,6 +41,7 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
     {
         _store = store;
         _logger = logger;
+        _mediator = mediator;
         _apiClient = apiClient;
         _mqttInterno = mqttInterno;
     }
@@ -65,10 +68,10 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             return result;
         }
         var restart = false;
-        var topic = request.Topic;
-        var controladorId = request.ControladorId;
+        //var topic = request.Topic;
+        //var controladorId = request.ControladorId;
         var controladores = Controlador.Master ? Application.Controladores : [];
-        if (controladorId == null || controladorId == Controlador.ControladorId)
+        if (request.ControladorId == null || request.ControladorId == Controlador.ControladorId)
         {
             await Sincronizar(Controlador.PainelId, cancellationToken);
             restart = true;
@@ -80,7 +83,7 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             var slaves = controladores
                 .Where(x =>
                     x.Id != Controlador.ControladorId
-                    && (controladorId == null || x.Id == controladorId)
+                    && (request.ControladorId == null || x.Id == request.ControladorId)
                 )
                 .ToList();
 
@@ -90,7 +93,10 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
                 requestSlave.ControladorId = slave.Id;
                 requestSlave.Topic = $"controladores/{slave.Id}/comando";
                 requestSlave.AdditionalProperties = null;
-                var result = await _mqttInterno.Current!.PublishAsync(requestSlave.Topic, requestSlave);
+                var result = await _mqttInterno.Current!.PublishAsync(
+                    requestSlave.Topic,
+                    requestSlave
+                );
                 if (result != null)
                 {
                     pendings.Add(result);
@@ -103,30 +109,20 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             {
                 try
                 {
-                    foreach (var pendingResponse in pendings)
-                    {
-                        Console.WriteLine(
-                            $"Aguardando processo [{pendingResponse.Id}] => {JsonConvert.SerializeObject(pendingResponse.Content, Formatting.Indented)}"
-                        );
-                    }
-                    await Task.WhenAll(pendings.Select(x => x.Completion.Task))
-                        .WaitAsync(ResponseRequest.Timeout, cancellationToken);
-                    //var start = DateTimeOffset.UtcNow;
-                    //while (
-                    //    !cancellationToken.IsCancellationRequested
-                    //    && pendings.Any(p => !p.Completion.Task.IsCompleted)
-                    //    && (DateTimeOffset.UtcNow - start).TotalMilliseconds
-                    //        < ResponseRequest.Timeout.TotalMilliseconds
-                    //)
+                    //foreach (var pendingResponse in pendings)
                     //{
-                    //    await Task.Delay(20);
+                    //    Console.WriteLine(
+                    //        $"Aguardando processo [{pendingResponse.Id}] => {JsonConvert.SerializeObject(pendingResponse.Content, Formatting.Indented)}"
+                    //    );
                     //}
+                    await Task.WhenAll(pendings.Select(x => x.Completion.Task))
+                        .WaitAsync(ResponseRequest.DefaultTimeout, cancellationToken);
                 }
                 catch { }
                 var timeout = RequestTimeout()
                     .AddError(
                         "timeout",
-                        $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})"
+                        $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.DefaultTimeout})"
                     );
                 foreach (var pendingResponse in pendings)
                 {
@@ -141,7 +137,7 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
                             response
                         );
                         //Verificar se precisa chamar Completed pois já foi realizado dentro de PublishAsync
-                        MqttManager.Process.Completed(pendingResponse.Content.ProcessId, response);
+                        MqttManager.Process.Completed(pendingResponse.Content.Id, response);
                     }
                     else
                     {
@@ -149,11 +145,15 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
                         response.AdditionalProperties?.Remove(
                             nameof(request.Mqtt.BrokerKey).ToLowerFirst()
                         );
-                        await request.Mqtt.PublishAsync($"{pendingResponse.Topic}/resposta", response);
+                        await request.Mqtt.PublishAsync(
+                            $"{pendingResponse.Topic}/resposta",
+                            response
+                        );
                     }
                 }
             }
-            request.Topic = topic;
+            request.ControladorId ??= Controlador.ControladorId;
+            request.Topic = $"controladores/{request.ControladorId}/comando";
             var resposta = ResponseRequest.From(request);
             resposta.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", resposta);
@@ -162,9 +162,12 @@ internal class SincronizarHandler : CommandHandler, ICommandHandler<Sincronizar>
             //    ResponseRequest.From(request)
             //);
             _logger.LogWarning(
-                "A aplicação será finalizada para completar o ciclo de sincronização de dados."
+                "A aplicação será finalizada para completar o ciclo remoto de sincronização de dados."
             );
-            await Application.Restart();
+            return await _mediator.Execute(
+                new Messages.Commands.Restart(),
+                cancellationToken: cancellationToken
+            );
         }
 
         return NoContent();

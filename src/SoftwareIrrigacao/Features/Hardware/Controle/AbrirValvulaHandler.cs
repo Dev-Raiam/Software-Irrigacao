@@ -26,7 +26,7 @@ public class AbrirValvulaHandler : ICommandHandler<AbrirValvula>
         // a requisicao para buscar as infromacoes de qual é o dispositivo com id que vem no request
         var comando = new ComandoControleDigital { Porta = "Q1", Valor = true};
         // TODO: Implementar lógica de publicação no MQTT
-        await _mqtt.PublishAsync("topic", comando);
+        //await _mqtt.PublishAsync("topic", comando);
 
         return ResponseResult.Result(System.Net.HttpStatusCode.OK);
     }

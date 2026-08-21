@@ -28,7 +28,7 @@ public class LerMonitorPosicaoHandler : ICommandHandler<LerMonitorPosicao>
         //var payload = JsonSerializer.Serialize(comando);
 
         // TODO: Implementar lógica de publicação no MQTT
-        await _mqtt.PublishAsync("topic", comando);
+        //await _mqtt.PublishAsync("topic", comando);
 
         return ResponseResult.Result(System.Net.HttpStatusCode.OK);
     }

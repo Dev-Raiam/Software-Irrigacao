@@ -28,7 +28,7 @@ public class DefinirValvulaProporcionalHandler : ICommandHandler<DefinirValvulaP
         //var payload = JsonSerializer.Serialize(comando);
 
         // TODO: Implementar lógica de publicação no MQTT
-        await _mqtt.PublishAsync("topic", comando);
+        //await _mqtt.PublishAsync("topic", comando);
 
         return ResponseResult.Result(System.Net.HttpStatusCode.OK);
     }

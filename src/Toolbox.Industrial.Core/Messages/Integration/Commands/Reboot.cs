@@ -18,7 +18,7 @@ public class Reboot : RemoteCommand
     /// Caso contrário, todos os controladores, Master e Slave, realizarão a sincronização.
     /// Após a sincronização, a aplicação poderá ser reiniciada automaticamente para aplicar a nova configuração.
     /// </summary>
-    public Guid? ControladorId { get; internal set; }
+    public Guid? ControladorId { get; set; }
 }
 
 internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
@@ -40,16 +40,16 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
 
     public async Task<ResponseResult> Handle(Reboot request, CancellationToken cancellationToken)
     {
-        var topic = request.Topic;
+        //var topic = request.Topic;
         var pendings = new List<PendingProcess<Reboot>>();
-        var controladorId = request.ControladorId;
+        //var controladorId = request.ControladorId;
         var controladores = Controlador.Master ? Application.Controladores : [];
         if (Controlador.Master)
         {
             var slaves = controladores
                 .Where(x =>
                     x.Id != Controlador.ControladorId
-                    && (controladorId == null || x.Id == controladorId)
+                    && (request.ControladorId == null || x.Id == request.ControladorId)
                 )
                 .ToList();
 
@@ -59,7 +59,10 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                 requestSlave.ControladorId = slave.Id;
                 requestSlave.Topic = $"controladores/{slave.Id}/comando";
                 requestSlave.AdditionalProperties = null;
-                var result = await _mqttInterno.Current!.PublishAsync(requestSlave.Topic, requestSlave);
+                var result = await _mqttInterno.Current!.PublishAsync(
+                    requestSlave.Topic,
+                    requestSlave
+                );
                 if (result != null)
                 {
                     pendings.Add(result);
@@ -70,30 +73,20 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
         {
             try
             {
-                foreach (var pendingResponse in pendings)
-                {
-                    Console.WriteLine(
-                        $"Aguardando processo [{pendingResponse.Id}] => {JsonConvert.SerializeObject(pendingResponse.Content, Formatting.Indented)}"
-                    );
-                }
-                await Task.WhenAll(pendings.Select(x => x.Completion.Task))
-                    .WaitAsync(ResponseRequest.Timeout, cancellationToken);
-                //var start = DateTimeOffset.UtcNow;
-                //while (
-                //    !cancellationToken.IsCancellationRequested
-                //    && pendings.Any(p => !p.Completion.Task.IsCompleted)
-                //    && (DateTimeOffset.UtcNow - start).TotalMilliseconds
-                //        < ResponseRequest.Timeout.TotalMilliseconds
-                //)
+                //foreach (var pendingResponse in pendings)
                 //{
-                //    await Task.Delay(20);
+                //    Console.WriteLine(
+                //        $"Aguardando processo [{pendingResponse.Id}] => {JsonConvert.SerializeObject(pendingResponse.Content, Formatting.Indented)}"
+                //    );
                 //}
+                await Task.WhenAll(pendings.Select(x => x.Completion.Task))
+                    .WaitAsync(ResponseRequest.DefaultTimeout, cancellationToken);
             }
             catch { }
             var timeout = RequestTimeout()
                 .AddError(
                     "timeout",
-                    $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.Timeout})"
+                    $"A operação excedeu o tempo limite de espera pela resposta. ({ResponseRequest.DefaultTimeout})"
                 );
             foreach (var pendingResponse in pendings)
             {
@@ -105,7 +98,7 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                     );
                     await request.Mqtt.PublishAsync($"{pendingResponse.Topic}/resposta", response);
                     //Verificar se precisa chamar Completed pois já foi realizado dentro de PublishAsync
-                    MqttManager.Process.Completed(pendingResponse.Content.ProcessId, response);
+                    MqttManager.Process.Completed(pendingResponse.Content.Id, response);
                 }
                 else
                 {
@@ -117,12 +110,16 @@ internal class RebootHandler : CommandHandler, ICommandHandler<Reboot>
                 }
             }
         }
-        if (controladorId == null || controladorId == Controlador.ControladorId)
+        if (request.ControladorId == null || request.ControladorId == Controlador.ControladorId)
         {
-            request.Topic = topic;
+            request.ControladorId ??= Controlador.ControladorId;
+            request.Topic = $"controladores/{request.ControladorId}/comando";
             var response = ResponseRequest.From(request);
             response.AdditionalProperties?.Remove(nameof(request.Mqtt.BrokerKey).ToLowerFirst());
             await request.Mqtt.PublishAsync($"{request.Topic}/resposta", response);
+            _logger.LogWarning(
+                "O dispositivo será reiniciado através de uma solicitação remota."
+            );
             return await _mediator.Execute(
                 new Messages.Commands.Reboot(),
                 cancellationToken: cancellationToken

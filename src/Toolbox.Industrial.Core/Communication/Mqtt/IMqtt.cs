@@ -1,6 +1,5 @@
-using Newtonsoft.Json;
 using Toolbox.Core.Extensions;
-using Toolbox.Industrial.Core.Messages.Integration.Events;
+using Toolbox.Core.Messages;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
@@ -18,7 +17,7 @@ public interface IMqtt : IDisposable
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
     )
-        where TContent : class;
+        where TContent : IMessage;
 
     Task SubscribeAsync(string topic, QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce);
 
