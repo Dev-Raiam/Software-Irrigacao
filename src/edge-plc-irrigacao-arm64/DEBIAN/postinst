@@ -33,3 +33,6 @@ cp /opt/cmd-plc/commands.d/20-atualizador "$CMD_DIR/" 2>/dev/null || true
 cp /opt/cmd-plc/commands.d/30-rede "$CMD_DIR/" 2>/dev/null || true
 cp /opt/cmd-plc/commands.d/40-pacotes "$CMD_DIR/" 2>/dev/null || true
 chown -R "$REAL_USER:$REAL_USER" "$CMD_DIR"
+
+# Limpa a cópia de /opt (já foi copiada para a home)
+rm -rf /opt/cmd-plc
