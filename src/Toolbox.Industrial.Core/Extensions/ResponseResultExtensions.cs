@@ -9,7 +9,7 @@ namespace Toolbox.Industrial.Core.Extensions
             var result = new List<object>();
             foreach (var error in response.Errors)
             {
-                result.Add(error.Value);
+                result.AddRange(error.Value);
             }
             return result;
         }

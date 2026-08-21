@@ -76,10 +76,12 @@ public static class Application
             _logger = scope.ServiceProvider.GetRequiredService<ILogger<IApplicationBuilder>>();
             var store = scope.ServiceProvider.GetRequiredService<IEntityStore>();
 
-            var version = await store.FirstOrDefaultAsync<Configuracao>(x => x.Id == Entity.Keys.VersaoAtual);
-            if (version != null) 
+            var version = await store.FirstOrDefaultAsync<Configuracao>(x =>
+                x.Id == Entity.Keys.VersaoAtual
+            );
+            if (version != null)
             {
-                Log.Information("Versão : {version}",version.Valor);
+                Log.Information("Aplicação Versão : {version}",version.Valor);
             }
 
             _hascredentials = await CheckCredentials(store);
