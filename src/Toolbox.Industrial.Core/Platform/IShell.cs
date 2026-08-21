@@ -1,5 +1,6 @@
 ﻿namespace Toolbox.Industrial.Core.Platform
 {
+    //Interface
     public interface IShell
     {
         Task<bool> Stop(string serviceName, TimeSpan? timeout = null);

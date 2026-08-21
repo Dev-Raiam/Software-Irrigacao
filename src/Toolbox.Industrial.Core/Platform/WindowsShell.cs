@@ -3,12 +3,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Toolbox.Industrial.Core.Platform
 {
+    //Interface
     internal class WindowsShell : IShell
     {
         private readonly ILogger<WindowsShell> _logger;
 
         public WindowsShell(ILogger<WindowsShell> logger) => _logger = logger;
-        
+
         private TimeSpan _timeout = TimeSpan.FromSeconds(5);
 
         private async Task<(string output, string error, int exitCode)> Run(string command)
