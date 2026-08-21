@@ -1,0 +1,83 @@
+#!/bin/bash
+CMD_DIR="$HOME/cmd-plc/config/commands.d"
+
+# Cores
+VERDE='\033[1;32m'
+VERDE_ESC='\033[0;32m'
+CIANO='\033[1;36m'
+BRANCO='\033[1;37m'
+CINZA='\033[0;90m'
+RESET='\033[0m'
+
+LARGURA=56
+
+linha() {
+    printf "${CINZA}%s${RESET}\n" "$(printf '─%.0s' $(seq 1 $LARGURA))"
+}
+
+topo() {
+    printf "${CINZA}┌%s┐${RESET}\n" "$(printf '─%.0s' $(seq 1 $LARGURA))"
+}
+
+fundo() {
+    printf "${CINZA}└%s┘${RESET}\n" "$(printf '─%.0s' $(seq 1 $LARGURA))"
+}
+
+titulo() {
+    local texto="🧰  PLC TOOLBOX"
+    local pad=$(( (LARGURA - ${#texto} - 1) / 2 ))
+    printf "${CINZA}│${RESET}%*s${VERDE}${texto}${RESET}%*s${CINZA}│${RESET}\n" "$pad" "" "$((LARGURA - pad - ${#texto} - 1))" ""
+}
+
+while true; do
+    clear
+    topo
+    titulo
+    linha
+    echo
+    NUMERO=1
+    declare -A COMANDOS
+    for arquivo in "$CMD_DIR"/*; do
+        [ -f "$arquivo" ] || continue
+        while IFS='|' read -r descricao comando; do
+            [ -z "$descricao" ] && continue
+            if [[ "$descricao" == \#* ]]; then
+                echo
+                printf "  ${CIANO}▸ %s${RESET}\n" "${descricao#\# }"
+                continue
+            fi
+            COMANDOS[$NUMERO]="$comando"
+            printf "  ${BRANCO}%2s${RESET} ${CINZA})${RESET} %s\n" "$NUMERO" "$descricao"
+            ((NUMERO++))
+        done < "$arquivo"
+    done
+    echo
+    linha
+    printf "  ${VERDE_ESC}%2s${RESET} ${CINZA})${RESET} Sair\n" "0"
+    fundo
+    echo
+    read -p "$(printf "${VERDE}Escolha: ${RESET}")" escolha
+
+    if [ "$escolha" = "0" ]; then
+        clear
+        exit 0
+    fi
+
+    comando="${COMANDOS[$escolha]}"
+    if [ -z "$comando" ]; then
+        echo
+        printf "${CINZA}Comando inválido.${RESET}\n"
+        sleep 2
+        continue
+    fi
+
+    clear
+    topo
+    printf "${CINZA}│${RESET} ${VERDE}Executando:${RESET}\n"
+    printf "${CINZA}│${RESET} %s\n" "$comando"
+    fundo
+    echo
+    eval "$comando"
+    echo
+    read -p "Pressione ENTER para voltar ao menu..."
+done

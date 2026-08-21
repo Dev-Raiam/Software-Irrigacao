@@ -1,0 +1,8 @@
+# ATUALIZADOR
+Status|systemctl status irrigacao-atualizador
+Iniciar|sudo systemctl start irrigacao-atualizador
+Parar|sudo systemctl stop irrigacao-atualizador
+Reiniciar|sudo systemctl restart irrigacao-atualizador
+Logs (últimos 100)|journalctl -u irrigacao-atualizador -n 100
+Logs em tempo real|journalctl -u irrigacao-atualizador -f
+Logs de erro|journalctl -u irrigacao-atualizador -p err -n 100

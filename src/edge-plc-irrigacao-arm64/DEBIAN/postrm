@@ -5,3 +5,9 @@ systemctl disable irrigacao.service || true
 systemctl disable irrigacao-atualizador.service || true
 
 systemctl daemon-reload || true
+
+# Remove arquivos de serviço
+rm -f /etc/systemd/system/irrigacao.service 2>/dev/null || true
+rm -f /etc/systemd/system/irrigacao-atualizador.service 2>/dev/null || true
+
+systemctl daemon-reload || true

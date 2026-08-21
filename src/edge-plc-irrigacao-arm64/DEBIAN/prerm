@@ -3,3 +3,12 @@ set -e
 
 systemctl stop irrigacao.service || true
 systemctl stop irrigacao-atualizador.service || true
+
+# === Remove apenas os fragmentos deste pacote ===
+REAL_USER=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}' /etc/passwd)
+CMD_DIR="/home/$REAL_USER/cmd-plc/config/commands.d"
+
+rm -f "$CMD_DIR/10-irrigacao" 2>/dev/null || true
+rm -f "$CMD_DIR/20-atualizador" 2>/dev/null || true
+rm -f "$CMD_DIR/30-rede" 2>/dev/null || true
+rm -f "$CMD_DIR/40-pacotes" 2>/dev/null || true

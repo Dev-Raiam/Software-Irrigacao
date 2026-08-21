@@ -66,11 +66,4 @@
   <ItemGroup>
     <Folder Include="Data\" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="irrigacao-atualizador.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
 </Project>
