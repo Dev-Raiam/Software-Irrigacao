@@ -11,3 +11,25 @@ systemctl enable irrigacao-atualizador.service
 
 systemctl start irrigacao.service
 systemctl start irrigacao-atualizador.service
+
+# === Instalação do cmd-plc ===
+REAL_USER=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}' /etc/passwd)
+CMD_BASE="/home/$REAL_USER/cmd-plc"
+CMD_DIR="$CMD_BASE/config/commands.d"
+
+# Se a base não existe, cria e instala o script list + comandos base
+if [ ! -d "$CMD_DIR" ]; then
+    mkdir -p "$CMD_DIR"
+    cp /opt/cmd-plc/list "$CMD_BASE/"
+    cp /opt/cmd-plc/commands.d/00-sistema "$CMD_DIR/"
+    chmod +x "$CMD_BASE/list"
+    chown -R "$REAL_USER:$REAL_USER" "$CMD_BASE"
+    ln -sf "$CMD_BASE/list" /usr/local/bin/cmd
+fi
+
+# Copia os fragmentos deste pacote
+cp /opt/cmd-plc/commands.d/10-irrigacao "$CMD_DIR/" 2>/dev/null || true
+cp /opt/cmd-plc/commands.d/20-atualizador "$CMD_DIR/" 2>/dev/null || true
+cp /opt/cmd-plc/commands.d/30-rede "$CMD_DIR/" 2>/dev/null || true
+cp /opt/cmd-plc/commands.d/40-pacotes "$CMD_DIR/" 2>/dev/null || true
+chown -R "$REAL_USER:$REAL_USER" "$CMD_DIR"

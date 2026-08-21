@@ -1,0 +1,8 @@
+# SISTEMA
+Disco|df -h
+Memória|free -h
+Processos|top
+Processos por memória|ps aux --sort=-%mem | head -10
+Versão do sistema|cat /etc/os-release
+Listar arquivos /opt/edge-plc|ls -la /opt/edge-plc
+Reiniciar Raspberry|sudo reboot

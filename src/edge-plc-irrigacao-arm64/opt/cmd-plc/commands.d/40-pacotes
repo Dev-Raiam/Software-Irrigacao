@@ -1,0 +1,4 @@
+# PACOTES .DEB
+Instalar .deb|sudo dpkg -i pacote.deb
+Listar pacotes irrigacao|dpkg -l | grep irrigacao
+Ver arquivos do pacote|dpkg -L nome-pacote

@@ -1,0 +1,9 @@
+# IRRIGAÇÃO
+Status|systemctl status irrigacao
+Iniciar|sudo systemctl start irrigacao
+Parar|sudo systemctl stop irrigacao
+Reiniciar|sudo systemctl restart irrigacao
+Logs (últimos 100)|journalctl -u irrigacao -n 100
+Logs em tempo real|journalctl -u irrigacao -f
+Logs de erro|journalctl -u irrigacao -p err -n 100
+Logs de hoje|journalctl -u irrigacao --since today

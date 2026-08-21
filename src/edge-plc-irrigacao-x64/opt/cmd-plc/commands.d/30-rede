@@ -1,0 +1,9 @@
+# REDE
+Ver IP|ip addr show
+Ver WiFi|nmcli device status
+Ver conexões WiFi|nmcli connection show
+Testar internet|ping -c 4 8.8.8.8
+Portas abertas|ss -tlnp
+Logs do WiFi|journalctl -u NetworkManager -n 100
+Logs do WiFi em tempo real|journalctl -u NetworkManager -f
+Reiniciar rede|sudo systemctl restart NetworkManager
