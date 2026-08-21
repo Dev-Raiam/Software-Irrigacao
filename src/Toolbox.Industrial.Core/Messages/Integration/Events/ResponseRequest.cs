@@ -81,10 +81,7 @@ internal class ResponseRequestHandler : INotificationHandler<ResponseRequest>
                     await mqtt.PublishAsync(notification.Topic, notification);
                 }
             }
-            MqttManager.Process.Completed(
-                $"{notification.CorrelationId}-{brokerKey}",
-                notification
-            );
+            MqttManager.Process.Completed($"{notification.CorrelationId}", notification);
         }
     }
 }

@@ -14,21 +14,20 @@ namespace Toolbox.Industrial.Core.Messages
             CorrelationId = Id;
         }
 
-        public static TRemoteCommand From<TRemoteCommand>(TRemoteCommand origin) 
+        public static TRemoteCommand From<TRemoteCommand>(TRemoteCommand origin)
             where TRemoteCommand : RemoteCommand, new()
-        { 
-            var result = new TRemoteCommand() 
+        {
+            var result = new TRemoteCommand()
             {
-                
                 Mqtt = origin.Mqtt,
                 Topic = origin.Topic,
                 Timestamp = origin.Timestamp,
                 Stopwatch = Stopwatch.StartNew(),
                 CorrelationId = origin.Id,
-                AdditionalProperties = new Dictionary<string, object>(origin.AdditionalProperties ?? [],
+                AdditionalProperties = new Dictionary<string, object>(
+                    origin.AdditionalProperties ?? [],
                     StringComparer.OrdinalIgnoreCase
-                )
-
+                ),
             };
             result._timestamp = origin._timestamp;
 
@@ -45,7 +44,7 @@ namespace Toolbox.Industrial.Core.Messages
         public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 
         [JsonIgnore]
-        public virtual string ProcessId => $"{Id}-{Mqtt?.BrokerKey}";
+        public virtual string ProcessId => $"{Id}";
 
         [JsonIgnore]
         public bool HasAdditionalProperties => AdditionalProperties?.Count > 0;
