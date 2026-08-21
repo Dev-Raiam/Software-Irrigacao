@@ -1,7 +1,3 @@
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
@@ -10,6 +6,10 @@ using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
 using Serilog;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Timers;
 using Toolbox.Core.Mediator;
 using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.RaspIO;
@@ -18,6 +18,7 @@ using Toolbox.Industrial.Core.Messages;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
 using Toolbox.Industrial.Core.Security;
 using Toolbox.Industrial.Core.Setup;
+using Toolbox.Industrial.Core.Telemetry;
 using Timer = System.Timers.Timer;
 using Token = Toolbox.Industrial.Core.Communication.Api.Contracts.Token;
 
@@ -184,10 +185,13 @@ public sealed class Mqtt : IMqtt
                 var topic = e.ApplicationMessage.Topic;
                 var payload = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
                 var message = JsonConvert.DeserializeObject(payload, _serializer)!;
-                Console.WriteLine(
-                    $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} =>"
-                );
-                Console.WriteLine($"{payload}");
+                if (!(message is SlaveHeartbeat))
+                {
+                    Console.WriteLine(
+                        $"Mensagem recebida [{_brokerKey}]: {topic} => {message.GetType().Name} =>"
+                    );
+                    Console.WriteLine($"{payload}");
+                }
                 if (message is RemoteCommand remoteCommand)
                 {
                     remoteCommand.Mqtt = this;
@@ -385,7 +389,7 @@ public sealed class Mqtt : IMqtt
         bool retain = false,
         QualityOfServiceLevel qos = QualityOfServiceLevel.AtMostOnce
     )
-        where TContent : class
+        where TContent : IMessage
     {
         await ConnectAsync();
         ResponseRequest? responseRequest = null;
@@ -397,12 +401,12 @@ public sealed class Mqtt : IMqtt
                 command.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                command.AdditionalProperties[$"publish"] =
-                    $"{Environment.MachineName} - {BrokerKey}";
-                command.AdditionalProperties[$"processId"] = command.ProcessId;
+                //command.AdditionalProperties[$"publish"] =
+                //    $"{Environment.MachineName} - {BrokerKey}";
+                //command.AdditionalProperties[$"processId"] = command.Id;
                 result = new PendingProcess<TContent>
                 {
-                    Id = command.ProcessId,
+                    Id = command.Id,
                     Topic = topic,
                     Content = content,
                     BrokerKey = command.Mqtt.BrokerKey,
@@ -417,9 +421,9 @@ public sealed class Mqtt : IMqtt
                 response.AdditionalProperties ??= new Dictionary<string, object>(
                     StringComparer.OrdinalIgnoreCase
                 );
-                response.AdditionalProperties[$"publish"] =
-                    $"{Environment.MachineName} - {BrokerKey}";
-                response.AdditionalProperties[$"processId"] = response.ProcessId;
+                //response.AdditionalProperties[$"publish"] =
+                //    $"{Environment.MachineName} - {BrokerKey}";
+                //response.AdditionalProperties[$"processId"] = response.ProcessId;
                 responseRequest = response;
             }
             var payload = JsonConvert.SerializeObject(content, _serializer);
@@ -430,15 +434,18 @@ public sealed class Mqtt : IMqtt
                 .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)qos)
                 .Build();
 
-            Console.WriteLine(
-                $"Mensagem publicada [{_brokerKey}]: {topic} => {content.GetType().Name} =>"
-            );
-            Console.WriteLine($"{payload}");
+            if (!(content is SlaveHeartbeat))
+            {
+                Console.WriteLine(
+                    $"Mensagem publicada [{_brokerKey}]: {topic} => {content.GetType().Name} =>"
+                );
+                Console.WriteLine($"{payload}");
+            }
             await _mqttClient.PublishAsync(message);
 
             if (responseRequest != null)
             {
-                MqttManager.Process.Completed(responseRequest.ProcessId, responseRequest);
+                MqttManager.Process.Completed(responseRequest.CorrelationId, responseRequest);
             }
         }
         catch (Exception ex)

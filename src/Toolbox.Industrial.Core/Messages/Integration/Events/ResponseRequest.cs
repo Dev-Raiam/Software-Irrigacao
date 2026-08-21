@@ -10,28 +10,29 @@ namespace Toolbox.Industrial.Core.Messages.Integration.Events;
 
 public sealed class ResponseRequest : Toolbox.Core.Messages.NotificationEvent
 {
+    public static TimeSpan DefaultTimeout = TimeSpan.FromSeconds(3);
+
     internal Mqtt Mqtt { get; set; } = null!;
     internal string Topic { get; set; } = null!;
 
     [JsonProperty(Order = -96)]
     public TimeSpan Latency { get; init; }
 
-    [JsonIgnore]
-    public string ProcessId => $"{CorrelationId}";
-
-    public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
+    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public override DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 
     public static ResponseRequest From(RemoteCommand request, ResponseResult? response = null)
     {
         request.Stopwatch.Stop();
         var result = new ResponseRequest
         {
-            CorrelationId = request.Id,
             Latency = request.Latency,
             Payload = response?.PayLoad,
             Duration = request.Stopwatch.Elapsed,
             Success = response?.IsSuccessful ?? true,
-            StatusCode = ((int?)response?.HttpStatusCode ?? 0),
+            CorrelationId = request.CorrelationId,
+            StatusCode = ((int?)response?.HttpStatusCode ?? (response?.PayLoad != null ? 200 : 204)),
         };
         result.AdditionalProperties ??= new Dictionary<string, object>(
             StringComparer.OrdinalIgnoreCase
@@ -66,7 +67,7 @@ internal class ResponseRequestHandler : INotificationHandler<ResponseRequest>
         {
             //logar falha
         }
-        MqttManager.Process.Completed($"{notification.CorrelationId}", notification);
+        MqttManager.Process.Completed(notification.CorrelationId, notification);
         var property = nameof(notification.Mqtt.BrokerKey).ToLowerFirst();
         if (
             notification.HasAdditionalProperties

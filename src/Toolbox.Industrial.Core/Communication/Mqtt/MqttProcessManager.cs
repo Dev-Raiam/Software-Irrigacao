@@ -1,24 +1,22 @@
-using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
 using Toolbox.Industrial.Core.Messages.Integration.Events;
 
 namespace Toolbox.Industrial.Core.Communication.Mqtt;
 
 public sealed class MqttProcessManager
 {
-    private readonly ConcurrentDictionary<string, IPendingProcess> _pendings = new();
-    public IReadOnlyDictionary<string, IPendingProcess> Pendings => _pendings;
+    private readonly ConcurrentDictionary<Guid, IPendingProcess> _pendings = new();
+    public IReadOnlyDictionary<Guid, IPendingProcess> Pendings => _pendings;
 
     public bool Add(IPendingProcess process)
     {
         return _pendings.TryAdd(process.Id, process);
     }
 
-    public bool Completed(string processId, ResponseRequest response)
+    public bool Completed(Guid processId, ResponseRequest response)
     {
-        Console.WriteLine(
-            $"Processo completado [{processId}] =>"
-        );
+        Console.WriteLine($"Processo completado [{processId}] =>");
         var result = _pendings.TryRemove(processId, out var process);
         if (result)
         {
@@ -31,13 +29,13 @@ public sealed class MqttProcessManager
 
 public interface IPendingProcess
 {
-    string Id { get; init; }
+    Guid Id { get; init; }
     void Completed(ResponseRequest response);
 }
 
 public sealed class PendingProcess<TContent> : IPendingProcess
 {
-    public required string Id { get; init; }
+    public required Guid Id { get; init; }
     public required string Topic { get; init; }
     public required string BrokerKey { get; init; }
     public required TContent Content { get; init; }

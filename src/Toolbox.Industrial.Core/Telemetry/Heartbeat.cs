@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Toolbox.Core.Messages;
 using Toolbox.Industrial.Core.Communication.Api;
 using Toolbox.Industrial.Core.Communication.Mqtt;
 using Toolbox.Industrial.Core.Data;
@@ -117,11 +118,11 @@ internal sealed class Heartbeat : BackgroundService
                 //informando que está em operação.
                 if (_mqtt.IsConnected)
                 {
-                    var heartbeat = JsonConvert.SerializeObject(
-                        new SlaveHeartbeat { Id = Controlador.ControladorId },
-                        _mqttSerializer
-                    );
-                    await _mqtt.PublishAsync("heartbeats", heartbeat);
+                    //var heartbeat = JsonConvert.SerializeObject(
+                    //    ,
+                    //    _mqttSerializer
+                    //);
+                    await _mqtt.PublishAsync("heartbeats", new SlaveHeartbeat { Id = Controlador.ControladorId });
                 }
                 else
                 {
@@ -189,7 +190,7 @@ internal sealed record HeartbeatOptions
     public TimeSpan IntervalHealthCheckMetrics { get; init; } = TimeSpan.FromMinutes(1);
 }
 
-internal sealed record SlaveHeartbeat
+internal sealed record SlaveHeartbeat : IMessage
 {
     public required Guid Id { get; init; }
 }

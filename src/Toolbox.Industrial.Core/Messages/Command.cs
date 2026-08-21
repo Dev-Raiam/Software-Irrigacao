@@ -1,16 +1,22 @@
 ﻿using System.Diagnostics;
-using Newtonsoft.Json;
 using Toolbox.Industrial.Core.Communication.Mqtt;
+using Toolbox.Industrial.Core.Messages.Integration.Events;
 
 namespace Toolbox.Industrial.Core.Messages
 {
     public abstract class RemoteCommand : Toolbox.Core.Messages.Command
     {
-        private DateTimeOffset _timestamp;
+        [Newtonsoft.Json.JsonProperty("data", Order = -99)]
+        [System.Text.Json.Serialization.JsonPropertyOrder(-99)]
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        private DateTimeOffset _createdAt = DateTimeOffset.UtcNow;
+
+        private DateTimeOffset _received = DateTimeOffset.UtcNow;
 
         protected RemoteCommand()
         {
-            _timestamp = DateTimeOffset.UtcNow;
+            var old = _received;
+            _received = DateTimeOffset.UtcNow;
             CorrelationId = Id;
         }
 
@@ -21,35 +27,52 @@ namespace Toolbox.Industrial.Core.Messages
             {
                 Mqtt = origin.Mqtt,
                 Topic = origin.Topic,
-                Timestamp = origin.Timestamp,
+                Timeout = origin.Timeout,
                 Stopwatch = Stopwatch.StartNew(),
-                CorrelationId = origin.Id,
+                CorrelationId = origin.CorrelationId,
                 AdditionalProperties = new Dictionary<string, object>(
                     origin.AdditionalProperties ?? [],
                     StringComparer.OrdinalIgnoreCase
                 ),
+                Timeouts = new Dictionary<Guid, TimeSpan> 
+                { 
+                    [origin.CorrelationId] = origin.Timeout,
+                    [origin.Id] = origin.Timeout 
+                }
             };
-            result._timestamp = origin._timestamp;
-
+            result._createdAt = origin._createdAt;
+            result._received = origin._received;
             return result;
         }
 
         internal Guid CorrelationId { get; set; }
         internal Mqtt Mqtt { get; set; } = null!;
         internal string Topic { get; set; } = null!;
-        internal TimeSpan Latency => _timestamp - Timestamp;
+
+        [Newtonsoft.Json.JsonProperty("timeout", Order = -98)]
+        [System.Text.Json.Serialization.JsonPropertyOrder(-98)]
+        [System.Text.Json.Serialization.JsonPropertyName("timeout")]
+        internal TimeSpan Timeout { get; init; } = ResponseRequest.DefaultTimeout;
+
+        [Newtonsoft.Json.JsonProperty("timeouts", Order = -97)]
+        [System.Text.Json.Serialization.JsonPropertyOrder(-97)]
+        [System.Text.Json.Serialization.JsonPropertyName("timeouts")]
+        internal Dictionary<Guid, TimeSpan>? Timeouts { get; set; }
+
+        internal TimeSpan Latency => _received - _createdAt;
+
         internal Stopwatch Stopwatch { get; init; } = Stopwatch.StartNew();
 
+        [Newtonsoft.Json.JsonProperty(Order = -100)]
+        [System.Text.Json.Serialization.JsonPropertyOrder(-100)]
         public virtual Guid Id { get; init; } = SequentialGuid.NewGuid();
-        public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 
-        [JsonIgnore]
-        public virtual string ProcessId => $"{Id}";
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public virtual bool HasAdditionalProperties => AdditionalProperties?.Count > 0;
 
-        [JsonIgnore]
-        public bool HasAdditionalProperties => AdditionalProperties?.Count > 0;
-
-        [JsonExtensionData]
+        [Newtonsoft.Json.JsonExtensionData]
+        [System.Text.Json.Serialization.JsonExtensionData]
         public virtual Dictionary<string, object>? AdditionalProperties { get; set; }
     }
 
