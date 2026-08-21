@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Toolbox.Industrial.Core.Platform
 {
+    //Interface
     internal class LinuxShell : IShell
     {
         private readonly ILogger<LinuxShell> _logger;

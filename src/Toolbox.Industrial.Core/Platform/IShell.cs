@@ -1,5 +1,6 @@
 ﻿namespace Toolbox.Industrial.Core.Platform
 {
+    //Interface
     public interface IShell
     {
         Task<(string output, string error, int exitCode)> Run(string command);
